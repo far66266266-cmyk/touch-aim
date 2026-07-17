@@ -349,14 +349,36 @@
     box-shadow: 0 0 14px rgba(46,168,255,.25);
   }
   .modedesc { font-size: 11px; color: #8b949e; margin-bottom: 20px; min-height: 14px; }
-  .rules {
+  /* ===== ルールページ ===== */
+  #rules {
+    justify-content: flex-start;
+    overflow-y: auto; touch-action: pan-y;
+    padding-top: max(32px, env(safe-area-inset-top));
+  }
+  #rules h2 {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 20px; font-weight: 700;
+    letter-spacing: .3em; text-indent: .3em;
+    margin-bottom: 20px;
+    color: #e6edf3;
+    text-shadow: 0 0 16px rgba(46,168,255,.4);
+  }
+  .rule-sec {
     width: 100%; max-width: 420px;
     text-align: left;
-    font-size: 11px; color: #8b949e;
-    line-height: 2;
-    margin-bottom: 24px;
+    margin-bottom: 16px;
   }
+  .rule-sec h3 {
+    font-size: 12px; font-weight: 700;
+    color: #2ea8ff; letter-spacing: .12em;
+    margin-bottom: 4px;
+  }
+  .rule-sec p { font-size: 12px; color: #8b949e; line-height: 1.9; }
   .rule-core { color: #2ea8ff; }
+  .g-exc-t   { color: #ffdf5d; font-weight: 700; }
+  .g-great-t { color: #2ea8ff; font-weight: 700; }
+  .g-good-t  { color: #3fb950; font-weight: 700; }
+  .g-poor-t  { color: #8b949e; font-weight: 700; }
   .rec-head {
     margin: 30px 0 8px;
     font-size: 12px; color: #8b949e;
@@ -410,11 +432,42 @@
       <svg id="chartT" viewBox="0 0 340 240" xmlns="http://www.w3.org/2000/svg"></svg>
       <div id="chartInfoT" class="chart-info">点をタップすると詳細を表示</div>
     </div>
-    <div class="rules">
-      <div>・10個の円を25秒以内にタップ。速さ × 中心精度 × 円の小ささでスコア</div>
-      <div>・<span class="rule-core">青い芯</span>に当て続けるとコンボ倍率 (最大×1.30)</div>
-      <div>・空振りは -100点</div>
+    <button class="btn ghost" id="rulesBtn">ルール・遊び方</button>
+  </div>
+
+  <!-- ルール -->
+  <div id="rules" class="screen hidden">
+    <h2>RULES</h2>
+    <div class="rule-sec">
+      <h3>基本</h3>
+      <p>25秒の間に10個の円がランダムなタイミング・場所・大きさで出現します(常に1個ずつ・2秒で消滅)。すばやく、中心を狙ってタップしてください。反応時間は1/1000秒単位で計測されます。</p>
     </div>
+    <div class="rule-sec">
+      <h3>スコア</h3>
+      <p>1発の得点 = 速さ × 中心精度 × 円の小ささ。基準は1000点満点で、小さい円ほど倍率が高くなります(10個の平均はどのプレイでも×1.00になるよう調整)。速さと精度のどちらを重く見るかはモードによって変わります。</p>
+    </div>
+    <div class="rule-sec">
+      <h3>評価</h3>
+      <p>
+        <span class="g-exc-t">EXCELLENT</span> 800点以上 /
+        <span class="g-great-t">GREAT</span> 550〜 /
+        <span class="g-good-t">GOOD</span> 300〜 /
+        <span class="g-poor-t">POOR</span> それ未満
+      </p>
+    </div>
+    <div class="rule-sec">
+      <h3>コンボ</h3>
+      <p><span class="rule-core">青い芯</span>(白枠の内側)に当て続けると1回ごとに倍率+3%、10連続で最大×1.30。芯を外したヒット・空振り・タイムアウトでコンボは切れます。</p>
+    </div>
+    <div class="rule-sec">
+      <h3>ペナルティ</h3>
+      <p>空振り(円の外をタップ)は -100点。円を2秒以内にタップできないとTIME OUTで0点です。</p>
+    </div>
+    <div class="rule-sec">
+      <h3>モードと記録</h3>
+      <p>ノーマル/精度重視/速度重視は配点だけが異なり、円の出方は共通です。ベストスコア・TOP10・グラフはモード別に、この端末のブラウザ内へ保存されます。</p>
+    </div>
+    <button class="btn ghost" id="rulesBackBtn">タイトルへ戻る</button>
   </div>
 
   <!-- カウントダウン -->
@@ -606,7 +659,7 @@
 
   // ===== 画面遷移 =====
   function show(id) {
-    ['title', 'countdown', 'result'].forEach(s => $(s).classList.toggle('hidden', s !== id));
+    ['title', 'countdown', 'result', 'rules'].forEach(s => $(s).classList.toggle('hidden', s !== id));
   }
 
   // ===== 記録 (すべてモード別に管理) =====
@@ -1217,6 +1270,8 @@
     renderTitle();
     show('title');
   });
+  $('rulesBtn').addEventListener('click', () => show('rules'));
+  $('rulesBackBtn').addEventListener('click', () => show('title'));
   document.querySelectorAll('.modebtn').forEach(b => {
     b.addEventListener('click', () => {
       mode = b.dataset.mode;
