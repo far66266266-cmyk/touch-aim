@@ -63,6 +63,7 @@
   .hidden { display: none !important; }
 
   h1 {
+    margin-top: 52px; /* 右上の言語セレクタと重ならないように */
     font-family: 'Orbitron', sans-serif;
     font-size: 37px; font-weight: 900;
     letter-spacing: .16em;
@@ -633,12 +634,15 @@
   // ===== 状態 =====
   let state = 'title';          // title | countdown | play | result
   let roundStart = 0;           // ラウンド開始時刻 (performance.now)
-  let active = [];              // 画面上のターゲット (同時複数あり)
+  let active = [];              // 画面上のターゲット (仕様上は常に1個)
   let resolved = 0;             // 処理済み(ヒット/タイムアウト)数
   let totalScore = 0;
   let records = [];             // idx順の {time, acc, pts, sizeF, miss}
   let rafId = 0;
-  let spawnTimers = [];
+  let gapTimer = 0;             // 次ターゲット出現用タイマー
+  let nextIdx = 0;              // 次に出すターゲット番号
+  let spawnSizes = [];          // 事前生成したサイズ倍率
+  let gapQueue = [];            // 事前生成した出現間隔 (合計固定)
   let replay = null;            // 直前プレイのリプレイデータ (メモリのみ)
   let combo = 0, maxCombo = 0;  // 青い芯への連続ヒット数
 
@@ -730,16 +734,15 @@
     return v.map(x => x / mean);
   }
 
-  // 出現時刻10個: 前の円が確実に消えてから少し揺らして次を出す (同時出現なし)
-  // 最終出現は最大でも約22.3秒 → 寿命2秒込みでも25秒以内に収まる
-  function makeSpawnTimes() {
-    const t = [];
-    let cur = 400 + Math.random() * 300;
-    for (let i = 0; i < TARGETS; i++) {
-      t.push(cur);
-      cur += TARGET_LIFE + 50 + Math.random() * 350;
-    }
-    return t;
+  // 出現間隔10個: 前のターゲットの解決(ヒット/タイムアウト)後、この間隔で次を出す。
+  // 速く倒すほど次がすぐ来る方式。個々はランダムだが合計を固定し、プレイ間の運差を抑える。
+  // 全タイムアウトの最悪ケースでも 700 + 9×2000 + 4500 ≈ 23.2秒 < 25秒 に収まる。
+  function makeSpawnGaps() {
+    const g = [500 + Math.random() * 200]; // 最初の1個までの待ち
+    const raw = Array.from({ length: TARGETS - 1 }, () => 300 + Math.random() * 500);
+    const sum = raw.reduce((s, x) => s + x, 0);
+    raw.forEach(x => g.push(x * 4500 / sum)); // 2個目以降の間隔は合計4.5秒で固定
+    return g;
   }
 
   // ===== スコア計算 (配点はモードごと) =====
@@ -942,10 +945,11 @@
     setCombo(0);
     $('score').textContent = '0';
     $('progress').textContent = `0/${TARGETS}`;
-    const times = makeSpawnTimes();
-    const sizes = makeSizeFactors();
+    spawnSizes = makeSizeFactors();
+    gapQueue = makeSpawnGaps();
+    nextIdx = 0;
     roundStart = performance.now();
-    spawnTimers = times.map((tm, i) => setTimeout(() => spawnTarget(i, sizes[i]), tm));
+    gapTimer = setTimeout(() => spawnTarget(0, spawnSizes[0]), gapQueue[0]);
     tick();
   }
 
@@ -962,9 +966,10 @@
     rafId = requestAnimationFrame(tick);
   }
 
-  // ===== ターゲット出現 (同時複数あり) =====
+  // ===== ターゲット出現 (常に1個。解決後に次が出る) =====
   function spawnTarget(idx, sizeF) {
     if (state !== 'play') return;
+    nextIdx = idx + 1;
     const r = Math.max(24, Math.round(baseRadius() / sizeF));
     const hudH = 76 + r;
     const x = r + 8 + Math.random() * (innerWidth - 2 * (r + 8));
@@ -1000,7 +1005,12 @@
   function resolveOne() {
     resolved++;
     $('progress').textContent = `${resolved}/${TARGETS}`;
-    if (resolved >= TARGETS) setTimeout(endRound, 400);
+    if (resolved >= TARGETS) { setTimeout(endRound, 400); return; }
+    // 解決したら短いランダム間隔で次のターゲットを出す
+    if (nextIdx < TARGETS) {
+      const i = nextIdx;
+      gapTimer = setTimeout(() => spawnTarget(i, spawnSizes[i]), gapQueue[i]);
+    }
   }
 
   // ===== タップ判定 =====
@@ -1032,7 +1042,7 @@
     active = active.filter(a => a !== hit);
     const timeMs = now - hit.spawnAt;
     const acc = Math.max(0, 1 - hitDist / hit.r);
-    // コンボ: 青い芯(中心33%以内)に当てたときだけ継続、外れたら切れる
+    // コンボ: 青い芯(中心からCOMBO_ZONE半径比以内)に当てたときだけ継続、外れたら切れる
     const zoneHit = hitDist <= hit.r * COMBO_ZONE;
     setCombo(zoneHit ? combo + 1 : 0);
     const base = calcPoints(timeMs, acc, hit.sizeF); // 評価はコンボ倍率前の素点で判定
@@ -1090,7 +1100,7 @@
     if (state !== 'play') return;
     state = 'result';
     cancelAnimationFrame(rafId);
-    spawnTimers.forEach(clearTimeout);
+    clearTimeout(gapTimer);
     active.forEach(tg => { clearTimeout(tg.lifeTimer); tg.el.remove(); });
     active = [];
     $('combo').classList.add('hidden');
