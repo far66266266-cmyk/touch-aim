@@ -330,6 +330,14 @@
     overflow-y: auto; touch-action: pan-y;
     padding-top: max(32px, env(safe-area-inset-top));
   }
+  #langSel {
+    position: absolute;
+    top: calc(12px + env(safe-area-inset-top)); right: 16px;
+    background: #161b22; color: #8b949e;
+    border: 1px solid #30363d; border-radius: 8px;
+    font-size: 13px; padding: 6px 8px;
+    font-family: inherit;
+  }
   .modes {
     display: flex; gap: 8px;
     width: 100%; max-width: 420px;
@@ -412,62 +420,64 @@
 
   <!-- タイトル -->
   <div id="title" class="screen">
+    <select id="langSel"></select>
     <h1>TOUCH AIM</h1>
-    <div class="sub">出現する円をすばやく・中心を狙ってタップ</div>
+    <div class="sub" data-i18n="sub">出現する円をすばやく・中心を狙ってタップ</div>
     <div class="modes">
-      <button class="modebtn" data-mode="normal">ノーマル</button>
-      <button class="modebtn" data-mode="acc">精度重視</button>
-      <button class="modebtn" data-mode="speed">速度重視</button>
+      <button class="modebtn" data-mode="normal" data-i18n="m_normal">ノーマル</button>
+      <button class="modebtn" data-mode="acc" data-i18n="m_acc">精度重視</button>
+      <button class="modebtn" data-mode="speed" data-i18n="m_speed">速度重視</button>
     </div>
     <div id="modeDesc" class="modedesc"></div>
     <button class="btn" id="startBtn">START</button>
     <div id="best"></div>
     <div class="rec-head" id="recHead">RECORDS</div>
     <table id="top10">
-      <thead><tr><th>#</th><th>スコア</th><th>平均反応 / 精度</th><th>日付</th></tr></thead>
+      <thead><tr><th>#</th><th data-i18n="thScore">スコア</th><th data-i18n="thAvg">平均反応 / 精度</th><th data-i18n="thDate">日付</th></tr></thead>
       <tbody></tbody>
     </table>
     <div class="chartWrap">
-      <div class="chart-title">過去30プレイ</div>
+      <div class="chart-title" data-i18n="chartTitle">過去30プレイ</div>
       <svg id="chartT" viewBox="0 0 340 240" xmlns="http://www.w3.org/2000/svg"></svg>
       <div id="chartInfoT" class="chart-info">点をタップすると詳細を表示</div>
     </div>
-    <button class="btn ghost" id="rulesBtn">ルール・遊び方</button>
+    <button class="btn ghost" id="rulesBtn" data-i18n="rulesBtn">ルール・遊び方</button>
   </div>
 
   <!-- ルール -->
   <div id="rules" class="screen hidden">
     <h2>RULES</h2>
     <div class="rule-sec">
-      <h3>基本</h3>
-      <p>25秒の間に10個の円がランダムなタイミング・場所・大きさで出現します(常に1個ずつ・2秒で消滅)。すばやく、中心を狙ってタップしてください。反応時間は1/1000秒単位で計測されます。</p>
+      <h3 data-i18n="rBasic">基本</h3>
+      <p data-i18n="rBasicP"></p>
     </div>
     <div class="rule-sec">
-      <h3>スコア</h3>
-      <p>1発の得点 = 速さ × 中心精度 × 円の小ささ。基準は1000点満点で、小さい円ほど倍率が高くなります(10個の平均はどのプレイでも×1.00になるよう調整)。速さと精度のどちらを重く見るかはモードによって変わります。</p>
+      <h3 data-i18n="rScore">スコア</h3>
+      <p data-i18n="rScoreP"></p>
     </div>
     <div class="rule-sec">
-      <h3>評価</h3>
+      <h3 data-i18n="rGrade">評価</h3>
       <p>
-        <span class="g-exc-t">EXCELLENT</span> 800点以上 /
-        <span class="g-great-t">GREAT</span> 550〜 /
-        <span class="g-good-t">GOOD</span> 300〜 /
-        <span class="g-poor-t">POOR</span> それ未満
+        <span class="g-exc-t">EXCELLENT</span> 800+ /
+        <span class="g-great-t">GREAT</span> 550+ /
+        <span class="g-good-t">GOOD</span> 300+ /
+        <span class="g-poor-t">POOR</span> &lt;300
       </p>
+      <p data-i18n="rGradeP"></p>
     </div>
     <div class="rule-sec">
-      <h3>コンボ</h3>
-      <p><span class="rule-core">青い芯</span>(白枠の内側)に当て続けると1回ごとに倍率+3%、10連続で最大×1.30。芯を外したヒット・空振り・タイムアウトでコンボは切れます。</p>
+      <h3 data-i18n="rCombo">コンボ</h3>
+      <p data-i18n="rComboP"></p>
     </div>
     <div class="rule-sec">
-      <h3>ペナルティ</h3>
-      <p>空振り(円の外をタップ)は -100点。円を2秒以内にタップできないとTIME OUTで0点です。</p>
+      <h3 data-i18n="rPenalty">ペナルティ</h3>
+      <p data-i18n="rPenaltyP"></p>
     </div>
     <div class="rule-sec">
-      <h3>モードと記録</h3>
-      <p>ノーマル/精度重視/速度重視は配点だけが異なり、円の出方は共通です。ベストスコア・TOP10・グラフはモード別に、この端末のブラウザ内へ保存されます。</p>
+      <h3 data-i18n="rMode">モードと記録</h3>
+      <p data-i18n="rModeP"></p>
     </div>
-    <button class="btn ghost" id="rulesBackBtn">タイトルへ戻る</button>
+    <button class="btn ghost" id="rulesBackBtn" data-i18n="backTitle">タイトルへ戻る</button>
   </div>
 
   <!-- カウントダウン -->
@@ -480,24 +490,24 @@
     <div id="totalScore">0</div>
     <div id="newBest"></div>
     <div class="stats">
-      <div class="stat"><div class="v" id="avgTime">-</div><div class="k">平均反応 (ms)</div></div>
-      <div class="stat"><div class="v" id="avgAcc">-</div><div class="k">平均精度</div></div>
-      <div class="stat"><div class="v" id="hitCount">-</div><div class="k">ヒット</div></div>
-      <div class="stat"><div class="v" id="maxCombo">-</div><div class="k">最大コンボ</div></div>
+      <div class="stat"><div class="v" id="avgTime">-</div><div class="k" data-i18n="kAvgTime">平均反応 (ms)</div></div>
+      <div class="stat"><div class="v" id="avgAcc">-</div><div class="k" data-i18n="kAvgAcc">平均精度</div></div>
+      <div class="stat"><div class="v" id="hitCount">-</div><div class="k" data-i18n="kHits">ヒット</div></div>
+      <div class="stat"><div class="v" id="maxCombo">-</div><div class="k" data-i18n="kMaxCombo">最大コンボ</div></div>
     </div>
     <div class="chartWrap">
-      <div class="chart-title">過去30プレイ</div>
+      <div class="chart-title" data-i18n="chartTitle">過去30プレイ</div>
       <svg id="chart" viewBox="0 0 340 240" xmlns="http://www.w3.org/2000/svg"></svg>
       <div id="chartInfo" class="chart-info">点をタップすると詳細を表示</div>
     </div>
-    <div class="rep-hint">▶ 明細の行をタップするとそのターゲットのリプレイを再生</div>
+    <div class="rep-hint" data-i18n="repHint">▶ 明細の行をタップするとそのターゲットのリプレイを再生</div>
     <table id="detail">
-      <thead><tr><th>#</th><th>反応時間</th><th>精度</th><th>サイズ</th><th>スコア</th></tr></thead>
+      <thead><tr><th>#</th><th data-i18n="thTime">反応時間</th><th data-i18n="thAcc">精度</th><th data-i18n="thSize">サイズ</th><th data-i18n="thScore">スコア</th></tr></thead>
       <tbody></tbody>
     </table>
     <button class="btn" id="retryBtn">RETRY</button>
-    <button class="btn ghost" id="fullReplayBtn">通しリプレイ</button>
-    <button class="btn ghost" id="homeBtn">タイトルへ</button>
+    <button class="btn ghost" id="fullReplayBtn" data-i18n="fullReplay">通しリプレイ</button>
+    <button class="btn ghost" id="homeBtn" data-i18n="backTitle">タイトルへ</button>
   </div>
 
   <!-- リプレイ (行タップ=単体 / ボタン=通し) -->
@@ -508,10 +518,10 @@
       <div id="replayInfo"></div>
       <div>
         <button class="rbtn hidden" id="replaySpeed">×1</button>
-        <button class="rbtn" id="replayClose">閉じる</button>
+        <button class="rbtn" id="replayClose" data-i18n="close">閉じる</button>
       </div>
     </div>
-    <div id="replayNote">黄=タップ位置 / 赤=空振り / 薄い輪郭=消えた円</div>
+    <div id="replayNote" data-i18n="replayNote">黄=タップ位置 / 赤=空振り / 薄い輪郭=消えた円</div>
   </div>
 
 </div>
@@ -554,6 +564,67 @@
   };
   let mode = localStorage.getItem('touchaim_mode') || 'normal';
   if (!MODES[mode]) mode = 'normal';
+
+  // ===== 多言語 (10言語) =====
+  const LANGS = ['ja', 'en', 'zh', 'ko', 'es', 'pt', 'fr', 'de', 'ru', 'id'];
+  const LANG_NAMES = ['日本語', 'English', '中文', '한국어', 'Español', 'Português', 'Français', 'Deutsch', 'Русский', 'Bahasa Indonesia'];
+  // 値は LANGS と同順
+  const STR = {
+    sub: ['出現する円をすばやく・中心を狙ってタップ', 'Tap the circles fast — aim for the center', '快速点击出现的圆圈，瞄准圆心', '나타나는 원을 빠르게, 중심을 노려 탭', 'Toca los círculos rápido, apuntando al centro', 'Toque nos círculos rápido, mirando no centro', 'Touchez vite les cercles en visant le centre', 'Tippe die Kreise schnell und ziele auf die Mitte', 'Быстро нажимайте на круги, целясь в центр', 'Ketuk lingkaran dengan cepat, bidik tepat di tengah'],
+    m_normal: ['ノーマル', 'Normal', '普通', '노멀', 'Normal', 'Normal', 'Normal', 'Normal', 'Обычный', 'Normal'],
+    m_acc: ['精度重視', 'Precision', '精准', '정확도', 'Precisión', 'Precisão', 'Précision', 'Präzision', 'Точность', 'Presisi'],
+    m_speed: ['速度重視', 'Speed', '速度', '스피드', 'Velocidad', 'Velocidade', 'Vitesse', 'Tempo', 'Скорость', 'Kecepatan'],
+    d_normal: ['速さと精度をバランスよく評価', 'Balanced scoring of speed and accuracy', '速度与精度均衡计分', '속도와 정확도를 균형 있게 평가', 'Puntuación equilibrada de velocidad y precisión', 'Pontuação equilibrada de velocidade e precisão', 'Score équilibré entre vitesse et précision', 'Ausgewogene Wertung aus Tempo und Präzision', 'Сбалансированная оценка скорости и точности', 'Skor seimbang antara kecepatan dan akurasi'],
+    d_acc: ['中心精度が得点の大半を決める。時間の影響は小さめ', 'Accuracy dominates the score; time matters less', '精度决定大部分得分，时间影响较小', '정확도가 점수 대부분을 결정, 시간 영향은 작음', 'La precisión domina; el tiempo influye menos', 'A precisão domina; o tempo pesa menos', 'La précision domine ; le temps compte moins', 'Präzision zählt am meisten; Zeit weniger', 'Точность решает больше; время влияет меньше', 'Akurasi paling menentukan; waktu kurang berpengaruh'],
+    d_speed: ['反応の速さが得点の大半を決める。精度の影響は小さめ', 'Reaction speed dominates; accuracy matters less', '反应速度决定大部分得分，精度影响较小', '반응 속도가 점수 대부분을 결정, 정확도 영향은 작음', 'La velocidad domina; la precisión influye menos', 'A velocidade domina; a precisão pesa menos', 'La vitesse domine ; la précision compte moins', 'Tempo zählt am meisten; Präzision weniger', 'Скорость решает больше; точность влияет меньше', 'Kecepatan paling menentukan; akurasi kurang berpengaruh'],
+    rulesBtn: ['ルール・遊び方', 'How to Play', '规则玩法', '규칙·플레이 방법', 'Reglas', 'Regras', 'Règles', 'Regeln', 'Правила', 'Aturan'],
+    noRec: ['まだ記録がありません', 'No records yet', '暂无记录', '아직 기록이 없습니다', 'Sin registros todavía', 'Nenhum registro ainda', 'Aucun record pour l’instant', 'Noch keine Einträge', 'Пока нет записей', 'Belum ada rekor'],
+    thScore: ['スコア', 'Score', '得分', '점수', 'Puntos', 'Pontos', 'Score', 'Punkte', 'Очки', 'Skor'],
+    thAvg: ['平均反応 / 精度', 'Avg time / acc.', '平均反应 / 精度', '평균 반응 / 정확도', 'Media / precisión', 'Média / precisão', 'Moy. / précision', 'Ø Zeit / Präz.', 'Среднее / точность', 'Rerata / akurasi'],
+    thDate: ['日付', 'Date', '日期', '날짜', 'Fecha', 'Data', 'Date', 'Datum', 'Дата', 'Tanggal'],
+    chartTitle: ['過去30プレイ', 'Last 30 plays', '最近30次', '최근 30회', 'Últimas 30 partidas', 'Últimas 30 partidas', '30 dernières parties', 'Letzte 30 Runden', 'Последние 30 игр', '30 permainan terakhir'],
+    chartHint: ['点をタップすると詳細を表示', 'Tap a dot for details', '点按圆点查看详情', '점을 탭하면 상세 표시', 'Toca un punto para ver detalles', 'Toque em um ponto para detalhes', 'Touchez un point pour les détails', 'Punkt antippen für Details', 'Нажмите на точку для деталей', 'Ketuk titik untuk detail'],
+    axSlow: ['← 遅い', '← Slow', '← 慢', '← 느림', '← Lento', '← Lento', '← Lent', '← Langsam', '← Медленно', '← Lambat'],
+    axFast: ['速い →', 'Fast →', '快 →', '빠름 →', 'Rápido →', 'Rápido →', 'Rapide →', 'Schnell →', 'Быстро →', 'Cepat →'],
+    axHi: ['精度高', 'High acc.', '精度高', '정확도 높음', '+Precisión', '+Precisão', '+Précision', 'Präz. hoch', 'Точнее', 'Akurasi tinggi'],
+    axLo: ['精度低', 'Low acc.', '精度低', '정확도 낮음', '-Precisión', '-Precisão', '-Précision', 'Präz. niedrig', 'Грубее', 'Akurasi rendah'],
+    now: ['今回', 'Now', '本次', '이번', 'Ahora', 'Agora', 'Actuel', 'Jetzt', 'Сейчас', 'Kini'],
+    ago: ['{n}プレイ前', '{n} plays ago', '{n}局前', '{n}판 전', 'hace {n}', 'há {n}', 'il y a {n}', 'vor {n}', '{n} назад', '{n} lalu'],
+    kAvgTime: ['平均反応 (ms)', 'Avg. reaction (ms)', '平均反应 (ms)', '평균 반응 (ms)', 'Reacción media (ms)', 'Reação média (ms)', 'Réaction moy. (ms)', 'Ø Reaktion (ms)', 'Ср. реакция (мс)', 'Reaksi rata² (ms)'],
+    kAvgAcc: ['平均精度', 'Avg. accuracy', '平均精度', '평균 정확도', 'Precisión media', 'Precisão média', 'Précision moy.', 'Ø Präzision', 'Ср. точность', 'Akurasi rata²'],
+    kHits: ['ヒット', 'Hits', '命中', '명중', 'Aciertos', 'Acertos', 'Touches', 'Treffer', 'Попадания', 'Kena'],
+    kMaxCombo: ['最大コンボ', 'Max combo', '最大连击', '최대 콤보', 'Combo máx.', 'Combo máx.', 'Combo max', 'Max. Combo', 'Макс. комбо', 'Combo maks'],
+    thTime: ['反応時間', 'Time', '反应', '반응', 'Tiempo', 'Tempo', 'Temps', 'Zeit', 'Время', 'Waktu'],
+    thAcc: ['精度', 'Acc.', '精度', '정확도', 'Precisión', 'Precisão', 'Précision', 'Präz.', 'Точность', 'Akurasi'],
+    thSize: ['サイズ', 'Size', '大小', '크기', 'Tamaño', 'Tamanho', 'Taille', 'Größe', 'Размер', 'Ukuran'],
+    repHint: ['▶ 明細の行をタップするとそのターゲットのリプレイを再生', '▶ Tap a row to replay that target', '▶ 点按某一行可回放该目标', '▶ 행을 탭하면 해당 타깃 리플레이 재생', '▶ Toca una fila para repetir ese objetivo', '▶ Toque numa linha para rever esse alvo', '▶ Touchez une ligne pour revoir cette cible', '▶ Zeile antippen, um das Ziel erneut zu sehen', '▶ Нажмите на строку — повтор этой цели', '▶ Ketuk baris untuk memutar ulang target itu'],
+    fullReplay: ['通しリプレイ', 'Full replay', '完整回放', '전체 리플레이', 'Repetición completa', 'Replay completo', 'Replay complet', 'Kompletter Replay', 'Полный повтор', 'Replay penuh'],
+    backTitle: ['タイトルへ', 'Back to title', '返回标题', '타이틀로', 'Al título', 'Ao título', 'Retour au titre', 'Zum Titel', 'В меню', 'Ke judul'],
+    close: ['閉じる', 'Close', '关闭', '닫기', 'Cerrar', 'Fechar', 'Fermer', 'Schließen', 'Закрыть', 'Tutup'],
+    replayNote: ['黄=タップ位置 / 赤=空振り / 薄い輪郭=消えた円', 'Yellow = tap / Red = whiff / Faint = expired circle', '黄=点击位置 / 红=落空 / 淡圈=已消失的圆', '노랑=탭 위치 / 빨강=헛스윙 / 옅은 원=사라진 원', 'Amarillo = toque / Rojo = fallo / Tenue = círculo expirado', 'Amarelo = toque / Vermelho = erro / Fraco = círculo expirado', 'Jaune = toucher / Rouge = raté / Pâle = cercle disparu', 'Gelb = Tipp / Rot = Fehlschlag / Blass = abgelaufen', 'Жёлтый = нажатие / Красный = промах / Бледный = исчезнувший круг', 'Kuning = ketukan / Merah = meleset / Pudar = lingkaran hilang'],
+    rBasic: ['基本', 'Basics', '基本', '기본', 'Básico', 'Básico', 'Bases', 'Grundlagen', 'Основы', 'Dasar'],
+    rBasicP: ['25秒の間に10個の円がランダムなタイミング・位置・大きさで出現します(常に1個ずつ・2秒で消滅)。すばやく中心を狙ってタップ。反応時間は1/1000秒単位で計測されます。', '10 circles appear within 25 seconds at random times, positions and sizes (one at a time, gone after 2s). Tap fast and aim for the center. Reaction time is measured to the millisecond.', '25秒内会出现10个圆圈，时间、位置、大小均为随机（每次1个，2秒后消失）。快速点击并瞄准圆心。反应时间以毫秒为单位计量。', '25초 동안 10개의 원이 무작위 타이밍·위치·크기로 나타납니다(한 번에 1개, 2초 후 소멸). 빠르게 중심을 노려 탭하세요. 반응 시간은 1/1000초 단위로 측정됩니다.', 'Aparecen 10 círculos en 25 segundos con tiempo, posición y tamaño aleatorios (uno a la vez, desaparecen en 2 s). Toca rápido apuntando al centro. La reacción se mide al milisegundo.', '10 círculos aparecem em 25 segundos com tempo, posição e tamanho aleatórios (um por vez, somem em 2 s). Toque rápido mirando no centro. A reação é medida em milissegundos.', '10 cercles apparaissent en 25 secondes à des moments, positions et tailles aléatoires (un à la fois, disparu après 2 s). Touchez vite en visant le centre. La réaction est mesurée à la milliseconde.', 'In 25 Sekunden erscheinen 10 Kreise zu zufälligen Zeiten, Positionen und Größen (einzeln, weg nach 2 s). Tippe schnell und ziele auf die Mitte. Die Reaktionszeit wird auf die Millisekunde gemessen.', 'За 25 секунд появляются 10 кругов в случайное время, в случайных местах и размерах (по одному, исчезают через 2 с). Нажимайте быстро, целясь в центр. Реакция измеряется до миллисекунды.', '10 lingkaran muncul dalam 25 detik dengan waktu, posisi, dan ukuran acak (satu per satu, hilang setelah 2 dtk). Ketuk cepat, bidik tengah. Waktu reaksi diukur per milidetik.'],
+    rScore: ['スコア', 'Scoring', '得分', '점수', 'Puntuación', 'Pontuação', 'Score', 'Punkte', 'Очки', 'Skor'],
+    rScoreP: ['1発の得点 = 速さ × 中心精度 × 円の小ささ(基準1000点)。小さい円ほど倍率が高く、10個の平均は常に×1.00。速さと精度の配分はモードで変わります。', 'Points per hit = speed × accuracy × circle size (base 1000). Smaller circles score higher, and the 10-circle average is always ×1.00. Each mode weighs speed vs accuracy differently.', '单次得分 = 速度 × 精度 × 圆圈大小（基准1000分）。圆越小倍率越高，10个圆的平均始终为×1.00。各模式对速度与精度的权重不同。', '1회 득점 = 속도 × 정확도 × 원의 크기(기준 1000점). 작은 원일수록 배율이 높고, 10개 평균은 항상 ×1.00입니다. 속도와 정확도의 비중은 모드마다 다릅니다.', 'Puntos por acierto = velocidad × precisión × tamaño (base 1000). Los círculos pequeños puntúan más y la media de los 10 siempre es ×1,00. Cada modo pondera distinto velocidad y precisión.', 'Pontos por acerto = velocidade × precisão × tamanho (base 1000). Círculos menores valem mais e a média dos 10 é sempre ×1,00. Cada modo pesa velocidade e precisão de forma diferente.', 'Points par tir = vitesse × précision × taille (base 1000). Les petits cercles rapportent plus et la moyenne des 10 est toujours ×1,00. Chaque mode pondère différemment vitesse et précision.', 'Punkte pro Treffer = Tempo × Präzision × Kreisgröße (Basis 1000). Kleinere Kreise bringen mehr, der Schnitt der 10 ist immer ×1,00. Jeder Modus gewichtet Tempo und Präzision anders.', 'Очки за попадание = скорость × точность × размер круга (база 1000). Маленькие круги дают больше, среднее по 10 всегда ×1,00. Режимы по-разному взвешивают скорость и точность.', 'Poin per ketukan = kecepatan × akurasi × ukuran lingkaran (dasar 1000). Lingkaran kecil bernilai lebih; rata-rata 10 lingkaran selalu ×1,00. Tiap mode menimbang kecepatan vs akurasi secara berbeda.'],
+    rGrade: ['評価', 'Grades', '评价', '등급', 'Calificación', 'Avaliação', 'Notes', 'Wertung', 'Оценка', 'Penilaian'],
+    rGradeP: ['評価はコンボ倍率を含まない素点で判定されます。', 'Grades are based on base points, before the combo multiplier.', '评价基于不含连击倍率的基础分。', '등급은 콤보 배율을 제외한 기본 점수로 판정됩니다.', 'La calificación se basa en los puntos base, sin el multiplicador de combo.', 'A avaliação usa os pontos base, sem o multiplicador de combo.', 'La note est basée sur les points de base, hors multiplicateur de combo.', 'Die Wertung basiert auf den Basispunkten ohne Combo-Multiplikator.', 'Оценка даётся по базовым очкам, без множителя комбо.', 'Penilaian berdasarkan poin dasar, tanpa pengali combo.'],
+    rCombo: ['コンボ', 'Combo', '连击', '콤보', 'Combo', 'Combo', 'Combo', 'Combo', 'Комбо', 'Combo'],
+    rComboP: ['円の中心にある明るい芯に当て続けると1回ごとに倍率+3%、10連続で最大×1.30。芯を外したヒット・空振り・タイムアウトでコンボは切れます。', 'Keep hitting the bright core at the center: +3% multiplier per hit, up to ×1.30 at 10 in a row. Hitting outside the core, whiffing or timing out breaks the combo.', '连续命中圆心的亮色核心，每次倍率+3%，10连击最高×1.30。命中核心以外、落空或超时都会中断连击。', '중심의 밝은 코어를 계속 맞히면 1회당 배율 +3%, 10연속 시 최대 ×1.30. 코어를 벗어난 히트·헛스윙·타임아웃 시 콤보가 끊깁니다.', 'Sigue acertando el núcleo brillante del centro: +3 % por acierto, hasta ×1,30 con 10 seguidos. Fallar el núcleo, fallar el toque o agotar el tiempo rompe el combo.', 'Continue acertando o núcleo brilhante do centro: +3% por acerto, até ×1,30 com 10 seguidos. Acertar fora do núcleo, errar ou estourar o tempo quebra o combo.', 'Enchaînez les tirs dans le noyau lumineux du centre : +3 % par tir, jusqu’à ×1,30 après 10 d’affilée. Toucher hors du noyau, rater ou dépasser le temps casse le combo.', 'Triff immer wieder den hellen Kern in der Mitte: +3 % pro Treffer, bis ×1,30 bei 10 in Folge. Treffer außerhalb des Kerns, Fehlschläge oder Timeouts brechen die Combo.', 'Попадайте подряд в яркое ядро в центре: +3 % за попадание, до ×1,30 при 10 подряд. Попадание вне ядра, промах или таймаут обнуляют комбо.', 'Terus kenai inti terang di tengah: pengali +3% per ketukan, maksimal ×1,30 setelah 10 beruntun. Kena di luar inti, meleset, atau kehabisan waktu memutus combo.'],
+    rPenalty: ['ペナルティ', 'Penalties', '惩罚', '페널티', 'Penalizaciones', 'Penalidades', 'Pénalités', 'Strafen', 'Штрафы', 'Penalti'],
+    rPenaltyP: ['空振り(円の外をタップ)は-100点。円を2秒以内にタップできないとTIME OUTで0点です。', 'Whiffs (tapping outside the circle) cost -100 points. Missing a circle for 2 seconds is a TIME OUT worth 0 points.', '落空（点击圆圈外）扣100分。2秒内未点击圆圈则TIME OUT，得0分。', '헛스윙(원 밖 탭)은 -100점. 2초 안에 원을 탭하지 못하면 TIME OUT으로 0점입니다.', 'Fallar el toque (fuera del círculo) resta 100 puntos. No tocar un círculo en 2 s es TIME OUT y vale 0.', 'Errar o toque (fora do círculo) custa -100 pontos. Não tocar em 2 s é TIME OUT e vale 0.', 'Un raté (hors du cercle) coûte -100 points. Ne pas toucher un cercle en 2 s est un TIME OUT à 0 point.', 'Fehlschläge (außerhalb des Kreises) kosten -100 Punkte. Wird ein Kreis 2 s nicht getroffen: TIME OUT, 0 Punkte.', 'Промах (нажатие вне круга) — минус 100 очков. Если не нажать круг за 2 с — TIME OUT, 0 очков.', 'Meleset (ketuk di luar lingkaran) -100 poin. Tidak mengetuk dalam 2 detik = TIME OUT, 0 poin.'],
+    rMode: ['モードと記録', 'Modes & records', '模式与记录', '모드와 기록', 'Modos y registros', 'Modos e registros', 'Modes et records', 'Modi & Rekorde', 'Режимы и рекорды', 'Mode & rekor'],
+    rModeP: ['3つのモードは配点だけが異なり、円の出方は共通です。記録(ベスト・TOP10・グラフ)はモード別に、この端末のブラウザへ保存されます。', 'The three modes differ only in scoring; circles behave the same. Records (best, top 10, chart) are stored per mode in this device\'s browser.', '三种模式仅计分不同，圆圈的出现方式相同。记录（最佳、前10、图表）按模式保存在本设备的浏览器中。', '세 모드는 배점만 다르고 원의 등장 방식은 같습니다. 기록(베스트·TOP10·그래프)은 모드별로 이 기기의 브라우저에 저장됩니다.', 'Los tres modos solo cambian la puntuación; los círculos son iguales. Los registros (récord, top 10, gráfica) se guardan por modo en el navegador de este dispositivo.', 'Os três modos mudam só a pontuação; os círculos são iguais. Os registros (recorde, top 10, gráfico) ficam salvos por modo no navegador deste aparelho.', 'Les trois modes ne diffèrent que par le score ; les cercles sont identiques. Les records (meilleur, top 10, graphique) sont enregistrés par mode dans le navigateur de cet appareil.', 'Die drei Modi unterscheiden sich nur in der Wertung; die Kreise sind gleich. Rekorde (Best, Top 10, Diagramm) werden pro Modus im Browser dieses Geräts gespeichert.', 'Три режима отличаются только подсчётом очков; круги одинаковы. Рекорды (лучший, топ-10, график) хранятся по режимам в браузере этого устройства.', 'Ketiga mode hanya berbeda penilaian; perilaku lingkaran sama. Rekor (terbaik, top 10, grafik) disimpan per mode di browser perangkat ini.'],
+  };
+  let lang = localStorage.getItem('touchaim_lang');
+  if (!LANGS.includes(lang)) {
+    const nav = (navigator.language || 'en').slice(0, 2);
+    lang = LANGS.includes(nav) ? nav : 'en';
+  }
+  function T(k) { return STR[k][LANGS.indexOf(lang)]; }
+  function applyLang() {
+    document.documentElement.lang = lang;
+    document.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = T(el.dataset.i18n); });
+  }
 
   const $ = id => document.getElementById(id);
   const field = $('field');
@@ -752,11 +823,11 @@
     // 軸ラベル
     const lbl = (x, y, text, anchor) =>
       `<text x="${x}" y="${y}" fill="#a8b6c2" font-size="14" text-anchor="${anchor}" font-family="inherit">${text}</text>`;
-    s += lbl(x0, y1 + 19, '← 遅い', 'start');
-    s += lbl(x1, y1 + 19, '速い →', 'end');
+    s += lbl(x0, y1 + 19, T('axSlow'), 'start');
+    s += lbl(x1, y1 + 19, T('axFast'), 'end');
     s += lbl(chX(500), y1 + 19, '500ms', 'middle');
-    s += `<text x="${x0 - 10}" y="${y0 + 6}" fill="#a8b6c2" font-size="14" text-anchor="middle" writing-mode="tb" font-family="inherit">精度高</text>`;
-    s += `<text x="${x0 - 10}" y="${y1 - 48}" fill="#a8b6c2" font-size="14" text-anchor="middle" writing-mode="tb" font-family="inherit">精度低</text>`;
+    s += `<text x="${x0 - 10}" y="${y0 + 6}" fill="#a8b6c2" font-size="14" text-anchor="middle" writing-mode="tb" font-family="inherit">${T('axHi')}</text>`;
+    s += `<text x="${x0 - 10}" y="${y1 - 48}" fill="#a8b6c2" font-size="14" text-anchor="middle" writing-mode="tb" font-family="inherit">${T('axLo')}</text>`;
     s += lbl(x0 - 4, chY(0.5) + 5, '50%', 'end');
     // グレードの目安線: 現在モードの配点で1発スコアが境界値になる曲線 (サイズ×1.00・コンボなし)
     const m = MODES[mode];
@@ -792,11 +863,11 @@
         (isLast ? ' stroke="#ffdf5d" stroke-width="2"' : ' stroke="#161b22" stroke-width="1.5"') + '/>';
     });
     svg.innerHTML = s;
-    $(infoId).textContent = n ? '点をタップすると詳細を表示' : 'まだ記録がありません';
+    $(infoId).textContent = n ? T('chartHint') : T('noRec');
   }
 
   // 点タップで詳細表示
-  function bindChartTap(svgId, infoId, latestLabel) {
+  function bindChartTap(svgId, infoId) {
     $(svgId).addEventListener('pointerdown', (e) => {
       const dot = e.target.closest('.dot');
       if (!dot) return;
@@ -805,25 +876,25 @@
       const h = hist[i];
       if (!h) return;
       const ago = hist.length - 1 - i;
-      $(infoId).textContent =
-        `${ago === 0 ? latestLabel : ago + 'プレイ前'}: スコア${h.s.toLocaleString()} / 平均${h.t}ms / 精度${Math.round(h.a * 100)}%`;
+      const when = ago === 0 ? T('now') : T('ago').replace('{n}', ago);
+      $(infoId).textContent = `${when}: ${h.s.toLocaleString()} / ${h.t}ms / ${Math.round(h.a * 100)}%`;
     });
   }
-  bindChartTap('chart', 'chartInfo', '今回');
-  bindChartTap('chartT', 'chartInfoT', '直近');
+  bindChartTap('chart', 'chartInfo');
+  bindChartTap('chartT', 'chartInfoT');
 
   function renderTitle() {
     document.querySelectorAll('.modebtn').forEach(b => b.classList.toggle('sel', b.dataset.mode === mode));
-    $('modeDesc').textContent = MODES[mode].desc;
+    $('modeDesc').textContent = T('d_' + mode);
     const b = loadBest();
     $('best').textContent = b > 0 ? `BEST SCORE: ${b.toLocaleString()}` : '';
-    $('recHead').textContent = `RECORDS — ${MODES[mode].name}`;
+    $('recHead').textContent = `RECORDS — ${T('m_' + mode)}`;
     // ハイスコアTOP10
     const top = loadTop();
     const tbody = $('top10').querySelector('tbody');
     tbody.innerHTML = '';
     if (!top.length) {
-      tbody.innerHTML = '<tr><td colspan="4" style="color:#8b949e;padding:10px">まだ記録がありません</td></tr>';
+      tbody.innerHTML = `<tr><td colspan="4" style="color:#8b949e;padding:10px">${T('noRec')}</td></tr>`;
     } else {
       top.forEach((h, i) => {
         const d = new Date(h.ts);
@@ -1063,7 +1134,7 @@
       saveTop(entry);
     }
     renderChart('chart', 'chartInfo', hist);
-    $('resultMode').textContent = MODES[mode].name;
+    $('resultMode').textContent = T('m_' + mode);
 
     // 明細テーブル
     const tbody = $('detail').querySelector('tbody');
@@ -1112,7 +1183,7 @@
     rp = { mode: 'single', tg, segLen: end - tg.spawnT, vt: 0, last: performance.now(), raf: 0 };
     $('replaySpeed').classList.add('hidden');
     $('replayInfo').textContent = tg.tap
-      ? `#${idx + 1}  ${rp.segLen.toFixed(1)}ms / 精度${Math.round(tg.tap.acc * 100)}% / +${tg.tap.pts}`
+      ? `#${idx + 1}  ${rp.segLen.toFixed(1)}ms / ${Math.round(tg.tap.acc * 100)}% / +${tg.tap.pts}`
       : `#${idx + 1}  TIME OUT`;
     drawSingleReplay();
   }
@@ -1123,7 +1194,7 @@
     rp = { mode: 'full', vt: 0, last: performance.now(), speed: 1, raf: 0 };
     $('replaySpeed').textContent = '×1';
     $('replaySpeed').classList.remove('hidden');
-    $('replayInfo').textContent = '通しリプレイ';
+    $('replayInfo').textContent = T('fullReplay');
     drawFullReplay();
   }
 
@@ -1297,6 +1368,21 @@
   });
   $('rulesBtn').addEventListener('click', () => show('rules'));
   $('rulesBackBtn').addEventListener('click', () => show('title'));
+  // 言語セレクタ
+  const sel = $('langSel');
+  LANGS.forEach((code, i) => {
+    const o = document.createElement('option');
+    o.value = code;
+    o.textContent = LANG_NAMES[i];
+    sel.appendChild(o);
+  });
+  sel.value = lang;
+  sel.addEventListener('change', () => {
+    lang = sel.value;
+    localStorage.setItem('touchaim_lang', lang);
+    applyLang();
+    renderTitle();
+  });
   document.querySelectorAll('.modebtn').forEach(b => {
     b.addEventListener('click', () => {
       mode = b.dataset.mode;
@@ -1309,6 +1395,7 @@
   document.addEventListener('dblclick', e => e.preventDefault());
   document.addEventListener('contextmenu', e => e.preventDefault());
 
+  applyLang();
   renderTitle();
 })();
 </script>
