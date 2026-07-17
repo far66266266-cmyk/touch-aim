@@ -435,18 +435,22 @@
       <tbody></tbody>
     </table>
     <button class="btn" id="retryBtn">RETRY</button>
+    <button class="btn ghost" id="fullReplayBtn">通しリプレイ</button>
     <button class="btn ghost" id="homeBtn">タイトルへ</button>
   </div>
 
-  <!-- リプレイ (ターゲット単位) -->
+  <!-- リプレイ (行タップ=単体 / ボタン=通し) -->
   <div id="replayOverlay" class="hidden">
     <canvas id="replayCanvas"></canvas>
     <div id="replayHud">
       <div class="val" id="replayTime">0ms</div>
       <div id="replayInfo"></div>
-      <button class="rbtn" id="replayClose">閉じる</button>
+      <div>
+        <button class="rbtn hidden" id="replaySpeed">×1</button>
+        <button class="rbtn" id="replayClose">閉じる</button>
+      </div>
     </div>
-    <div id="replayNote">ループ再生中 — 黄=タップ位置 / 赤=空振り</div>
+    <div id="replayNote">黄=タップ位置 / 赤=空振り / 薄い輪郭=消えた円</div>
   </div>
 
 </div>
@@ -977,14 +981,12 @@
     setTimeout(() => beep(1175, .18, .15), 130);
   }
 
-  // ===== リプレイ再生 (直前のプレイからターゲット単位で選択・メモリ保持) =====
+  // ===== リプレイ再生 (行タップ=ターゲット単体 / ボタン=通し・メモリ保持) =====
   const rCanvas = $('replayCanvas');
   const rctx = rCanvas.getContext('2d');
-  let rp = null; // {tg, segLen, vt, last, raf}
+  let rp = null; // {mode: 'single'|'full', ...}
 
-  function startReplaySingle(idx) {
-    const tg = replay && replay.targets[idx];
-    if (!tg) return;
+  function openReplayOverlay() {
     $('replayOverlay').classList.remove('hidden');
     const dpr = devicePixelRatio || 1;
     rCanvas.width = innerWidth * dpr;
@@ -992,12 +994,29 @@
     rCanvas.style.width = innerWidth + 'px';
     rCanvas.style.height = innerHeight + 'px';
     rctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+
+  function startReplaySingle(idx) {
+    const tg = replay && replay.targets[idx];
+    if (!tg) return;
+    openReplayOverlay();
     const end = tg.endT !== null ? tg.endT : Math.min(tg.spawnT + TARGET_LIFE, replay.duration);
-    rp = { tg, segLen: end - tg.spawnT, vt: 0, last: performance.now(), raf: 0 };
+    rp = { mode: 'single', tg, segLen: end - tg.spawnT, vt: 0, last: performance.now(), raf: 0 };
+    $('replaySpeed').classList.add('hidden');
     $('replayInfo').textContent = tg.tap
       ? `#${idx + 1}  ${rp.segLen.toFixed(1)}ms / 精度${Math.round(tg.tap.acc * 100)}% / +${tg.tap.pts}`
       : `#${idx + 1}  TIME OUT`;
     drawSingleReplay();
+  }
+
+  function startReplayFull() {
+    if (!replay || !replay.duration) return;
+    openReplayOverlay();
+    rp = { mode: 'full', vt: 0, last: performance.now(), speed: 1, raf: 0 };
+    $('replaySpeed').textContent = '×1';
+    $('replaySpeed').classList.remove('hidden');
+    $('replayInfo').textContent = '通しリプレイ';
+    drawFullReplay();
   }
 
   function drawTargetShape(x, y, r, ghost) {
@@ -1033,8 +1052,8 @@
     const now = performance.now();
     rp.vt += now - rp.last;
     rp.last = now;
-    const total = rp.segLen + 900;   // 終端で0.9秒静止してループ
-    const t = rp.vt % total;
+    const stopAt = rp.segLen + 1;    // 1回再生して最終フレームで静止
+    const t = Math.min(rp.vt, stopAt);
     const tg = rp.tg;
 
     rctx.fillStyle = '#0a0e14';
@@ -1081,13 +1100,78 @@
     }
 
     $('replayTime').textContent = Math.min(t, rp.segLen).toFixed(0) + 'ms';
+    if (rp.vt > stopAt) return; // 最終フレーム描画済み → 静止
     rp.raf = requestAnimationFrame(drawSingleReplay);
   }
 
-  // 明細の行タップでそのターゲットのリプレイ
+  // ===== 通しリプレイ =====
+  function drawFullReplay() {
+    const now = performance.now();
+    rp.vt += (now - rp.last) * rp.speed;
+    rp.last = now;
+    const endVt = replay.duration + 800;
+    const t = Math.min(rp.vt, endVt);
+
+    rctx.fillStyle = '#0a0e14';
+    rctx.fillRect(0, 0, innerWidth, innerHeight);
+
+    // ターゲット: 生存中は実体、消滅後は薄い輪郭を残す
+    for (const tg of replay.targets) {
+      if (!tg || t < tg.spawnT) continue;
+      const end = tg.endT !== null ? tg.endT : Math.min(tg.spawnT + TARGET_LIFE, replay.duration);
+      if (t <= end) {
+        const s = Math.min(1, (t - tg.spawnT) / 120);
+        drawTargetShape(tg.x, tg.y, tg.r * s, false);
+      } else {
+        drawTargetShape(tg.x, tg.y, tg.r, true);
+      }
+    }
+
+    // タップ位置: 一度出たら最後まで残す
+    for (const tp of replay.taps) {
+      if (t < tp.t) continue;
+      const age = t - tp.t;
+      if (tp.hit) {
+        if (age < 350) { // 波紋
+          rctx.strokeStyle = `rgba(255,223,93,${((1 - age / 350) * .8).toFixed(2)})`;
+          rctx.lineWidth = 2;
+          rctx.beginPath(); rctx.arc(tp.x, tp.y, 6 + age / 12, 0, 6.283); rctx.stroke();
+        }
+        rctx.fillStyle = '#ffdf5d';
+        rctx.beginPath(); rctx.arc(tp.x, tp.y, 3.5, 0, 6.283); rctx.fill();
+      } else {
+        rctx.strokeStyle = '#f85149';
+        rctx.lineWidth = 2;
+        rctx.beginPath();
+        rctx.moveTo(tp.x - 5, tp.y - 5); rctx.lineTo(tp.x + 5, tp.y + 5);
+        rctx.moveTo(tp.x + 5, tp.y - 5); rctx.lineTo(tp.x - 5, tp.y + 5);
+        rctx.stroke();
+      }
+    }
+
+    // ヒットの得点をタップ位置の横に残す
+    rctx.font = "11px 'Rajdhani', sans-serif";
+    for (const tg of replay.targets) {
+      if (!tg || !tg.tap || t < tg.endT) continue;
+      rctx.fillStyle = 'rgba(157,196,232,.9)';
+      rctx.fillText(`+${tg.tap.pts} (${Math.round(tg.tap.acc * 100)}%)`, tg.tap.x + 8, tg.tap.y - 8);
+    }
+
+    $('replayTime').textContent = (Math.min(t, replay.duration) / 1000).toFixed(3);
+    if (rp.vt >= endVt) return; // 最終フレームで静止
+    rp.raf = requestAnimationFrame(drawFullReplay);
+  }
+
+  // 明細の行タップ=単体 / ボタン=通し
   $('detail').querySelector('tbody').addEventListener('click', (e) => {
     const tr = e.target.closest('tr');
     if (tr && tr.dataset.idx !== undefined) startReplaySingle(+tr.dataset.idx);
+  });
+  $('fullReplayBtn').addEventListener('click', startReplayFull);
+  $('replaySpeed').addEventListener('click', () => {
+    if (!rp || rp.mode !== 'full') return;
+    rp.speed = rp.speed >= 4 ? 1 : rp.speed * 2;
+    $('replaySpeed').textContent = '×' + rp.speed;
   });
   $('replayClose').addEventListener('click', () => {
     if (rp) cancelAnimationFrame(rp.raf);
