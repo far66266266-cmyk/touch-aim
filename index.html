@@ -940,10 +940,10 @@
     // コンボ: 青い芯(中心33%以内)に当てたときだけ継続、外れたら切れる
     const zoneHit = hitDist <= hit.r * COMBO_ZONE;
     setCombo(zoneHit ? combo + 1 : 0);
-    const mult = comboMult(combo);
-    const pts = Math.round(calcPoints(timeMs, acc, hit.sizeF) * mult);
+    const base = calcPoints(timeMs, acc, hit.sizeF); // 評価はコンボ倍率前の素点で判定
+    const pts = Math.round(base * comboMult(combo));
     totalScore += pts;
-    records[hit.idx] = { time: timeMs, acc, pts, sizeF: hit.sizeF, miss: false };
+    records[hit.idx] = { time: timeMs, acc, pts, base, sizeF: hit.sizeF, miss: false };
     spawnParticles(e.clientX, e.clientY, zoneHit ? '#ffdf5d' : '#2ea8ff');
     buzz(zoneHit ? 15 : 8);
     replay.targets[hit.idx].endT = tNow;
@@ -959,7 +959,7 @@
     field.appendChild(dot);
     setTimeout(() => dot.remove(), 850);
 
-    showFloat(hit.x, hit.y - hit.r, timeMs, acc, pts, hit.sizeF);
+    showFloat(hit.x, hit.y - hit.r, timeMs, acc, pts, hit.sizeF, base);
     beep(600 + acc * 600, .09, .18);
 
     hit.el.remove();
@@ -967,7 +967,7 @@
   }, { passive: true });
 
   // ===== フローティング表示 =====
-  function showFloat(x, y, timeMs, acc, pts, sizeF) {
+  function showFloat(x, y, timeMs, acc, pts, sizeF, basePts) {
     const el = document.createElement('div');
     el.className = 'float';
     if (pts === 0 && timeMs === null) {
@@ -977,10 +977,11 @@
       el.classList.add('miss');
       el.innerHTML = `<div class="pts">MISS -${WHIFF_PENALTY}</div>`;
     } else {
+      const q = basePts !== undefined ? basePts : pts; // 評価は素点基準
       const [word, cls] =
-        pts >= EXCELLENT_PTS ? ['EXCELLENT', 'g-exc'] :
-        pts >= 550 ? ['GREAT', 'g-great'] :
-        pts >= 300 ? ['GOOD', 'g-good'] : ['POOR', 'g-poor'];
+        q >= EXCELLENT_PTS ? ['EXCELLENT', 'g-exc'] :
+        q >= 550 ? ['GREAT', 'g-great'] :
+        q >= 300 ? ['GOOD', 'g-good'] : ['POOR', 'g-poor'];
       el.classList.add(cls);
       el.innerHTML = `<div class="grade">${word}</div><div class="pts">+${pts}</div>`;
     }
@@ -1050,7 +1051,7 @@
       if (r.miss) {
         tr.innerHTML = `<td>${i + 1}</td><td class="miss" colspan="3">MISS</td><td class="miss">0</td>`;
       } else {
-        const exc = r.pts >= EXCELLENT_PTS;
+        const exc = (r.base !== undefined ? r.base : r.pts) >= EXCELLENT_PTS;
         tr.innerHTML = `<td>${i + 1}</td><td>${r.time.toFixed(1)}ms</td>` +
           `<td>${Math.round(r.acc * 100)}%</td>` +
           `<td>×${r.sizeF.toFixed(2)}</td>` +
