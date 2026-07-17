@@ -623,14 +623,15 @@
     }
   }
 
-  // ===== ターゲット半径: 画面基準サイズ =====
+  // ===== ターゲット半径: 画面基準サイズ (スマホの指で押しやすい大きさ) =====
   function baseRadius() {
-    return Math.round(Math.min(innerWidth, innerHeight) * 0.115);
+    return Math.round(Math.min(innerWidth, innerHeight) * 0.15);
   }
 
   // サイズ倍率10個: ばらつきはあるが平均はちょうど×1.00 (プレイ間の有利不利なし)
+  // 縮小側を抑えめにして極小の円が出ないようにする
   function makeSizeFactors() {
-    const v = Array.from({ length: TARGETS }, () => 0.7 + Math.random() * 0.7);
+    const v = Array.from({ length: TARGETS }, () => 0.8 + Math.random() * 0.5);
     const mean = v.reduce((s, x) => s + x, 0) / v.length;
     return v.map(x => x / mean);
   }
@@ -870,7 +871,7 @@
   // ===== ターゲット出現 (同時複数あり) =====
   function spawnTarget(idx, sizeF) {
     if (state !== 'play') return;
-    const r = Math.max(16, Math.round(baseRadius() / sizeF));
+    const r = Math.max(24, Math.round(baseRadius() / sizeF));
     const hudH = 60 + r;
     const x = r + 8 + Math.random() * (innerWidth - 2 * (r + 8));
     const y = hudH + Math.random() * (innerHeight - hudH - r - 8);
