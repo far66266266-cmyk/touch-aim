@@ -206,17 +206,18 @@
     text-shadow: 0 2px 8px rgba(0,0,0,.8);
     white-space: nowrap;
   }
-  .float .pts { font-family: 'Rajdhani', sans-serif; font-size: 23px; font-weight: 700; }
-  .float .detail { font-size: 11px; color: #9dc4e8; }
+  .float .pts { font-family: 'Rajdhani', sans-serif; font-size: 22px; font-weight: 700; }
   .float.miss .pts { color: #f85149; font-size: 16px; }
-  .float .exc {
+  .float .grade {
     font-family: 'Orbitron', sans-serif;
-    font-size: 11px; font-weight: 700;
-    letter-spacing: .18em;
-    color: #ffdf5d;
-    text-shadow: 0 0 12px rgba(255,223,93,.6);
+    font-size: 12px; font-weight: 700;
+    letter-spacing: .16em;
   }
-  .float.excellent .pts { color: #ffdf5d; text-shadow: 0 0 14px rgba(255,223,93,.5); }
+  .float.g-exc   { color: #ffdf5d; text-shadow: 0 0 16px rgba(255,223,93,.55); }
+  .float.g-great { color: #2ea8ff; text-shadow: 0 0 14px rgba(46,168,255,.5); }
+  .float.g-good  { color: #3fb950; }
+  .float.g-poor  { color: #8b949e; }
+  .float.g-exc .grade { font-size: 14px; }
   @keyframes floatup {
     from { opacity: 1; margin-top: 0; }
     to   { opacity: 0; margin-top: -44px; }
@@ -888,11 +889,12 @@
       el.classList.add('miss');
       el.innerHTML = `<div class="pts">MISS -${WHIFF_PENALTY}</div>`;
     } else {
-      const exc = pts >= EXCELLENT_PTS;
-      if (exc) el.classList.add('excellent');
-      el.innerHTML = (exc ? '<div class="exc">EXCELLENT</div>' : '') +
-        `<div class="pts">+${pts}</div>` +
-        `<div class="detail">${Math.round(timeMs)}ms / 精度${Math.round(acc * 100)}% / ×${sizeF.toFixed(2)}</div>`;
+      const [word, cls] =
+        pts >= EXCELLENT_PTS ? ['EXCELLENT', 'g-exc'] :
+        pts >= 550 ? ['GREAT', 'g-great'] :
+        pts >= 300 ? ['GOOD', 'g-good'] : ['POOR', 'g-poor'];
+      el.classList.add(cls);
+      el.innerHTML = `<div class="grade">${word}</div><div class="pts">+${pts}</div>`;
     }
     el.style.left = Math.min(Math.max(x, 70), innerWidth - 70) + 'px';
     el.style.top = Math.max(y, 80) + 'px';
