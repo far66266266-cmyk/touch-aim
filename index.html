@@ -585,6 +585,29 @@
     } catch (e) { /* サウンド非対応でも続行 */ }
   }
 
+  // ハズレ音 (タイムアウト・空振り用の「ブー」)
+  function boo() {
+    try {
+      if (!ac) ac = new (window.AudioContext || window.webkitAudioContext)();
+      const o = ac.createOscillator(), g = ac.createGain();
+      o.type = 'sawtooth';
+      o.frequency.setValueAtTime(140, ac.currentTime);
+      o.frequency.exponentialRampToValueAtTime(70, ac.currentTime + .28);
+      g.gain.setValueAtTime(.16, ac.currentTime);
+      g.gain.exponentialRampToValueAtTime(.0001, ac.currentTime + .3);
+      o.connect(g).connect(ac.destination);
+      o.start(); o.stop(ac.currentTime + .3);
+    } catch (e) { /* サウンド非対応でも続行 */ }
+  }
+
+  // ===== 評価 (素点基準・表示と音程の対応) =====
+  function gradeOf(q) {
+    return q >= EXCELLENT_PTS ? { word: 'EXCELLENT', cls: 'g-exc', freq: 880 } :
+           q >= 550 ? { word: 'GREAT', cls: 'g-great', freq: 659 } :
+           q >= 300 ? { word: 'GOOD', cls: 'g-good', freq: 494 } :
+                      { word: 'POOR', cls: 'g-poor', freq: 330 };
+  }
+
   // ===== 振動 (対応端末のみ) =====
   function buzz(p) {
     try { if (navigator.vibrate) navigator.vibrate(p); } catch (e) { /* 非対応でも続行 */ }
@@ -899,6 +922,7 @@
     records[tg.idx] = { time: null, acc: 0, pts: 0, sizeF: tg.sizeF, miss: true };
     replay.targets[tg.idx].endT = performance.now() - roundStart;
     showFloat(tg.x, tg.y, null, null, 0);
+    boo();
     resolveOne();
   }
 
@@ -928,7 +952,7 @@
       setCombo(0);
       replay.taps.push({ x: e.clientX, y: e.clientY, t: tNow, hit: false });
       showFloat(e.clientX, e.clientY, null, null, null);
-      beep(160, .08, .1);
+      boo();
       buzz(40);
       return;
     }
@@ -960,7 +984,10 @@
     setTimeout(() => dot.remove(), 850);
 
     showFloat(hit.x, hit.y - hit.r, timeMs, acc, pts, hit.sizeF, base);
-    beep(600 + acc * 600, .09, .18);
+    // 評価が高いほど高い音。EXCELLENTはさらにもう1音
+    const grade = gradeOf(base);
+    beep(grade.freq, .09, .18);
+    if (grade.cls === 'g-exc') setTimeout(() => beep(1175, .12, .15), 70);
 
     hit.el.remove();
     resolveOne();
@@ -977,13 +1004,9 @@
       el.classList.add('miss');
       el.innerHTML = `<div class="pts">MISS -${WHIFF_PENALTY}</div>`;
     } else {
-      const q = basePts !== undefined ? basePts : pts; // 評価は素点基準
-      const [word, cls] =
-        q >= EXCELLENT_PTS ? ['EXCELLENT', 'g-exc'] :
-        q >= 550 ? ['GREAT', 'g-great'] :
-        q >= 300 ? ['GOOD', 'g-good'] : ['POOR', 'g-poor'];
-      el.classList.add(cls);
-      el.innerHTML = `<div class="grade">${word}</div><div class="pts">+${pts}</div>`;
+      const g = gradeOf(basePts !== undefined ? basePts : pts); // 評価は素点基準
+      el.classList.add(g.cls);
+      el.innerHTML = `<div class="grade">${g.word}</div><div class="pts">+${pts}</div>`;
     }
     el.style.left = Math.min(Math.max(x, 70), innerWidth - 70) + 'px';
     el.style.top = Math.max(y, 80) + 'px';
