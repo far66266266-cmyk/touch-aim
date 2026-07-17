@@ -535,7 +535,7 @@
   const MODES = {
     normal: {
       name: 'ノーマル', desc: '速さと精度をバランスよく評価',
-      tFull: 450, tZero: 1700,
+      tFull: 350, tZero: 1700,
       combine: (tf, acc) => tf * (0.1 + 0.9 * acc),
       ranks: [.9, .72, .5, .28],
     },
