@@ -209,6 +209,14 @@
   .float .pts { font-family: 'Rajdhani', sans-serif; font-size: 23px; font-weight: 700; }
   .float .detail { font-size: 11px; color: #9dc4e8; }
   .float.miss .pts { color: #f85149; font-size: 16px; }
+  .float .exc {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 11px; font-weight: 700;
+    letter-spacing: .18em;
+    color: #ffdf5d;
+    text-shadow: 0 0 12px rgba(255,223,93,.6);
+  }
+  .float.excellent .pts { color: #ffdf5d; text-shadow: 0 0 14px rgba(255,223,93,.5); }
   @keyframes floatup {
     from { opacity: 1; margin-top: 0; }
     to   { opacity: 0; margin-top: -44px; }
@@ -252,8 +260,18 @@
     color: #8b949e; font-weight: 500; font-size: 10px;
     padding: 5px 4px; border-bottom: 1px solid #30363d;
   }
-  #detail td { padding: 5px 4px; text-align: center; border-bottom: 1px solid #1c2128; }
+  #detail td { padding: 6px 4px; text-align: center; border-bottom: 1px solid #1c2128; }
   #detail td.miss { color: #f85149; }
+  #detail tbody tr { cursor: pointer; }
+  #detail tbody tr:active { background: rgba(46,168,255,.08); }
+  #detail tbody td:first-child::before { content: '▶'; color: #2ea8ff; font-size: 7px; margin-right: 3px; vertical-align: 1px; }
+  #detail td.exc-cell { color: #ffdf5d; font-weight: 700; }
+  .rep-hint {
+    width: 100%; max-width: 420px;
+    text-align: left;
+    font-size: 10px; color: #5f7a94;
+    margin-bottom: 4px;
+  }
 
   /* ===== リプレイ ===== */
   #replayOverlay { position: fixed; inset: 0; z-index: 50; background: #0a0e14; }
@@ -264,7 +282,14 @@
     display: flex; align-items: center; justify-content: space-between;
     font-variant-numeric: tabular-nums;
   }
-  #replayHud .val { font-family: 'Rajdhani', sans-serif; font-size: 21px; font-weight: 700; color: #8b949e; }
+  #replayHud .val { font-family: 'Rajdhani', sans-serif; font-size: 21px; font-weight: 700; color: #8b949e; min-width: 76px; text-align: left; }
+  #replayInfo {
+    flex: 1;
+    font-size: 12px; color: #9dc4e8;
+    font-variant-numeric: tabular-nums;
+    text-align: center;
+    padding: 0 6px;
+  }
   .rbtn {
     background: #21262d; color: #e6edf3; border: 1px solid #30363d;
     border-radius: 8px; font-size: 13px; padding: 8px 14px; margin-left: 8px;
@@ -403,26 +428,24 @@
       <svg id="chart" viewBox="0 0 340 240" xmlns="http://www.w3.org/2000/svg"></svg>
       <div id="chartInfo" class="chart-info">点をタップすると詳細を表示</div>
     </div>
+    <div class="rep-hint">▶ 明細の行をタップするとそのターゲットのリプレイを再生</div>
     <table id="detail">
       <thead><tr><th>#</th><th>反応時間</th><th>精度</th><th>サイズ</th><th>スコア</th></tr></thead>
       <tbody></tbody>
     </table>
     <button class="btn" id="retryBtn">RETRY</button>
-    <button class="btn ghost" id="replayBtn">このプレイのリプレイ</button>
     <button class="btn ghost" id="homeBtn">タイトルへ</button>
   </div>
 
-  <!-- リプレイ -->
+  <!-- リプレイ (ターゲット単位) -->
   <div id="replayOverlay" class="hidden">
     <canvas id="replayCanvas"></canvas>
     <div id="replayHud">
-      <div class="val" id="replayTime">0.000</div>
-      <div>
-        <button class="rbtn" id="replaySpeed">×1</button>
-        <button class="rbtn" id="replayClose">閉じる</button>
-      </div>
+      <div class="val" id="replayTime">0ms</div>
+      <div id="replayInfo"></div>
+      <button class="rbtn" id="replayClose">閉じる</button>
     </div>
-    <div id="replayNote">REPLAY — 黄=タップ位置 / 赤=空振り / 薄い輪郭=消えた円</div>
+    <div id="replayNote">ループ再生中 — 黄=タップ位置 / 赤=空振り</div>
   </div>
 
 </div>
@@ -440,6 +463,7 @@
   const COMBO_STEP    = 0.03;    // 1コンボごとの倍率上昇
   const COMBO_CAP     = 10;      // 倍率上限に達するコンボ数 (最大×1.30)
   const WHIFF_PENALTY = 100;     // 空振りの減点
+  const EXCELLENT_PTS = 800;     // 単体スコアでEXCELLENT演出になるライン
 
   // ===== モード定義 (円の出現ルール・サイズは全モード共通、配点だけ変える) =====
   const MODES = {
@@ -864,7 +888,10 @@
       el.classList.add('miss');
       el.innerHTML = `<div class="pts">MISS -${WHIFF_PENALTY}</div>`;
     } else {
-      el.innerHTML = `<div class="pts">+${pts}</div>` +
+      const exc = pts >= EXCELLENT_PTS;
+      if (exc) el.classList.add('excellent');
+      el.innerHTML = (exc ? '<div class="exc">EXCELLENT</div>' : '') +
+        `<div class="pts">+${pts}</div>` +
         `<div class="detail">${Math.round(timeMs)}ms / 精度${Math.round(acc * 100)}% / ×${sizeF.toFixed(2)}</div>`;
     }
     el.style.left = Math.min(Math.max(x, 70), innerWidth - 70) + 'px';
@@ -929,13 +956,15 @@
     tbody.innerHTML = '';
     records.forEach((r, i) => {
       const tr = document.createElement('tr');
+      tr.dataset.idx = i;
       if (r.miss) {
         tr.innerHTML = `<td>${i + 1}</td><td class="miss" colspan="3">MISS</td><td class="miss">0</td>`;
       } else {
+        const exc = r.pts >= EXCELLENT_PTS;
         tr.innerHTML = `<td>${i + 1}</td><td>${r.time.toFixed(1)}ms</td>` +
           `<td>${Math.round(r.acc * 100)}%</td>` +
           `<td>×${r.sizeF.toFixed(2)}</td>` +
-          `<td>${r.pts}</td>`;
+          `<td${exc ? ' class="exc-cell"' : ''}>${exc ? '★' : ''}${r.pts}</td>`;
       }
       tbody.appendChild(tr);
     });
@@ -946,13 +975,14 @@
     setTimeout(() => beep(1175, .18, .15), 130);
   }
 
-  // ===== リプレイ再生 (直前のプレイのみ・メモリ保持) =====
+  // ===== リプレイ再生 (直前のプレイからターゲット単位で選択・メモリ保持) =====
   const rCanvas = $('replayCanvas');
   const rctx = rCanvas.getContext('2d');
-  let rp = null; // {vt: 仮想時刻, last, speed, raf}
+  let rp = null; // {tg, segLen, vt, last, raf}
 
-  function startReplay() {
-    if (!replay || !replay.duration) return;
+  function startReplaySingle(idx) {
+    const tg = replay && replay.targets[idx];
+    if (!tg) return;
     $('replayOverlay').classList.remove('hidden');
     const dpr = devicePixelRatio || 1;
     rCanvas.width = innerWidth * dpr;
@@ -960,9 +990,12 @@
     rCanvas.style.width = innerWidth + 'px';
     rCanvas.style.height = innerHeight + 'px';
     rctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    rp = { vt: 0, last: performance.now(), speed: 1, raf: 0 };
-    $('replaySpeed').textContent = '×1';
-    drawReplay();
+    const end = tg.endT !== null ? tg.endT : Math.min(tg.spawnT + TARGET_LIFE, replay.duration);
+    rp = { tg, segLen: end - tg.spawnT, vt: 0, last: performance.now(), raf: 0 };
+    $('replayInfo').textContent = tg.tap
+      ? `#${idx + 1}  ${rp.segLen.toFixed(1)}ms / 精度${Math.round(tg.tap.acc * 100)}% / +${tg.tap.pts}`
+      : `#${idx + 1}  TIME OUT`;
+    drawSingleReplay();
   }
 
   function drawTargetShape(x, y, r, ghost) {
@@ -994,68 +1027,65 @@
     rctx.beginPath(); rctx.arc(x, y, r, 0, 6.283); rctx.stroke();
   }
 
-  function drawReplay() {
+  function drawSingleReplay() {
     const now = performance.now();
-    rp.vt += (now - rp.last) * rp.speed;
+    rp.vt += now - rp.last;
     rp.last = now;
-    const endVt = replay.duration + 800;
-    const t = Math.min(rp.vt, endVt);
+    const total = rp.segLen + 900;   // 終端で0.9秒静止してループ
+    const t = rp.vt % total;
+    const tg = rp.tg;
 
     rctx.fillStyle = '#0a0e14';
     rctx.fillRect(0, 0, innerWidth, innerHeight);
 
-    // ターゲット: 生存中は実体、消滅後は薄い輪郭を残す (タップとの位置関係を見返せる)
-    for (const tg of replay.targets) {
-      if (!tg || t < tg.spawnT) continue;
-      const end = tg.endT !== null ? tg.endT : Math.min(tg.spawnT + TARGET_LIFE, replay.duration);
-      if (t <= end) {
-        const s = Math.min(1, (t - tg.spawnT) / 120); // 出現アニメ
-        drawTargetShape(tg.x, tg.y, tg.r * s, false);
-      } else {
-        drawTargetShape(tg.x, tg.y, tg.r, true);
-      }
-    }
-
-    // タップ位置: 一度出たら最後まで残す
-    for (const tp of replay.taps) {
-      if (t < tp.t) continue;
-      const age = t - tp.t;
-      if (tp.hit) {
-        if (age < 350) { // 波紋
-          rctx.strokeStyle = `rgba(255,223,93,${((1 - age / 350) * .8).toFixed(2)})`;
-          rctx.lineWidth = 2;
-          rctx.beginPath(); rctx.arc(tp.x, tp.y, 6 + age / 12, 0, 6.283); rctx.stroke();
-        }
-        rctx.fillStyle = '#ffdf5d';
-        rctx.beginPath(); rctx.arc(tp.x, tp.y, 3.5, 0, 6.283); rctx.fill();
-      } else {
-        rctx.strokeStyle = '#f85149';
+    if (t <= rp.segLen) {
+      // 生存中
+      const s = Math.min(1, t / 120); // 出現アニメ
+      drawTargetShape(tg.x, tg.y, tg.r * s, false);
+    } else {
+      // 終端: ゴースト輪郭 + 結果表示
+      drawTargetShape(tg.x, tg.y, tg.r, true);
+      if (tg.tap) {
+        rctx.strokeStyle = 'rgba(255,223,93,.5)';
         rctx.lineWidth = 2;
-        rctx.beginPath();
-        rctx.moveTo(tp.x - 5, tp.y - 5); rctx.lineTo(tp.x + 5, tp.y + 5);
-        rctx.moveTo(tp.x + 5, tp.y - 5); rctx.lineTo(tp.x - 5, tp.y + 5);
-        rctx.stroke();
+        rctx.beginPath(); rctx.arc(tg.tap.x, tg.tap.y, 10, 0, 6.283); rctx.stroke();
+        rctx.font = "12px 'Rajdhani', sans-serif";
+        rctx.fillStyle = 'rgba(157,196,232,.95)';
+        rctx.fillText(`+${tg.tap.pts} (${Math.round(tg.tap.acc * 100)}%)`, tg.tap.x + 14, tg.tap.y - 10);
+      } else {
+        rctx.font = "700 14px 'Rajdhani', sans-serif";
+        rctx.fillStyle = '#f85149';
+        rctx.textAlign = 'center';
+        rctx.fillText('TIME OUT', tg.x, tg.y - tg.r - 10);
+        rctx.textAlign = 'left';
       }
     }
 
-    // ヒットの得点をタップ位置の横に残す
-    rctx.font = '10px sans-serif';
-    for (const tg of replay.targets) {
-      if (!tg || !tg.tap || t < tg.endT) continue;
-      rctx.fillStyle = 'rgba(157,196,232,.9)';
-      rctx.fillText(`+${tg.tap.pts} (${Math.round(tg.tap.acc * 100)}%)`, tg.tap.x + 8, tg.tap.y - 8);
+    // タップ位置 (ヒット + このターゲットの時間窓内の空振り)
+    if (tg.tap && t >= rp.segLen - 1) {
+      rctx.fillStyle = '#ffdf5d';
+      rctx.beginPath(); rctx.arc(tg.tap.x, tg.tap.y, 3.5, 0, 6.283); rctx.fill();
+    }
+    for (const tp of replay.taps) {
+      if (tp.hit) continue;
+      const rel = tp.t - tg.spawnT;
+      if (rel < 0 || rel > rp.segLen || t < rel) continue;
+      rctx.strokeStyle = '#f85149';
+      rctx.lineWidth = 2;
+      rctx.beginPath();
+      rctx.moveTo(tp.x - 5, tp.y - 5); rctx.lineTo(tp.x + 5, tp.y + 5);
+      rctx.moveTo(tp.x + 5, tp.y - 5); rctx.lineTo(tp.x - 5, tp.y + 5);
+      rctx.stroke();
     }
 
-    $('replayTime').textContent = (Math.min(t, replay.duration) / 1000).toFixed(3);
-    if (t >= endVt) return; // 最終フレーム(全タップ+輪郭)で停止
-    rp.raf = requestAnimationFrame(drawReplay);
+    $('replayTime').textContent = Math.min(t, rp.segLen).toFixed(0) + 'ms';
+    rp.raf = requestAnimationFrame(drawSingleReplay);
   }
 
-  $('replayBtn').addEventListener('click', startReplay);
-  $('replaySpeed').addEventListener('click', () => {
-    if (!rp) return;
-    rp.speed = rp.speed >= 4 ? 1 : rp.speed * 2;
-    $('replaySpeed').textContent = '×' + rp.speed;
+  // 明細の行タップでそのターゲットのリプレイ
+  $('detail').querySelector('tbody').addEventListener('click', (e) => {
+    const tr = e.target.closest('tr');
+    if (tr && tr.dataset.idx !== undefined) startReplaySingle(+tr.dataset.idx);
   });
   $('replayClose').addEventListener('click', () => {
     if (rp) cancelAnimationFrame(rp.raf);
