@@ -1,0 +1,1090 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>Touch Aim - タッチエイム練習</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body {
+    width: 100%; height: 100%;
+    overflow: hidden;
+    background:
+      radial-gradient(1200px 800px at 50% 28%, rgba(46,168,255,.08), transparent 62%),
+      repeating-linear-gradient(0deg, rgba(120,180,255,.035) 0 1px, transparent 1px 44px),
+      repeating-linear-gradient(90deg, rgba(120,180,255,.035) 0 1px, transparent 1px 44px),
+      #0a0e14;
+    color: #e6edf3;
+    font-family: -apple-system, "Segoe UI", "Hiragino Sans", "Noto Sans JP", sans-serif;
+    touch-action: none;
+    -webkit-user-select: none; user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    overscroll-behavior: none;
+  }
+  .digits { font-family: 'Rajdhani', -apple-system, sans-serif; }
+  #app { position: fixed; inset: 0; }
+
+  /* ===== HUD ===== */
+  #hud {
+    position: absolute; top: 0; left: 0; right: 0;
+    height: 52px;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 16px;
+    padding-top: env(safe-area-inset-top);
+    font-variant-numeric: tabular-nums;
+    z-index: 5;
+    pointer-events: none;
+  }
+  #hud .label { font-size: 9px; color: #5f7a94; letter-spacing: .22em; font-weight: 600; }
+  #hud .val {
+    font-family: 'Rajdhani', -apple-system, sans-serif;
+    font-size: 23px; font-weight: 700; line-height: 1.1;
+    text-shadow: 0 0 12px rgba(46,168,255,.35);
+  }
+  #timer.warn { color: #f85149; text-shadow: 0 0 12px rgba(248,81,73,.5); }
+
+  /* ===== 画面共通 ===== */
+  .screen {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    text-align: center;
+    padding: 24px;
+    z-index: 10;
+    background:
+      radial-gradient(1200px 800px at 50% 28%, rgba(46,168,255,.08), transparent 62%),
+      repeating-linear-gradient(0deg, rgba(120,180,255,.035) 0 1px, transparent 1px 44px),
+      repeating-linear-gradient(90deg, rgba(120,180,255,.035) 0 1px, transparent 1px 44px),
+      #0a0e14;
+  }
+  .hidden { display: none !important; }
+
+  h1 {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 31px; font-weight: 900;
+    letter-spacing: .16em;
+    margin-bottom: 10px;
+    background: linear-gradient(180deg, #eaf6ff 30%, #2ea8ff);
+    -webkit-background-clip: text; background-clip: text;
+    -webkit-text-fill-color: transparent;
+    filter: drop-shadow(0 0 16px rgba(46,168,255,.45));
+  }
+  .sub { color: #8b949e; font-size: 12px; line-height: 1.8; margin-bottom: 26px; }
+
+  .btn {
+    background: linear-gradient(135deg, #2ea8ff, #1f6feb);
+    color: #fff; border: 1px solid rgba(160,215,255,.5);
+    border-radius: 12px;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 17px; font-weight: 700;
+    padding: 16px 52px;
+    letter-spacing: .22em; text-indent: .22em;
+    box-shadow: 0 4px 24px rgba(31,111,235,.5), inset 0 0 14px rgba(160,215,255,.2);
+    cursor: pointer;
+  }
+  .btn:active { transform: scale(.96); }
+  .btn.ghost {
+    background: transparent;
+    border: 1px solid #30414f;
+    box-shadow: none;
+    color: #8b949e;
+    font-family: inherit;
+    letter-spacing: .05em; text-indent: 0;
+    font-size: 14px; padding: 12px 36px;
+    margin-top: 14px;
+  }
+  #best {
+    margin-top: 26px; font-size: 13px; color: #5f7a94;
+    font-family: 'Rajdhani', sans-serif; font-weight: 600;
+    letter-spacing: .14em;
+  }
+
+  /* ===== カウントダウン ===== */
+  #countdown {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 96px; font-weight: 900;
+    color: #2ea8ff;
+    text-shadow: 0 0 40px rgba(46,168,255,.6);
+    justify-content: center;
+  }
+
+  /* ===== ゲーム ===== */
+  #field { position: absolute; inset: 0; z-index: 1; }
+
+  .target {
+    position: absolute;
+    border-radius: 50%;
+    transform: translate(-50%, -50%) scale(1);
+    background:
+      radial-gradient(circle, #fff 0 5%, transparent 5.5%),
+      radial-gradient(circle, rgba(46,168,255,.9) 0 15%, rgba(46,168,255,.5) 15% 33%, rgba(46,168,255,.12) 33.5% 66%, rgba(46,168,255,.05) 66% 100%);
+    border: 1.5px solid rgba(140,210,255,.95);
+    box-shadow:
+      0 0 26px rgba(46,168,255,.45),
+      inset 0 0 20px rgba(46,168,255,.3);
+    animation: pop .12s ease-out;
+  }
+  @keyframes pop {
+    from { transform: translate(-50%,-50%) scale(.3); opacity: 0; }
+    to   { transform: translate(-50%,-50%) scale(1);  opacity: 1; }
+  }
+  .target.timeout { animation: fadeout .25s ease-in forwards; }
+  @keyframes fadeout { to { transform: translate(-50%,-50%) scale(.5); opacity: 0; } }
+
+  /* クロスヘア (視覚のみ・判定に影響なし) */
+  .target::before {
+    content: '';
+    position: absolute; inset: 0;
+    border-radius: 50%;
+    background:
+      linear-gradient(to right, transparent calc(50% - .75px), rgba(220,240,255,.4) calc(50% - .75px) calc(50% + .75px), transparent calc(50% + .75px)),
+      linear-gradient(to bottom, transparent calc(50% - .75px), rgba(220,240,255,.4) calc(50% - .75px) calc(50% + .75px), transparent calc(50% + .75px));
+  }
+  /* コンボ判定ゾーン (青い芯) の境界線 */
+  .target::after {
+    content: '';
+    position: absolute;
+    left: 50%; top: 50%;
+    width: 33%; height: 33%;
+    transform: translate(-50%,-50%);
+    border: 1.5px solid rgba(255,255,255,.55);
+    border-radius: 50%;
+    box-shadow: 0 0 10px rgba(255,255,255,.25);
+  }
+
+  /* ヒットパーティクル */
+  .particle {
+    position: absolute;
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    pointer-events: none; z-index: 3;
+    animation: part .5s ease-out forwards;
+  }
+  @keyframes part {
+    from { opacity: 1; transform: translate(-50%,-50%); }
+    to   { opacity: 0; transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(.4); }
+  }
+
+  /* コンボ表示 */
+  #combo {
+    position: absolute;
+    top: calc(58px + env(safe-area-inset-top));
+    left: 50%; transform: translateX(-50%);
+    z-index: 6; pointer-events: none;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 17px; font-weight: 700;
+    letter-spacing: .1em;
+    color: #ffdf5d;
+    text-shadow: 0 2px 8px rgba(0,0,0,.7);
+    font-variant-numeric: tabular-nums;
+  }
+  #combo.pulse { animation: cpulse .25s ease-out; }
+  @keyframes cpulse {
+    from { transform: translateX(-50%) scale(1.5); }
+    to   { transform: translateX(-50%) scale(1); }
+  }
+
+  .hitdot {
+    position: absolute; width: 8px; height: 8px;
+    border-radius: 50%; background: #ffdf5d;
+    transform: translate(-50%,-50%);
+    z-index: 3; pointer-events: none;
+    animation: dotfade .8s ease-out forwards;
+  }
+  @keyframes dotfade { to { opacity: 0; } }
+
+  .float {
+    position: absolute;
+    transform: translate(-50%,-100%);
+    z-index: 4; pointer-events: none;
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+    animation: floatup .9s ease-out forwards;
+    text-shadow: 0 2px 8px rgba(0,0,0,.8);
+    white-space: nowrap;
+  }
+  .float .pts { font-family: 'Rajdhani', sans-serif; font-size: 23px; font-weight: 700; }
+  .float .detail { font-size: 11px; color: #9dc4e8; }
+  .float.miss .pts { color: #f85149; font-size: 16px; }
+  @keyframes floatup {
+    from { opacity: 1; margin-top: 0; }
+    to   { opacity: 0; margin-top: -44px; }
+  }
+
+  /* ===== リザルト ===== */
+  #result { justify-content: flex-start; overflow-y: auto; touch-action: pan-y; padding-top: max(28px, env(safe-area-inset-top)); }
+  #rank { font-family: 'Orbitron', sans-serif; font-size: 68px; font-weight: 900; line-height: 1.15; }
+  #rank.S  { color: #ffdf5d; text-shadow: 0 0 30px rgba(255,223,93,.6); }
+  #rank.A  { color: #2ea8ff; }
+  #rank.B  { color: #3fb950; }
+  #rank.C  { color: #8b949e; }
+  #rank.D  { color: #6e7681; }
+  #totalScore {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 42px; font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    margin: 2px 0 4px;
+    text-shadow: 0 0 18px rgba(46,168,255,.35);
+  }
+  #newBest { color: #ffdf5d; font-size: 13px; font-weight: 700; height: 18px; }
+
+  .stats {
+    display: flex; gap: 8px; margin: 16px 0;
+    width: 100%; max-width: 420px;
+  }
+  .stat {
+    flex: 1; background: #161b22; border: 1px solid #30363d;
+    border-radius: 12px; padding: 12px 4px;
+  }
+  .stat .v { font-family: 'Rajdhani', sans-serif; font-size: 19px; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .stat .k { font-size: 10px; color: #8b949e; margin-top: 3px; }
+
+  #detail {
+    width: 100%; max-width: 420px;
+    border-collapse: collapse;
+    font-size: 12px; font-variant-numeric: tabular-nums;
+    margin-bottom: 20px;
+  }
+  #detail th {
+    color: #8b949e; font-weight: 500; font-size: 10px;
+    padding: 5px 4px; border-bottom: 1px solid #30363d;
+  }
+  #detail td { padding: 5px 4px; text-align: center; border-bottom: 1px solid #1c2128; }
+  #detail td.miss { color: #f85149; }
+
+  /* ===== リプレイ ===== */
+  #replayOverlay { position: fixed; inset: 0; z-index: 50; background: #0a0e14; }
+  #replayCanvas { position: absolute; inset: 0; }
+  #replayHud {
+    position: absolute; top: 0; left: 0; right: 0; height: 52px;
+    padding: 0 16px; padding-top: env(safe-area-inset-top);
+    display: flex; align-items: center; justify-content: space-between;
+    font-variant-numeric: tabular-nums;
+  }
+  #replayHud .val { font-family: 'Rajdhani', sans-serif; font-size: 21px; font-weight: 700; color: #8b949e; }
+  .rbtn {
+    background: #21262d; color: #e6edf3; border: 1px solid #30363d;
+    border-radius: 8px; font-size: 13px; padding: 8px 14px; margin-left: 8px;
+  }
+  .rbtn:active { background: #30363d; }
+  #replayNote {
+    position: absolute; bottom: calc(10px + env(safe-area-inset-bottom));
+    left: 0; right: 0; text-align: center;
+    font-size: 11px; color: #8b949e; pointer-events: none;
+  }
+
+  /* ===== 履歴散布図 ===== */
+  .chartWrap {
+    width: 100%; max-width: 420px;
+    background: #161b22; border: 1px solid #30363d;
+    border-radius: 12px;
+    padding: 12px 12px 8px;
+    margin: 0 0 16px;
+  }
+  .chart-title {
+    font-size: 11px; color: #8b949e;
+    text-align: left; margin-bottom: 8px;
+    letter-spacing: .04em;
+  }
+  .chartWrap svg { width: 100%; display: block; }
+  .chartWrap .dot { cursor: pointer; }
+  .chart-info {
+    font-size: 11px; color: #9dc4e8;
+    min-height: 15px; margin-top: 6px;
+    text-align: left;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* ===== タイトル: モード選択と記録 ===== */
+  #title {
+    justify-content: flex-start;
+    overflow-y: auto; touch-action: pan-y;
+    padding-top: max(32px, env(safe-area-inset-top));
+  }
+  .modes {
+    display: flex; gap: 8px;
+    width: 100%; max-width: 420px;
+    margin-bottom: 10px;
+  }
+  .modebtn {
+    flex: 1; padding: 12px 4px;
+    border-radius: 10px; border: 1px solid #30363d;
+    background: #161b22; color: #8b949e;
+    font-size: 13px; font-weight: 700; cursor: pointer;
+  }
+  .modebtn:active { transform: scale(.97); }
+  .modebtn.sel {
+    border-color: #2ea8ff;
+    background: rgba(46,168,255,.12);
+    color: #e6edf3;
+    box-shadow: 0 0 14px rgba(46,168,255,.25);
+  }
+  .modedesc { font-size: 11px; color: #8b949e; margin-bottom: 20px; min-height: 14px; }
+  .rec-head {
+    margin: 30px 0 8px;
+    font-size: 12px; color: #8b949e;
+    letter-spacing: .12em; font-weight: 700;
+  }
+  #top10 {
+    width: 100%; max-width: 420px;
+    border-collapse: collapse;
+    font-size: 12px; font-variant-numeric: tabular-nums;
+    margin-bottom: 14px;
+  }
+  #top10 th { color: #8b949e; font-weight: 500; font-size: 10px; padding: 5px 4px; border-bottom: 1px solid #30363d; }
+  #top10 td { padding: 6px 4px; text-align: center; border-bottom: 1px solid #1c2128; }
+  #top10 td.sc { font-family: 'Rajdhani', sans-serif; font-weight: 700; font-size: 14px; }
+  #resultMode { font-size: 12px; color: #8b949e; letter-spacing: .1em; font-weight: 700; }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- HUD -->
+  <div id="hud" class="hidden">
+    <div><div class="label">TIME</div><div class="val" id="timer">25.000</div></div>
+    <div style="text-align:center"><div class="label">TARGET</div><div class="val" id="progress">0/10</div></div>
+    <div style="text-align:right"><div class="label">SCORE</div><div class="val" id="score">0</div></div>
+  </div>
+
+  <!-- ゲームフィールド -->
+  <div id="field"></div>
+  <div id="combo" class="hidden"></div>
+
+  <!-- タイトル -->
+  <div id="title" class="screen">
+    <h1>TOUCH AIM</h1>
+    <div class="sub">
+      出現する円をすばやく・中心を狙ってタップ<br>
+      反応速度は1/1000秒、精度は中心からの距離で判定<br>
+      青い芯に当て続けるとコンボ倍率(最大×1.30)<br>
+      空振りは-100点。全10ターゲット・制限時間25秒
+    </div>
+    <div class="modes">
+      <button class="modebtn" data-mode="normal">ノーマル</button>
+      <button class="modebtn" data-mode="acc">精度重視</button>
+      <button class="modebtn" data-mode="speed">速度重視</button>
+    </div>
+    <div id="modeDesc" class="modedesc"></div>
+    <button class="btn" id="startBtn">START</button>
+    <div id="best"></div>
+    <div class="rec-head" id="recHead">RECORDS</div>
+    <table id="top10">
+      <thead><tr><th>#</th><th>スコア</th><th>平均反応 / 精度</th><th>日付</th></tr></thead>
+      <tbody></tbody>
+    </table>
+    <div class="chartWrap">
+      <div class="chart-title">過去30プレイの記録 — 明るい点ほど最近</div>
+      <svg id="chartT" viewBox="0 0 340 240" xmlns="http://www.w3.org/2000/svg"></svg>
+      <div id="chartInfoT" class="chart-info">点をタップすると詳細を表示</div>
+    </div>
+  </div>
+
+  <!-- カウントダウン -->
+  <div id="countdown" class="screen hidden">3</div>
+
+  <!-- リザルト -->
+  <div id="result" class="screen hidden">
+    <div id="resultMode"></div>
+    <div id="rank">S</div>
+    <div id="totalScore">0</div>
+    <div id="newBest"></div>
+    <div class="stats">
+      <div class="stat"><div class="v" id="avgTime">-</div><div class="k">平均反応 (ms)</div></div>
+      <div class="stat"><div class="v" id="avgAcc">-</div><div class="k">平均精度</div></div>
+      <div class="stat"><div class="v" id="hitCount">-</div><div class="k">ヒット</div></div>
+      <div class="stat"><div class="v" id="maxCombo">-</div><div class="k">最大コンボ</div></div>
+    </div>
+    <div class="chartWrap">
+      <div class="chart-title">過去30プレイの記録 — 明るい点ほど最近 / 黄枠が今回</div>
+      <svg id="chart" viewBox="0 0 340 240" xmlns="http://www.w3.org/2000/svg"></svg>
+      <div id="chartInfo" class="chart-info">点をタップすると詳細を表示</div>
+    </div>
+    <table id="detail">
+      <thead><tr><th>#</th><th>反応時間</th><th>精度</th><th>サイズ</th><th>スコア</th></tr></thead>
+      <tbody></tbody>
+    </table>
+    <button class="btn" id="retryBtn">RETRY</button>
+    <button class="btn ghost" id="replayBtn">このプレイのリプレイ</button>
+    <button class="btn ghost" id="homeBtn">タイトルへ</button>
+  </div>
+
+  <!-- リプレイ -->
+  <div id="replayOverlay" class="hidden">
+    <canvas id="replayCanvas"></canvas>
+    <div id="replayHud">
+      <div class="val" id="replayTime">0.000</div>
+      <div>
+        <button class="rbtn" id="replaySpeed">×1</button>
+        <button class="rbtn" id="replayClose">閉じる</button>
+      </div>
+    </div>
+    <div id="replayNote">REPLAY — 黄=タップ位置 / 赤=空振り / 薄い輪郭=消えた円</div>
+  </div>
+
+</div>
+
+<script>
+(() => {
+  'use strict';
+
+  // ===== 設定 =====
+  const TARGETS       = 10;      // 1ラウンドのターゲット数
+  const ROUND_MS      = 25000;   // 制限時間
+  const TARGET_LIFE   = 2000;    // ターゲットの寿命(ms) 超過でミス
+  const MAX_PTS       = 1000;    // 1ターゲットの満点
+  const COMBO_ZONE    = 0.33;    // コンボ判定: 中心からこの半径比以内 (青い芯)
+  const COMBO_STEP    = 0.03;    // 1コンボごとの倍率上昇
+  const COMBO_CAP     = 10;      // 倍率上限に達するコンボ数 (最大×1.30)
+  const WHIFF_PENALTY = 100;     // 空振りの減点
+
+  // ===== モード定義 (円の出現ルール・サイズは全モード共通、配点だけ変える) =====
+  const MODES = {
+    normal: {
+      name: 'ノーマル', desc: '速さと精度をバランスよく評価',
+      tFull: 250, tZero: 1500,
+      combine: (tf, acc) => tf * (0.1 + 0.9 * acc),
+      ranks: [.9, .72, .5, .28],
+    },
+    acc: {
+      name: '精度重視', desc: '中心精度が得点の大半を決める。時間の影響は小さめ',
+      tFull: 400, tZero: 1800,
+      combine: (tf, acc) => (0.4 + 0.6 * tf) * Math.pow(acc, 1.5),
+      ranks: [.78, .6, .42, .22],
+    },
+    speed: {
+      name: '速度重視', desc: '反応の速さが得点の大半を決める。精度の影響は小さめ',
+      tFull: 200, tZero: 1000,
+      combine: (tf, acc) => Math.pow(tf, 1.3) * (0.4 + 0.6 * acc),
+      ranks: [.78, .6, .42, .22],
+    },
+  };
+  let mode = localStorage.getItem('touchaim_mode') || 'normal';
+  if (!MODES[mode]) mode = 'normal';
+
+  const $ = id => document.getElementById(id);
+  const field = $('field');
+  const hud = $('hud');
+
+  // ===== 状態 =====
+  let state = 'title';          // title | countdown | play | result
+  let roundStart = 0;           // ラウンド開始時刻 (performance.now)
+  let active = [];              // 画面上のターゲット (同時複数あり)
+  let resolved = 0;             // 処理済み(ヒット/タイムアウト)数
+  let totalScore = 0;
+  let records = [];             // idx順の {time, acc, pts, sizeF, miss}
+  let rafId = 0;
+  let spawnTimers = [];
+  let replay = null;            // 直前プレイのリプレイデータ (メモリのみ)
+  let combo = 0, maxCombo = 0;  // 青い芯への連続ヒット数
+
+  // ===== サウンド (WebAudio・タップで初期化) =====
+  let ac = null;
+  function beep(freq, dur, gain) {
+    try {
+      if (!ac) ac = new (window.AudioContext || window.webkitAudioContext)();
+      const o = ac.createOscillator(), g = ac.createGain();
+      o.frequency.value = freq;
+      g.gain.setValueAtTime(gain, ac.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.0001, ac.currentTime + dur);
+      o.connect(g).connect(ac.destination);
+      o.start(); o.stop(ac.currentTime + dur);
+    } catch (e) { /* サウンド非対応でも続行 */ }
+  }
+
+  // ===== 振動 (対応端末のみ) =====
+  function buzz(p) {
+    try { if (navigator.vibrate) navigator.vibrate(p); } catch (e) { /* 非対応でも続行 */ }
+  }
+
+  // ===== コンボ =====
+  function comboMult(n) { return 1 + Math.min(n, COMBO_CAP) * COMBO_STEP; }
+  function setCombo(n) {
+    combo = n;
+    if (n > maxCombo) maxCombo = n;
+    const el = $('combo');
+    if (n >= 2) {
+      el.textContent = `${n} COMBO ×${comboMult(n).toFixed(2)}`;
+      el.classList.remove('hidden');
+      el.classList.remove('pulse');
+      void el.offsetWidth; // アニメ再トリガー
+      el.classList.add('pulse');
+    } else {
+      el.classList.add('hidden');
+    }
+  }
+
+  // ===== ヒットパーティクル =====
+  function spawnParticles(x, y, color) {
+    for (let i = 0; i < 6; i++) {
+      const p = document.createElement('div');
+      p.className = 'particle';
+      p.style.left = x + 'px';
+      p.style.top = y + 'px';
+      p.style.background = color;
+      const ang = Math.random() * 6.283, d = 24 + Math.random() * 26;
+      p.style.setProperty('--dx', (Math.cos(ang) * d) + 'px');
+      p.style.setProperty('--dy', (Math.sin(ang) * d) + 'px');
+      field.appendChild(p);
+      setTimeout(() => p.remove(), 550);
+    }
+  }
+
+  // ===== ターゲット半径: 画面基準サイズ =====
+  function baseRadius() {
+    return Math.round(Math.min(innerWidth, innerHeight) * 0.115);
+  }
+
+  // サイズ倍率10個: ばらつきはあるが平均はちょうど×1.00 (プレイ間の有利不利なし)
+  function makeSizeFactors() {
+    const v = Array.from({ length: TARGETS }, () => 0.7 + Math.random() * 0.7);
+    const mean = v.reduce((s, x) => s + x, 0) / v.length;
+    return v.map(x => x / mean);
+  }
+
+  // 出現時刻10個: 前の円が確実に消えてから少し揺らして次を出す (同時出現なし)
+  // 最終出現は最大でも約22.3秒 → 寿命2秒込みでも25秒以内に収まる
+  function makeSpawnTimes() {
+    const t = [];
+    let cur = 400 + Math.random() * 300;
+    for (let i = 0; i < TARGETS; i++) {
+      t.push(cur);
+      cur += TARGET_LIFE + 50 + Math.random() * 350;
+    }
+    return t;
+  }
+
+  // ===== スコア計算 (配点はモードごと) =====
+  // acc: 中心=1.0, 縁=0.0 (連続値)
+  // timeF: tFull以下=満点, tZeroに向けて線形減衰 (最低0.1)
+  // sizeF: サイズ倍率 (小さい円ほど高倍率)
+  function calcPoints(timeMs, acc, sizeF) {
+    const m = MODES[mode];
+    const tf = timeMs <= m.tFull ? 1 : Math.max(0.1, (m.tZero - timeMs) / (m.tZero - m.tFull));
+    return Math.round(MAX_PTS * m.combine(tf, Math.max(0, acc)) * sizeF);
+  }
+
+  // ===== 画面遷移 =====
+  function show(id) {
+    ['title', 'countdown', 'result'].forEach(s => $(s).classList.toggle('hidden', s !== id));
+  }
+
+  // ===== 記録 (すべてモード別に管理) =====
+  function loadBest() { return Number(localStorage.getItem('touchaim_best_' + mode) || 0); }
+
+  function loadJson(key) {
+    try { return JSON.parse(localStorage.getItem(key) || '[]'); }
+    catch (e) { return []; }
+  }
+  // プレイ履歴 (散布図用・直近30回)
+  function loadHistory() { return loadJson('touchaim_history_' + mode); }
+  function saveHistory(entry) {
+    const h = loadHistory();
+    h.push(entry);
+    const trimmed = h.slice(-30);
+    localStorage.setItem('touchaim_history_' + mode, JSON.stringify(trimmed));
+    return trimmed;
+  }
+  // ハイスコアTOP10
+  function loadTop() { return loadJson('touchaim_top_' + mode); }
+  function saveTop(entry) {
+    const t = loadTop();
+    t.push(entry);
+    t.sort((a, b) => b.s - a.s);
+    const trimmed = t.slice(0, 10);
+    localStorage.setItem('touchaim_top_' + mode, JSON.stringify(trimmed));
+    return trimmed;
+  }
+
+  // モード導入前の旧データはノーマルへ移行
+  (function migrate() {
+    const oldH = localStorage.getItem('touchaim_history');
+    if (oldH) {
+      localStorage.setItem('touchaim_history_normal', oldH);
+      localStorage.removeItem('touchaim_history');
+      if (!localStorage.getItem('touchaim_top_normal')) {
+        const top = loadJson('touchaim_history_normal').slice().sort((a, b) => b.s - a.s).slice(0, 10);
+        localStorage.setItem('touchaim_top_normal', JSON.stringify(top));
+      }
+    }
+    const oldB = localStorage.getItem('touchaim_best');
+    if (oldB) {
+      localStorage.setItem('touchaim_best_normal', oldB);
+      localStorage.removeItem('touchaim_best');
+    }
+  })();
+
+  // ===== 履歴散布図: X=反応速度(右ほど速い) Y=精度 =====
+  const CH = { W: 340, H: 240, padL: 26, padR: 10, padT: 14, padB: 20, tMax: 1000 };
+  function chX(t) { return CH.padL + (CH.W - CH.padL - CH.padR) * (1 - Math.min(Math.max(t, 0), CH.tMax) / CH.tMax); }
+  function chY(a) { return CH.padT + (CH.H - CH.padT - CH.padB) * (1 - a); }
+
+  function renderChart(svgId, infoId, hist) {
+    const svg = $(svgId);
+    svg.__hist = hist;
+    const x0 = CH.padL, x1 = CH.W - CH.padR, y0 = CH.padT, y1 = CH.H - CH.padB;
+    let s = '';
+    // 控えめなグリッド
+    for (let ms = 0; ms <= CH.tMax; ms += 250)
+      s += `<line x1="${chX(ms)}" y1="${y0}" x2="${chX(ms)}" y2="${y1}" stroke="#21262d" stroke-width="1"/>`;
+    for (let a = 0; a <= 1.001; a += 0.25)
+      s += `<line x1="${x0}" y1="${chY(a)}" x2="${x1}" y2="${chY(a)}" stroke="#21262d" stroke-width="1"/>`;
+    // 十字 (500ms / 精度50%)
+    s += `<line x1="${chX(500)}" y1="${y0}" x2="${chX(500)}" y2="${y1}" stroke="#484f58" stroke-width="1.5"/>`;
+    s += `<line x1="${x0}" y1="${chY(0.5)}" x2="${x1}" y2="${chY(0.5)}" stroke="#484f58" stroke-width="1.5"/>`;
+    // 軸ラベル
+    const lbl = (x, y, text, anchor) =>
+      `<text x="${x}" y="${y}" fill="#8b949e" font-size="9" text-anchor="${anchor}" font-family="inherit">${text}</text>`;
+    s += lbl(x0, y1 + 12, '← 遅い', 'start');
+    s += lbl(x1, y1 + 12, '速い →', 'end');
+    s += lbl(chX(500), y1 + 12, '500ms', 'middle');
+    s += `<text x="${x0 - 6}" y="${y0 + 8}" fill="#8b949e" font-size="9" text-anchor="middle" writing-mode="tb" font-family="inherit">精度高</text>`;
+    s += `<text x="${x0 - 6}" y="${y1 - 34}" fill="#8b949e" font-size="9" text-anchor="middle" writing-mode="tb" font-family="inherit">精度低</text>`;
+    s += lbl(x0 - 4, chY(0.5) + 3, '50%', 'end');
+    // 理想ゾーンの目印
+    s += `<text x="${x1 - 4}" y="${y0 + 10}" fill="#3fb950" font-size="9" text-anchor="end" font-family="inherit">◎ 速く正確</text>`;
+    // 点: 古い→新しい順に描画 (新しいほど明るい)
+    const n = hist.length;
+    hist.forEach((h, i) => {
+      const lum = n <= 1 ? 68 : 24 + 44 * (i / (n - 1));
+      const isLast = i === n - 1;
+      s += `<circle class="dot" data-i="${i}" cx="${chX(h.t).toFixed(1)}" cy="${chY(h.a).toFixed(1)}" r="${isLast ? 6 : 4.5}"` +
+        ` fill="hsl(205 90% ${lum.toFixed(0)}%)"` +
+        (isLast ? ' stroke="#ffdf5d" stroke-width="2"' : ' stroke="#161b22" stroke-width="1.5"') + '/>';
+    });
+    svg.innerHTML = s;
+    $(infoId).textContent = n ? '点をタップすると詳細を表示' : 'まだ記録がありません';
+  }
+
+  // 点タップで詳細表示
+  function bindChartTap(svgId, infoId, latestLabel) {
+    $(svgId).addEventListener('pointerdown', (e) => {
+      const dot = e.target.closest('.dot');
+      if (!dot) return;
+      const hist = $(svgId).__hist || [];
+      const i = +dot.dataset.i;
+      const h = hist[i];
+      if (!h) return;
+      const ago = hist.length - 1 - i;
+      $(infoId).textContent =
+        `${ago === 0 ? latestLabel : ago + 'プレイ前'}: スコア${h.s.toLocaleString()} / 平均${h.t}ms / 精度${Math.round(h.a * 100)}%`;
+    });
+  }
+  bindChartTap('chart', 'chartInfo', '今回');
+  bindChartTap('chartT', 'chartInfoT', '直近');
+
+  function renderTitle() {
+    document.querySelectorAll('.modebtn').forEach(b => b.classList.toggle('sel', b.dataset.mode === mode));
+    $('modeDesc').textContent = MODES[mode].desc;
+    const b = loadBest();
+    $('best').textContent = b > 0 ? `BEST SCORE: ${b.toLocaleString()}` : '';
+    $('recHead').textContent = `RECORDS — ${MODES[mode].name}`;
+    // ハイスコアTOP10
+    const top = loadTop();
+    const tbody = $('top10').querySelector('tbody');
+    tbody.innerHTML = '';
+    if (!top.length) {
+      tbody.innerHTML = '<tr><td colspan="4" style="color:#8b949e;padding:10px">まだ記録がありません</td></tr>';
+    } else {
+      top.forEach((h, i) => {
+        const d = new Date(h.ts);
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${i + 1}</td><td class="sc">${h.s.toLocaleString()}</td>` +
+          `<td>${h.t}ms / ${Math.round(h.a * 100)}%</td>` +
+          `<td>${d.getMonth() + 1}/${d.getDate()}</td>`;
+        tbody.appendChild(tr);
+      });
+    }
+    renderChart('chartT', 'chartInfoT', loadHistory());
+  }
+
+  // ===== カウントダウン → 開始 =====
+  function startCountdown() {
+    state = 'countdown';
+    show('countdown');
+    hud.classList.remove('hidden');
+    let n = 3;
+    $('countdown').textContent = n;
+    beep(440, .1, .15);
+    const iv = setInterval(() => {
+      n--;
+      if (n > 0) {
+        $('countdown').textContent = n;
+        beep(440, .1, .15);
+      } else {
+        clearInterval(iv);
+        beep(880, .15, .2);
+        $('countdown').classList.add('hidden');
+        startRound();
+      }
+    }, 800);
+  }
+
+  function startRound() {
+    state = 'play';
+    active = [];
+    resolved = 0;
+    totalScore = 0;
+    records = new Array(TARGETS).fill(null);
+    replay = { targets: new Array(TARGETS).fill(null), taps: [], duration: 0 };
+    field.innerHTML = '';
+    maxCombo = 0;
+    setCombo(0);
+    $('score').textContent = '0';
+    $('progress').textContent = `0/${TARGETS}`;
+    const times = makeSpawnTimes();
+    const sizes = makeSizeFactors();
+    roundStart = performance.now();
+    spawnTimers = times.map((tm, i) => setTimeout(() => spawnTarget(i, sizes[i]), tm));
+    tick();
+  }
+
+  // ===== メインループ (タイマー表示) =====
+  function tick() {
+    const remain = ROUND_MS - (performance.now() - roundStart);
+    if (remain <= 0) {
+      $('timer').textContent = '0.000';
+      endRound();
+      return;
+    }
+    $('timer').textContent = (remain / 1000).toFixed(3);
+    $('timer').classList.toggle('warn', remain < 5000);
+    rafId = requestAnimationFrame(tick);
+  }
+
+  // ===== ターゲット出現 (同時複数あり) =====
+  function spawnTarget(idx, sizeF) {
+    if (state !== 'play') return;
+    const r = Math.max(16, Math.round(baseRadius() / sizeF));
+    const hudH = 60 + r;
+    const x = r + 8 + Math.random() * (innerWidth - 2 * (r + 8));
+    const y = hudH + Math.random() * (innerHeight - hudH - r - 8);
+
+    const el = document.createElement('div');
+    el.className = 'target';
+    el.style.width = el.style.height = (r * 2) + 'px';
+    el.style.left = x + 'px';
+    el.style.top = y + 'px';
+    field.appendChild(el);
+
+    const tg = { el, x, y, r, sizeF, idx, spawnAt: performance.now() };
+    tg.lifeTimer = setTimeout(() => timeoutTarget(tg), TARGET_LIFE);
+    active.push(tg);
+    replay.targets[idx] = { x, y, r, spawnT: tg.spawnAt - roundStart, endT: null, tap: null };
+  }
+
+  function timeoutTarget(tg) {
+    if (state !== 'play') return;
+    active = active.filter(a => a !== tg);
+    tg.el.classList.add('timeout');
+    setTimeout(() => tg.el.remove(), 260);
+    setCombo(0);
+    buzz(30);
+    records[tg.idx] = { time: null, acc: 0, pts: 0, sizeF: tg.sizeF, miss: true };
+    replay.targets[tg.idx].endT = performance.now() - roundStart;
+    showFloat(tg.x, tg.y, null, null, 0);
+    resolveOne();
+  }
+
+  function resolveOne() {
+    resolved++;
+    $('progress').textContent = `${resolved}/${TARGETS}`;
+    if (resolved >= TARGETS) setTimeout(endRound, 400);
+  }
+
+  // ===== タップ判定 =====
+  field.addEventListener('pointerdown', (e) => {
+    if (state !== 'play') return;
+    const now = performance.now();
+    const tNow = now - roundStart;
+
+    // タップ地点を含むターゲットのうち、中心に最も近い(半径比の)ものを採用
+    let hit = null, hitDist = 0, bestRatio = Infinity;
+    for (const tg of active) {
+      const d = Math.hypot(e.clientX - tg.x, e.clientY - tg.y);
+      if (d <= tg.r && d / tg.r < bestRatio) { hit = tg; hitDist = d; bestRatio = d / tg.r; }
+    }
+
+    if (!hit) {
+      // 空振り: 減点 + コンボ切れ
+      totalScore = Math.max(0, totalScore - WHIFF_PENALTY);
+      $('score').textContent = totalScore.toLocaleString();
+      setCombo(0);
+      replay.taps.push({ x: e.clientX, y: e.clientY, t: tNow, hit: false });
+      showFloat(e.clientX, e.clientY, null, null, null);
+      beep(160, .08, .1);
+      buzz(40);
+      return;
+    }
+
+    clearTimeout(hit.lifeTimer);
+    active = active.filter(a => a !== hit);
+    const timeMs = now - hit.spawnAt;
+    const acc = Math.max(0, 1 - hitDist / hit.r);
+    // コンボ: 青い芯(中心33%以内)に当てたときだけ継続、外れたら切れる
+    const zoneHit = hitDist <= hit.r * COMBO_ZONE;
+    setCombo(zoneHit ? combo + 1 : 0);
+    const mult = comboMult(combo);
+    const pts = Math.round(calcPoints(timeMs, acc, hit.sizeF) * mult);
+    totalScore += pts;
+    records[hit.idx] = { time: timeMs, acc, pts, sizeF: hit.sizeF, miss: false };
+    spawnParticles(e.clientX, e.clientY, zoneHit ? '#ffdf5d' : '#2ea8ff');
+    buzz(zoneHit ? 15 : 8);
+    replay.targets[hit.idx].endT = tNow;
+    replay.targets[hit.idx].tap = { x: e.clientX, y: e.clientY, acc, pts };
+    replay.taps.push({ x: e.clientX, y: e.clientY, t: tNow, hit: true });
+    $('score').textContent = totalScore.toLocaleString();
+
+    // タップ地点マーカー
+    const dot = document.createElement('div');
+    dot.className = 'hitdot';
+    dot.style.left = e.clientX + 'px';
+    dot.style.top = e.clientY + 'px';
+    field.appendChild(dot);
+    setTimeout(() => dot.remove(), 850);
+
+    showFloat(hit.x, hit.y - hit.r, timeMs, acc, pts, hit.sizeF);
+    beep(600 + acc * 600, .09, .18);
+
+    hit.el.remove();
+    resolveOne();
+  }, { passive: true });
+
+  // ===== フローティング表示 =====
+  function showFloat(x, y, timeMs, acc, pts, sizeF) {
+    const el = document.createElement('div');
+    el.className = 'float';
+    if (pts === 0 && timeMs === null) {
+      el.classList.add('miss');
+      el.innerHTML = '<div class="pts">TIME OUT</div>';
+    } else if (pts === null) {
+      el.classList.add('miss');
+      el.innerHTML = `<div class="pts">MISS -${WHIFF_PENALTY}</div>`;
+    } else {
+      el.innerHTML = `<div class="pts">+${pts}</div>` +
+        `<div class="detail">${Math.round(timeMs)}ms / 精度${Math.round(acc * 100)}% / ×${sizeF.toFixed(2)}</div>`;
+    }
+    el.style.left = Math.min(Math.max(x, 70), innerWidth - 70) + 'px';
+    el.style.top = Math.max(y, 80) + 'px';
+    field.appendChild(el);
+    setTimeout(() => el.remove(), 950);
+  }
+
+  // ===== ラウンド終了 =====
+  function endRound() {
+    if (state !== 'play') return;
+    state = 'result';
+    cancelAnimationFrame(rafId);
+    spawnTimers.forEach(clearTimeout);
+    active.forEach(tg => { clearTimeout(tg.lifeTimer); tg.el.remove(); });
+    active = [];
+    $('combo').classList.add('hidden');
+    replay.duration = Math.min(performance.now() - roundStart, ROUND_MS);
+    // 未解決ターゲットはミス扱い
+    for (let i = 0; i < TARGETS; i++)
+      if (!records[i]) records[i] = { time: null, acc: 0, pts: 0, sizeF: 0, miss: true };
+
+    const hits = records.filter(r => !r.miss);
+    const avgT = hits.length ? hits.reduce((s, r) => s + r.time, 0) / hits.length : 0;
+    const avgA = hits.length ? hits.reduce((s, r) => s + r.acc, 0) / hits.length : 0;
+
+    $('totalScore').textContent = totalScore.toLocaleString();
+    $('avgTime').textContent = hits.length ? Math.round(avgT) : '-';
+    $('avgAcc').textContent = hits.length ? Math.round(avgA * 100) + '%' : '-';
+    $('hitCount').textContent = `${hits.length}/${TARGETS}`;
+    $('maxCombo').textContent = maxCombo;
+
+    // ランク (しきい値はモード別)
+    const ratio = totalScore / (TARGETS * MAX_PTS);
+    const rk4 = MODES[mode].ranks;
+    const rank = ratio >= rk4[0] ? 'S' : ratio >= rk4[1] ? 'A' : ratio >= rk4[2] ? 'B' : ratio >= rk4[3] ? 'C' : 'D';
+    const rk = $('rank');
+    rk.textContent = rank;
+    rk.className = rank;
+
+    // ベスト更新
+    const best = loadBest();
+    if (totalScore > best) {
+      localStorage.setItem('touchaim_best_' + mode, totalScore);
+      $('newBest').textContent = '★ NEW BEST!';
+    } else {
+      $('newBest').textContent = best > 0 ? `BEST: ${best.toLocaleString()}` : '';
+    }
+
+    // 履歴・TOP10に保存して散布図を描画 (全ミスの回は保存しない)
+    let hist = loadHistory();
+    if (hits.length) {
+      const entry = { t: Math.round(avgT), a: +avgA.toFixed(3), s: totalScore, ts: Date.now() };
+      hist = saveHistory(entry);
+      saveTop(entry);
+    }
+    renderChart('chart', 'chartInfo', hist);
+    $('resultMode').textContent = MODES[mode].name;
+
+    // 明細テーブル
+    const tbody = $('detail').querySelector('tbody');
+    tbody.innerHTML = '';
+    records.forEach((r, i) => {
+      const tr = document.createElement('tr');
+      if (r.miss) {
+        tr.innerHTML = `<td>${i + 1}</td><td class="miss" colspan="3">MISS</td><td class="miss">0</td>`;
+      } else {
+        tr.innerHTML = `<td>${i + 1}</td><td>${r.time.toFixed(1)}ms</td>` +
+          `<td>${Math.round(r.acc * 100)}%</td>` +
+          `<td>×${r.sizeF.toFixed(2)}</td>` +
+          `<td>${r.pts}</td>`;
+      }
+      tbody.appendChild(tr);
+    });
+
+    hud.classList.add('hidden');
+    show('result');
+    beep(880, .12, .15);
+    setTimeout(() => beep(1175, .18, .15), 130);
+  }
+
+  // ===== リプレイ再生 (直前のプレイのみ・メモリ保持) =====
+  const rCanvas = $('replayCanvas');
+  const rctx = rCanvas.getContext('2d');
+  let rp = null; // {vt: 仮想時刻, last, speed, raf}
+
+  function startReplay() {
+    if (!replay || !replay.duration) return;
+    $('replayOverlay').classList.remove('hidden');
+    const dpr = devicePixelRatio || 1;
+    rCanvas.width = innerWidth * dpr;
+    rCanvas.height = innerHeight * dpr;
+    rCanvas.style.width = innerWidth + 'px';
+    rCanvas.style.height = innerHeight + 'px';
+    rctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    rp = { vt: 0, last: performance.now(), speed: 1, raf: 0 };
+    $('replaySpeed').textContent = '×1';
+    drawReplay();
+  }
+
+  function drawTargetShape(x, y, r, ghost) {
+    if (!ghost) {
+      const g = rctx.createRadialGradient(x, y, 0, x, y, r);
+      g.addColorStop(0, 'rgba(46,168,255,.9)');
+      g.addColorStop(.15, 'rgba(46,168,255,.5)');
+      g.addColorStop(.33, 'rgba(46,168,255,.12)');
+      g.addColorStop(.66, 'rgba(46,168,255,.05)');
+      g.addColorStop(1, 'rgba(46,168,255,.05)');
+      rctx.fillStyle = g;
+      rctx.beginPath(); rctx.arc(x, y, r, 0, 6.283); rctx.fill();
+      // クロスヘア
+      rctx.strokeStyle = 'rgba(220,240,255,.4)';
+      rctx.lineWidth = 1.5;
+      rctx.beginPath();
+      rctx.moveTo(x - r, y); rctx.lineTo(x + r, y);
+      rctx.moveTo(x, y - r); rctx.lineTo(x, y + r);
+      rctx.stroke();
+      rctx.fillStyle = '#fff';
+      rctx.beginPath(); rctx.arc(x, y, Math.max(2, r * 0.05), 0, 6.283); rctx.fill();
+      // コンボゾーン (青い芯) の境界
+      rctx.strokeStyle = 'rgba(255,255,255,.55)';
+      rctx.lineWidth = 1.5;
+      rctx.beginPath(); rctx.arc(x, y, r * 0.33, 0, 6.283); rctx.stroke();
+    }
+    rctx.strokeStyle = ghost ? 'rgba(46,168,255,.22)' : 'rgba(140,210,255,.95)';
+    rctx.lineWidth = 1.5;
+    rctx.beginPath(); rctx.arc(x, y, r, 0, 6.283); rctx.stroke();
+  }
+
+  function drawReplay() {
+    const now = performance.now();
+    rp.vt += (now - rp.last) * rp.speed;
+    rp.last = now;
+    const endVt = replay.duration + 800;
+    const t = Math.min(rp.vt, endVt);
+
+    rctx.fillStyle = '#0a0e14';
+    rctx.fillRect(0, 0, innerWidth, innerHeight);
+
+    // ターゲット: 生存中は実体、消滅後は薄い輪郭を残す (タップとの位置関係を見返せる)
+    for (const tg of replay.targets) {
+      if (!tg || t < tg.spawnT) continue;
+      const end = tg.endT !== null ? tg.endT : Math.min(tg.spawnT + TARGET_LIFE, replay.duration);
+      if (t <= end) {
+        const s = Math.min(1, (t - tg.spawnT) / 120); // 出現アニメ
+        drawTargetShape(tg.x, tg.y, tg.r * s, false);
+      } else {
+        drawTargetShape(tg.x, tg.y, tg.r, true);
+      }
+    }
+
+    // タップ位置: 一度出たら最後まで残す
+    for (const tp of replay.taps) {
+      if (t < tp.t) continue;
+      const age = t - tp.t;
+      if (tp.hit) {
+        if (age < 350) { // 波紋
+          rctx.strokeStyle = `rgba(255,223,93,${((1 - age / 350) * .8).toFixed(2)})`;
+          rctx.lineWidth = 2;
+          rctx.beginPath(); rctx.arc(tp.x, tp.y, 6 + age / 12, 0, 6.283); rctx.stroke();
+        }
+        rctx.fillStyle = '#ffdf5d';
+        rctx.beginPath(); rctx.arc(tp.x, tp.y, 3.5, 0, 6.283); rctx.fill();
+      } else {
+        rctx.strokeStyle = '#f85149';
+        rctx.lineWidth = 2;
+        rctx.beginPath();
+        rctx.moveTo(tp.x - 5, tp.y - 5); rctx.lineTo(tp.x + 5, tp.y + 5);
+        rctx.moveTo(tp.x + 5, tp.y - 5); rctx.lineTo(tp.x - 5, tp.y + 5);
+        rctx.stroke();
+      }
+    }
+
+    // ヒットの得点をタップ位置の横に残す
+    rctx.font = '10px sans-serif';
+    for (const tg of replay.targets) {
+      if (!tg || !tg.tap || t < tg.endT) continue;
+      rctx.fillStyle = 'rgba(157,196,232,.9)';
+      rctx.fillText(`+${tg.tap.pts} (${Math.round(tg.tap.acc * 100)}%)`, tg.tap.x + 8, tg.tap.y - 8);
+    }
+
+    $('replayTime').textContent = (Math.min(t, replay.duration) / 1000).toFixed(3);
+    if (t >= endVt) return; // 最終フレーム(全タップ+輪郭)で停止
+    rp.raf = requestAnimationFrame(drawReplay);
+  }
+
+  $('replayBtn').addEventListener('click', startReplay);
+  $('replaySpeed').addEventListener('click', () => {
+    if (!rp) return;
+    rp.speed = rp.speed >= 4 ? 1 : rp.speed * 2;
+    $('replaySpeed').textContent = '×' + rp.speed;
+  });
+  $('replayClose').addEventListener('click', () => {
+    if (rp) cancelAnimationFrame(rp.raf);
+    rp = null;
+    $('replayOverlay').classList.add('hidden');
+  });
+
+  // ===== ボタン =====
+  $('startBtn').addEventListener('click', startCountdown);
+  $('retryBtn').addEventListener('click', startCountdown);
+  $('homeBtn').addEventListener('click', () => {
+    state = 'title';
+    renderTitle();
+    show('title');
+  });
+  document.querySelectorAll('.modebtn').forEach(b => {
+    b.addEventListener('click', () => {
+      mode = b.dataset.mode;
+      localStorage.setItem('touchaim_mode', mode);
+      renderTitle();
+    });
+  });
+
+  // ダブルタップズーム等の抑止
+  document.addEventListener('dblclick', e => e.preventDefault());
+  document.addEventListener('contextmenu', e => e.preventDefault());
+
+  renderTitle();
+})();
+</script>
+</body>
+</html>
