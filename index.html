@@ -535,19 +535,19 @@
   const MODES = {
     normal: {
       name: 'ノーマル', desc: '速さと精度をバランスよく評価',
-      tFull: 250, tZero: 1500,
+      tFull: 450, tZero: 1700,
       combine: (tf, acc) => tf * (0.1 + 0.9 * acc),
       ranks: [.9, .72, .5, .28],
     },
     acc: {
       name: '精度重視', desc: '中心精度が得点の大半を決める。時間の影響は小さめ',
-      tFull: 400, tZero: 1800,
+      tFull: 600, tZero: 2000,
       combine: (tf, acc) => (0.4 + 0.6 * tf) * Math.pow(acc, 1.5),
       ranks: [.78, .6, .42, .22],
     },
     speed: {
       name: '速度重視', desc: '反応の速さが得点の大半を決める。精度の影響は小さめ',
-      tFull: 200, tZero: 1000,
+      tFull: 350, tZero: 1300,
       combine: (tf, acc) => Math.pow(tf, 1.3) * (0.4 + 0.6 * acc),
       ranks: [.78, .6, .42, .22],
     },
