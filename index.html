@@ -331,6 +331,57 @@
     overflow-y: auto; touch-action: pan-y;
     padding-top: max(32px, env(safe-area-inset-top));
   }
+  /* ===== メインメニュー ===== */
+  #menu { overflow-y: auto; touch-action: pan-y; }
+  .cats {
+    display: flex; flex-direction: column; gap: 12px;
+    width: 100%; max-width: 420px;
+    margin-top: 6px;
+  }
+  .cat {
+    position: relative;
+    text-align: left;
+    background: #161b22; color: #e6edf3;
+    border: 1px solid #30414f; border-radius: 14px;
+    padding: 18px 18px;
+    cursor: pointer;
+  }
+  .cat:active { transform: scale(.98); }
+  .cat-name {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 19px; font-weight: 700;
+    letter-spacing: .12em;
+    color: #2ea8ff;
+    margin-bottom: 4px;
+  }
+  .cat-desc { font-size: 13px; color: #8b949e; line-height: 1.5; }
+  .cat.soon { opacity: .55; }
+  .cat-soon {
+    position: absolute; top: 12px; right: 14px;
+    font-size: 11px; font-weight: 700;
+    color: #ffdf5d;
+    border: 1px solid rgba(255,223,93,.5);
+    border-radius: 999px;
+    padding: 3px 10px;
+  }
+  .scr-head {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 24px; font-weight: 700;
+    letter-spacing: .2em; text-indent: .2em;
+    margin-bottom: 18px;
+    color: #e6edf3;
+    text-shadow: 0 0 16px rgba(46,168,255,.4);
+  }
+  .stub-desc { font-size: 15px; color: #8b949e; line-height: 1.9; max-width: 420px; }
+  .soon-badge {
+    margin-top: 16px;
+    font-size: 14px; font-weight: 700;
+    color: #ffdf5d;
+    border: 1px solid rgba(255,223,93,.5);
+    border-radius: 999px;
+    padding: 6px 18px;
+  }
+
   #langSel {
     position: absolute;
     top: calc(12px + env(safe-area-inset-top)); right: 16px;
@@ -419,15 +470,41 @@
   <div id="field"></div>
   <div id="combo" class="hidden"></div>
 
-  <!-- タイトル -->
-  <div id="title" class="screen">
+  <!-- メインメニュー (4分類) -->
+  <div id="menu" class="screen">
     <select id="langSel"></select>
     <h1>TOUCH AIM</h1>
     <div class="sub" data-i18n="sub">出現する円をすばやく・中心を狙ってタップ</div>
+    <div class="cats">
+      <button class="cat" id="catSa">
+        <div class="cat-name">SCORE ATTACK</div>
+        <div class="cat-desc" data-i18n="saDesc"></div>
+      </button>
+      <button class="cat soon" id="catTr">
+        <div class="cat-name">TRAINING</div>
+        <div class="cat-desc" data-i18n="trDesc"></div>
+        <div class="cat-soon" data-i18n="soon"></div>
+      </button>
+      <button class="cat soon" id="catAs">
+        <div class="cat-name">ASSESSMENT</div>
+        <div class="cat-desc" data-i18n="asDesc"></div>
+        <div class="cat-soon" data-i18n="soon"></div>
+      </button>
+      <button class="cat soon" id="catPr">
+        <div class="cat-name">PROFILE</div>
+        <div class="cat-desc" data-i18n="prDesc"></div>
+        <div class="cat-soon" data-i18n="soon"></div>
+      </button>
+    </div>
+  </div>
+
+  <!-- SCORE ATTACK -->
+  <div id="title" class="screen hidden">
+    <h2 class="scr-head">SCORE ATTACK</h2>
     <div class="modes">
-      <button class="modebtn" data-mode="normal" data-i18n="m_normal">ノーマル</button>
-      <button class="modebtn" data-mode="acc" data-i18n="m_acc">精度重視</button>
-      <button class="modebtn" data-mode="speed" data-i18n="m_speed">速度重視</button>
+      <button class="modebtn" data-mode="normal">BALANCED</button>
+      <button class="modebtn" data-mode="acc">PRECISION</button>
+      <button class="modebtn" data-mode="speed">SPEED</button>
     </div>
     <div id="modeDesc" class="modedesc"></div>
     <button class="btn" id="startBtn">START</button>
@@ -443,6 +520,27 @@
       <div id="chartInfoT" class="chart-info">点をタップすると詳細を表示</div>
     </div>
     <button class="btn ghost" id="rulesBtn" data-i18n="rulesBtn">ルール・遊び方</button>
+    <button class="btn ghost" data-back data-i18n="backMenu">メニューへ</button>
+  </div>
+
+  <!-- TRAINING / ASSESSMENT / PROFILE (準備中スタブ) -->
+  <div id="training" class="screen hidden">
+    <h2 class="scr-head">TRAINING</h2>
+    <p class="stub-desc" data-i18n="trDesc"></p>
+    <div class="soon-badge" data-i18n="soon"></div>
+    <button class="btn ghost" data-back data-i18n="backMenu">メニューへ</button>
+  </div>
+  <div id="assessment" class="screen hidden">
+    <h2 class="scr-head">ASSESSMENT</h2>
+    <p class="stub-desc" data-i18n="asDesc"></p>
+    <div class="soon-badge" data-i18n="soon"></div>
+    <button class="btn ghost" data-back data-i18n="backMenu">メニューへ</button>
+  </div>
+  <div id="profile" class="screen hidden">
+    <h2 class="scr-head">PROFILE</h2>
+    <p class="stub-desc" data-i18n="prDesc"></p>
+    <div class="soon-badge" data-i18n="soon"></div>
+    <button class="btn ghost" data-back data-i18n="backMenu">メニューへ</button>
   </div>
 
   <!-- ルール -->
@@ -616,7 +714,57 @@
     rMode: ['モードと記録', 'Modes & records', '模式与记录', '모드와 기록', 'Modos y registros', 'Modos e registros', 'Modes et records', 'Modi & Rekorde', 'Режимы и рекорды', 'Mode & rekor'],
     rModeP: ['3つのモードは配点だけが異なり、円の出方は共通です。記録(ベスト・TOP10・グラフ)はモード別に、この端末のブラウザへ保存されます。', 'The three modes differ only in scoring; circles behave the same. Records (best, top 10, chart) are stored per mode in this device\'s browser.', '三种模式仅计分不同，圆圈的出现方式相同。记录（最佳、前10、图表）按模式保存在本设备的浏览器中。', '세 모드는 배점만 다르고 원의 등장 방식은 같습니다. 기록(베스트·TOP10·그래프)은 모드별로 이 기기의 브라우저에 저장됩니다.', 'Los tres modos solo cambian la puntuación; los círculos son iguales. Los registros (récord, top 10, gráfica) se guardan por modo en el navegador de este dispositivo.', 'Os três modos mudam só a pontuação; os círculos são iguais. Os registros (recorde, top 10, gráfico) ficam salvos por modo no navegador deste aparelho.', 'Les trois modes ne diffèrent que par le score ; les cercles sont identiques. Les records (meilleur, top 10, graphique) sont enregistrés par mode dans le navigateur de cet appareil.', 'Die drei Modi unterscheiden sich nur in der Wertung; die Kreise sind gleich. Rekorde (Best, Top 10, Diagramm) werden pro Modus im Browser dieses Geräts gespeichert.', 'Три режима отличаются только подсчётом очков; круги одинаковы. Рекорды (лучший, топ-10, график) хранятся по режимам в браузере этого устройства.', 'Ketiga mode hanya berbeda penilaian; perilaku lingkaran sama. Rekor (terbaik, top 10, grafik) disimpan per mode di browser perangkat ini.'],
   };
-  let lang = localStorage.getItem('touchaim_lang');
+  STR.saDesc = ['10ターゲット×25秒のスコアアタック', 'Score attack — 10 targets in 25 seconds', '25秒10个目标的比分挑战', '25초 10타깃 스코어 어택', 'Ataque de puntuación: 10 objetivos en 25 s', 'Ataque de pontuação: 10 alvos em 25 s', 'Score attack : 10 cibles en 25 s', 'Score Attack – 10 Ziele in 25 s', 'Скоростной зачёт: 10 целей за 25 с', 'Score attack — 10 target dalam 25 detik'];
+  STR.trDesc = ['6つのエイム能力を個別に練習', 'Practice six aim skills individually', '分别训练6项瞄准能力', '6가지 에임 능력을 개별 연습', 'Entrena seis habilidades de puntería por separado', 'Treine seis habilidades de mira separadamente', 'Entraînez six aptitudes de visée séparément', 'Sechs Aim-Fähigkeiten einzeln trainieren', 'Тренируйте шесть навыков прицеливания по отдельности', 'Latih enam kemampuan aim secara terpisah'];
+  STR.asDesc = ['6種目を通して能力を測定 (1日2回)', 'Measure your skills across six tests (twice a day)', '通过6个项目测定能力（每日2次）', '6개 종목으로 능력 측정 (하루 2회)', 'Mide tus habilidades en seis pruebas (2 veces al día)', 'Meça suas habilidades em seis testes (2× ao dia)', 'Mesurez vos aptitudes sur six épreuves (2×/jour)', 'Miss deine Fähigkeiten in sechs Tests (2× täglich)', 'Измерьте навыки в шести тестах (2 раза в день)', 'Ukur kemampuan lewat enam tes (2× sehari)'];
+  STR.prDesc = ['六角形チャートで能力を可視化', 'Visualize your skills on a hexagon chart', '用六边形图表可视化能力', '육각형 차트로 능력 시각화', 'Visualiza tus habilidades en un hexágono', 'Visualize suas habilidades num hexágono', 'Visualisez vos aptitudes en hexagone', 'Fähigkeiten im Hexagon-Diagramm', 'Навыки на шестиугольной диаграмме', 'Visualisasikan kemampuan dalam grafik heksagon'];
+  STR.soon = ['準備中', 'Coming soon', '敬请期待', '준비 중', 'Próximamente', 'Em breve', 'Bientôt', 'Demnächst', 'Скоро', 'Segera hadir'];
+  STR.backMenu = ['メニューへ', 'Back to menu', '返回菜单', '메뉴로', 'Al menú', 'Ao menu', 'Retour au menu', 'Zum Menü', 'В меню', 'Ke menu'];
+
+  // ===== ストレージ v2 (バージョン付き・一元化) =====
+  const DB_KEY = 'touchaim_v2';
+  function freshModeData() { return { best: 0, top: [], hist: [] }; }
+  function loadJsonKey(key) {
+    try { return JSON.parse(localStorage.getItem(key) || '[]'); } catch (e) { return []; }
+  }
+  // 旧世代キー (touchaim_best_* 等、さらに古い touchaim_best 等) からの移行。旧キーは安全のため残す
+  function migrateV1() {
+    const d = { schema: 2, settings: {}, sa: { normal: freshModeData(), acc: freshModeData(), speed: freshModeData() }, stats: { plays: 0, hits: 0 } };
+    for (const m of ['normal', 'acc', 'speed']) {
+      d.sa[m].best = Number(localStorage.getItem('touchaim_best_' + m) || 0);
+      d.sa[m].top = loadJsonKey('touchaim_top_' + m);
+      d.sa[m].hist = loadJsonKey('touchaim_history_' + m);
+    }
+    // モード分割以前の単一キーが残っていた場合はノーマルへ
+    if (!d.sa.normal.best) d.sa.normal.best = Number(localStorage.getItem('touchaim_best') || 0);
+    if (!d.sa.normal.hist.length) d.sa.normal.hist = loadJsonKey('touchaim_history');
+    if (!d.sa.normal.top.length) d.sa.normal.top = d.sa.normal.hist.slice().sort((a, b) => b.s - a.s).slice(0, 10);
+    d.settings.mode = localStorage.getItem('touchaim_mode') || undefined;
+    d.settings.lang = localStorage.getItem('touchaim_lang') || undefined;
+    return d;
+  }
+  function loadDB() {
+    try {
+      const raw = localStorage.getItem(DB_KEY);
+      if (raw) {
+        const d = JSON.parse(raw);
+        if (d && d.schema === 2 && d.sa) return d;
+      }
+    } catch (e) {
+      // 破損時: 中身を退避してから作り直す
+      try { localStorage.setItem(DB_KEY + '_corrupt', localStorage.getItem(DB_KEY)); } catch (e2) { /* 退避不能でも続行 */ }
+    }
+    const d = migrateV1();
+    try { localStorage.setItem(DB_KEY, JSON.stringify(d)); } catch (e) { /* 保存不能でも続行 */ }
+    return d;
+  }
+  const db = loadDB();
+  function saveDB() {
+    try { localStorage.setItem(DB_KEY, JSON.stringify(db)); } catch (e) { /* 保存不能でも続行 */ }
+  }
+  if (MODES[db.settings.mode]) mode = db.settings.mode;
+
+  let lang = db.settings.lang;
   if (!LANGS.includes(lang)) {
     const nav = (navigator.language || 'en').slice(0, 2);
     lang = LANGS.includes(nav) ? nav : 'en';
@@ -738,10 +886,11 @@
   // 速く倒すほど次がすぐ来る方式。個々はランダムだが合計を固定し、プレイ間の運差を抑える。
   // 全タイムアウトの最悪ケースでも 700 + 9×2000 + 4500 ≈ 23.2秒 < 25秒 に収まる。
   function makeSpawnGaps() {
-    const g = [500 + Math.random() * 200]; // 最初の1個までの待ち
-    const raw = Array.from({ length: TARGETS - 1 }, () => 300 + Math.random() * 500);
+    const g = [400 + Math.random() * 400]; // 最初の1個までの待ち
+    // べき分布で偏らせる: 連続で来る瞬間と一呼吸空く瞬間が混ざる (合計は4.5秒固定)
+    const raw = Array.from({ length: TARGETS - 1 }, () => 120 + Math.pow(Math.random(), 1.7) * 1100);
     const sum = raw.reduce((s, x) => s + x, 0);
-    raw.forEach(x => g.push(x * 4500 / sum)); // 2個目以降の間隔は合計4.5秒で固定
+    raw.forEach(x => g.push(x * 4500 / sum));
     return g;
   }
 
@@ -756,54 +905,35 @@
   }
 
   // ===== 画面遷移 =====
+  const MODE_LABEL = { normal: 'BALANCED', acc: 'PRECISION', speed: 'SPEED' };
+
   function show(id) {
-    ['title', 'countdown', 'result', 'rules'].forEach(s => $(s).classList.toggle('hidden', s !== id));
+    ['menu', 'title', 'training', 'assessment', 'profile', 'countdown', 'result', 'rules']
+      .forEach(s => $(s).classList.toggle('hidden', s !== id));
   }
 
-  // ===== 記録 (すべてモード別に管理) =====
-  function loadBest() { return Number(localStorage.getItem('touchaim_best_' + mode) || 0); }
-
-  function loadJson(key) {
-    try { return JSON.parse(localStorage.getItem(key) || '[]'); }
-    catch (e) { return []; }
-  }
+  // ===== 記録 (ストレージv2・モード別) =====
+  function saData() { return db.sa[mode]; }
+  function loadBest() { return saData().best || 0; }
   // プレイ履歴 (散布図用・直近30回)
-  function loadHistory() { return loadJson('touchaim_history_' + mode); }
+  function loadHistory() { return saData().hist; }
   function saveHistory(entry) {
-    const h = loadHistory();
-    h.push(entry);
-    const trimmed = h.slice(-30);
-    localStorage.setItem('touchaim_history_' + mode, JSON.stringify(trimmed));
-    return trimmed;
+    const d = saData();
+    d.hist.push(entry);
+    d.hist = d.hist.slice(-30);
+    saveDB();
+    return d.hist;
   }
   // ハイスコアTOP10
-  function loadTop() { return loadJson('touchaim_top_' + mode); }
+  function loadTop() { return saData().top; }
   function saveTop(entry) {
-    const t = loadTop();
-    t.push(entry);
-    t.sort((a, b) => b.s - a.s);
-    const trimmed = t.slice(0, 10);
-    localStorage.setItem('touchaim_top_' + mode, JSON.stringify(trimmed));
-    return trimmed;
+    const d = saData();
+    d.top.push(entry);
+    d.top.sort((a, b) => b.s - a.s);
+    d.top = d.top.slice(0, 10);
+    saveDB();
+    return d.top;
   }
-
-  // モード導入前の旧データはノーマルへ移行
-  (function migrate() {
-    const oldH = localStorage.getItem('touchaim_history');
-    if (oldH) {
-      localStorage.setItem('touchaim_history_normal', oldH);
-      localStorage.removeItem('touchaim_history');
-      if (!localStorage.getItem('touchaim_top_normal')) {
-        const top = loadJson('touchaim_history_normal').slice().sort((a, b) => b.s - a.s).slice(0, 10);
-        localStorage.setItem('touchaim_top_normal', JSON.stringify(top));
-      }
-    }
-    const oldB = localStorage.getItem('touchaim_best');
-    if (oldB) {
-      localStorage.setItem('touchaim_best_normal', oldB);
-      localStorage.removeItem('touchaim_best');
-    }
-  })();
 
   // ===== 履歴散布図: X=反応速度(右ほど速い) Y=精度 =====
   const CH = { W: 340, H: 240, padL: 38, padR: 10, padT: 14, padB: 28, tMax: 1000 };
@@ -891,7 +1021,7 @@
     $('modeDesc').textContent = T('d_' + mode);
     const b = loadBest();
     $('best').textContent = b > 0 ? `BEST SCORE: ${b.toLocaleString()}` : '';
-    $('recHead').textContent = `RECORDS — ${T('m_' + mode)}`;
+    $('recHead').textContent = `RECORDS — ${MODE_LABEL[mode]}`;
     // ハイスコアTOP10
     const top = loadTop();
     const tbody = $('top10').querySelector('tbody');
@@ -1130,11 +1260,17 @@
     // ベスト更新
     const best = loadBest();
     if (totalScore > best) {
-      localStorage.setItem('touchaim_best_' + mode, totalScore);
+      saData().best = totalScore;
+      saveDB();
       $('newBest').textContent = '★ NEW BEST!';
     } else {
       $('newBest').textContent = best > 0 ? `BEST: ${best.toLocaleString()}` : '';
     }
+
+    // 累計統計 (将来の実績判定用の下地)
+    db.stats.plays++;
+    db.stats.hits += hits.length;
+    saveDB();
 
     // 履歴・TOP10に保存して散布図を描画 (全ミスの回は保存しない)
     let hist = loadHistory();
@@ -1144,7 +1280,7 @@
       saveTop(entry);
     }
     renderChart('chart', 'chartInfo', hist);
-    $('resultMode').textContent = T('m_' + mode);
+    $('resultMode').textContent = MODE_LABEL[mode];
 
     // 明細テーブル
     const tbody = $('detail').querySelector('tbody');
@@ -1377,7 +1513,13 @@
     show('title');
   });
   $('rulesBtn').addEventListener('click', () => show('rules'));
-  $('rulesBackBtn').addEventListener('click', () => show('title'));
+  $('rulesBackBtn').addEventListener('click', () => { renderTitle(); show('title'); });
+  // メニューの4分類
+  $('catSa').addEventListener('click', () => { renderTitle(); show('title'); });
+  $('catTr').addEventListener('click', () => show('training'));
+  $('catAs').addEventListener('click', () => show('assessment'));
+  $('catPr').addEventListener('click', () => show('profile'));
+  document.querySelectorAll('[data-back]').forEach(b => b.addEventListener('click', () => show('menu')));
   // 言語セレクタ
   const sel = $('langSel');
   LANGS.forEach((code, i) => {
@@ -1389,14 +1531,16 @@
   sel.value = lang;
   sel.addEventListener('change', () => {
     lang = sel.value;
-    localStorage.setItem('touchaim_lang', lang);
+    db.settings.lang = lang;
+    saveDB();
     applyLang();
     renderTitle();
   });
   document.querySelectorAll('.modebtn').forEach(b => {
     b.addEventListener('click', () => {
       mode = b.dataset.mode;
-      localStorage.setItem('touchaim_mode', mode);
+      db.settings.mode = mode;
+      saveDB();
       renderTitle();
     });
   });
