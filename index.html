@@ -119,8 +119,8 @@
     border-radius: 50%;
     transform: translate(-50%, -50%) scale(1);
     background:
-      radial-gradient(circle, #fff 0 5%, transparent 5.5%),
-      radial-gradient(circle, rgba(46,168,255,.9) 0 15%, rgba(46,168,255,.5) 15% 33%, rgba(46,168,255,.12) 33.5% 66%, rgba(46,168,255,.05) 66% 100%);
+      radial-gradient(circle, #fff 0 6%, transparent 6.5%),
+      radial-gradient(circle, rgba(46,168,255,.9) 0 22%, rgba(46,168,255,.5) 22% 50%, rgba(46,168,255,.12) 50.5% 75%, rgba(46,168,255,.05) 75% 100%);
     border: 1.5px solid rgba(140,210,255,.95);
     box-shadow:
       0 0 26px rgba(46,168,255,.45),
@@ -148,7 +148,7 @@
     content: '';
     position: absolute;
     left: 50%; top: 50%;
-    width: 33%; height: 33%;
+    width: 50%; height: 50%;
     transform: translate(-50%,-50%);
     border: 1.5px solid rgba(255,255,255,.55);
     border-radius: 50%;
@@ -525,7 +525,7 @@
   const ROUND_MS      = 25000;   // 制限時間
   const TARGET_LIFE   = 2000;    // ターゲットの寿命(ms) 超過でミス
   const MAX_PTS       = 1000;    // 1ターゲットの満点
-  const COMBO_ZONE    = 0.33;    // コンボ判定: 中心からこの半径比以内 (青い芯)
+  const COMBO_ZONE    = 0.50;    // コンボ判定: 中心からこの半径比以内 (青い芯)
   const COMBO_STEP    = 0.03;    // 1コンボごとの倍率上昇
   const COMBO_CAP     = 10;      // 倍率上限に達するコンボ数 (最大×1.30)
   const WHIFF_PENALTY = 100;     // 空振りの減点
@@ -625,7 +625,7 @@
 
   // ===== ターゲット半径: 画面基準サイズ (スマホの指で押しやすい大きさ) =====
   function baseRadius() {
-    return Math.round(Math.min(innerWidth, innerHeight) * 0.30);
+    return Math.round(Math.min(innerWidth, innerHeight) * 0.20);
   }
 
   // サイズ倍率10個: ばらつきはあるが平均はちょうど×1.00 (プレイ間の有利不利なし)
@@ -1107,9 +1107,9 @@
     if (!ghost) {
       const g = rctx.createRadialGradient(x, y, 0, x, y, r);
       g.addColorStop(0, 'rgba(46,168,255,.9)');
-      g.addColorStop(.15, 'rgba(46,168,255,.5)');
-      g.addColorStop(.33, 'rgba(46,168,255,.12)');
-      g.addColorStop(.66, 'rgba(46,168,255,.05)');
+      g.addColorStop(.22, 'rgba(46,168,255,.5)');
+      g.addColorStop(.5, 'rgba(46,168,255,.12)');
+      g.addColorStop(.75, 'rgba(46,168,255,.05)');
       g.addColorStop(1, 'rgba(46,168,255,.05)');
       rctx.fillStyle = g;
       rctx.beginPath(); rctx.arc(x, y, r, 0, 6.283); rctx.fill();
@@ -1125,7 +1125,7 @@
       // コンボゾーン (青い芯) の境界
       rctx.strokeStyle = 'rgba(255,255,255,.55)';
       rctx.lineWidth = 1.5;
-      rctx.beginPath(); rctx.arc(x, y, r * 0.33, 0, 6.283); rctx.stroke();
+      rctx.beginPath(); rctx.arc(x, y, r * COMBO_ZONE, 0, 6.283); rctx.stroke();
     }
     rctx.strokeStyle = ghost ? 'rgba(46,168,255,.22)' : 'rgba(140,210,255,.95)';
     rctx.lineWidth = 1.5;
