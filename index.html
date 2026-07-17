@@ -401,7 +401,7 @@
 
   <!-- HUD -->
   <div id="hud" class="hidden">
-    <div><div class="label">TIME</div><div class="val" id="timer">25.000</div></div>
+    <div><div class="label">TIME</div><div class="val" id="timer">25</div></div>
     <div style="text-align:center"><div class="label">TARGET</div><div class="val" id="progress">0/10</div></div>
     <div style="text-align:right"><div class="label">SCORE</div><div class="val" id="score">0</div></div>
   </div>
@@ -859,11 +859,11 @@
   function tick() {
     const remain = ROUND_MS - (performance.now() - roundStart);
     if (remain <= 0) {
-      $('timer').textContent = '0.000';
+      $('timer').textContent = '0';
       endRound();
       return;
     }
-    $('timer').textContent = (remain / 1000).toFixed(3);
+    $('timer').textContent = Math.ceil(remain / 1000);
     $('timer').classList.toggle('warn', remain < 5000);
     rafId = requestAnimationFrame(tick);
   }
