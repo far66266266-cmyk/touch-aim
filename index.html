@@ -349,6 +349,14 @@
     box-shadow: 0 0 14px rgba(46,168,255,.25);
   }
   .modedesc { font-size: 11px; color: #8b949e; margin-bottom: 20px; min-height: 14px; }
+  .rules {
+    width: 100%; max-width: 420px;
+    text-align: left;
+    font-size: 11px; color: #8b949e;
+    line-height: 2;
+    margin-bottom: 24px;
+  }
+  .rule-core { color: #2ea8ff; }
   .rec-head {
     margin: 30px 0 8px;
     font-size: 12px; color: #8b949e;
@@ -383,12 +391,7 @@
   <!-- タイトル -->
   <div id="title" class="screen">
     <h1>TOUCH AIM</h1>
-    <div class="sub">
-      出現する円をすばやく・中心を狙ってタップ<br>
-      反応速度は1/1000秒、精度は中心からの距離で判定<br>
-      青い芯に当て続けるとコンボ倍率(最大×1.30)<br>
-      空振りは-100点。全10ターゲット・制限時間25秒
-    </div>
+    <div class="sub">出現する円をすばやく・中心を狙ってタップ</div>
     <div class="modes">
       <button class="modebtn" data-mode="normal">ノーマル</button>
       <button class="modebtn" data-mode="acc">精度重視</button>
@@ -403,9 +406,14 @@
       <tbody></tbody>
     </table>
     <div class="chartWrap">
-      <div class="chart-title">過去30プレイの記録 — 明るい点ほど最近</div>
+      <div class="chart-title">過去30プレイ</div>
       <svg id="chartT" viewBox="0 0 340 240" xmlns="http://www.w3.org/2000/svg"></svg>
       <div id="chartInfoT" class="chart-info">点をタップすると詳細を表示</div>
+    </div>
+    <div class="rules">
+      <div>・10個の円を25秒以内にタップ。速さ × 中心精度 × 円の小ささでスコア</div>
+      <div>・<span class="rule-core">青い芯</span>に当て続けるとコンボ倍率 (最大×1.30)</div>
+      <div>・空振りは -100点</div>
     </div>
   </div>
 
@@ -425,7 +433,7 @@
       <div class="stat"><div class="v" id="maxCombo">-</div><div class="k">最大コンボ</div></div>
     </div>
     <div class="chartWrap">
-      <div class="chart-title">過去30プレイの記録 — 明るい点ほど最近 / 黄枠が今回</div>
+      <div class="chart-title">過去30プレイ</div>
       <svg id="chart" viewBox="0 0 340 240" xmlns="http://www.w3.org/2000/svg"></svg>
       <div id="chartInfo" class="chart-info">点をタップすると詳細を表示</div>
     </div>
@@ -647,7 +655,7 @@
   })();
 
   // ===== 履歴散布図: X=反応速度(右ほど速い) Y=精度 =====
-  const CH = { W: 340, H: 240, padL: 26, padR: 10, padT: 14, padB: 20, tMax: 1000 };
+  const CH = { W: 340, H: 240, padL: 32, padR: 10, padT: 14, padB: 24, tMax: 1000 };
   function chX(t) { return CH.padL + (CH.W - CH.padL - CH.padR) * (1 - Math.min(Math.max(t, 0), CH.tMax) / CH.tMax); }
   function chY(a) { return CH.padT + (CH.H - CH.padT - CH.padB) * (1 - a); }
 
@@ -666,15 +674,37 @@
     s += `<line x1="${x0}" y1="${chY(0.5)}" x2="${x1}" y2="${chY(0.5)}" stroke="#484f58" stroke-width="1.5"/>`;
     // 軸ラベル
     const lbl = (x, y, text, anchor) =>
-      `<text x="${x}" y="${y}" fill="#8b949e" font-size="9" text-anchor="${anchor}" font-family="inherit">${text}</text>`;
-    s += lbl(x0, y1 + 12, '← 遅い', 'start');
-    s += lbl(x1, y1 + 12, '速い →', 'end');
-    s += lbl(chX(500), y1 + 12, '500ms', 'middle');
-    s += `<text x="${x0 - 6}" y="${y0 + 8}" fill="#8b949e" font-size="9" text-anchor="middle" writing-mode="tb" font-family="inherit">精度高</text>`;
-    s += `<text x="${x0 - 6}" y="${y1 - 34}" fill="#8b949e" font-size="9" text-anchor="middle" writing-mode="tb" font-family="inherit">精度低</text>`;
-    s += lbl(x0 - 4, chY(0.5) + 3, '50%', 'end');
-    // 理想ゾーンの目印
-    s += `<text x="${x1 - 4}" y="${y0 + 10}" fill="#3fb950" font-size="9" text-anchor="end" font-family="inherit">◎ 速く正確</text>`;
+      `<text x="${x}" y="${y}" fill="#a8b6c2" font-size="12" text-anchor="${anchor}" font-family="inherit">${text}</text>`;
+    s += lbl(x0, y1 + 16, '← 遅い', 'start');
+    s += lbl(x1, y1 + 16, '速い →', 'end');
+    s += lbl(chX(500), y1 + 16, '500ms', 'middle');
+    s += `<text x="${x0 - 8}" y="${y0 + 6}" fill="#a8b6c2" font-size="12" text-anchor="middle" writing-mode="tb" font-family="inherit">精度高</text>`;
+    s += `<text x="${x0 - 8}" y="${y1 - 42}" fill="#a8b6c2" font-size="12" text-anchor="middle" writing-mode="tb" font-family="inherit">精度低</text>`;
+    s += lbl(x0 - 4, chY(0.5) + 4, '50%', 'end');
+    // グレードの目安線: 現在モードの配点で1発スコアが境界値になる曲線 (サイズ×1.00・コンボなし)
+    const m = MODES[mode];
+    const bands = [[EXCELLENT_PTS, '#ffdf5d', 'EXCELLENT'], [550, '#2ea8ff', 'GREAT'], [300, '#3fb950', 'GOOD']];
+    for (const [thr, color, label] of bands) {
+      let d = '', needM = true, lastPt = null;
+      for (let px = 0; px <= x1 - x0; px += 4) {
+        const tMs = (1 - px / (x1 - x0)) * CH.tMax;
+        const tf = tMs <= m.tFull ? 1 : Math.max(0.1, (m.tZero - tMs) / (m.tZero - m.tFull));
+        if (MAX_PTS * m.combine(tf, 1) < thr) { needM = true; continue; } // この遅さでは精度100%でも届かない
+        let lo = 0, hi = 1;
+        for (let k = 0; k < 18; k++) {
+          const mid = (lo + hi) / 2;
+          if (MAX_PTS * m.combine(tf, mid) < thr) lo = mid; else hi = mid;
+        }
+        const X = x0 + px, Y = chY(hi);
+        d += (needM ? 'M' : 'L') + X.toFixed(1) + ' ' + Y.toFixed(1);
+        needM = false;
+        lastPt = [X, Y];
+      }
+      if (d) {
+        s += `<path d="${d}" fill="none" stroke="${color}" stroke-width="1" stroke-dasharray="3 3" opacity=".45"/>`;
+        if (lastPt) s += `<text x="${lastPt[0] - 3}" y="${lastPt[1] - 5}" fill="${color}" font-size="9" opacity=".9" text-anchor="end" font-family="inherit">${label}</text>`;
+      }
+    }
     // 点: 古い→新しい順に描画 (新しいほど明るい)
     const n = hist.length;
     hist.forEach((h, i) => {
