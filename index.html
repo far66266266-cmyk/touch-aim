@@ -502,6 +502,31 @@
     cursor: pointer;
   }
   .achBtn:active { transform: scale(.98); }
+
+  /* ===== メニュー: SCORE ATTACKの3モード紹介 (ACHIEVEMENTSボタン直下・控えめな情報密度) ===== */
+  .menu-modes {
+    width: 100%; max-width: 420px;
+    margin-top: 16px;
+    text-align: left;
+  }
+  .menu-modes-label {
+    font-size: 11px; color: #5f7a94;
+    letter-spacing: .22em; font-weight: 600;
+    margin-bottom: 6px;
+  }
+  .menu-mode-row {
+    display: flex; align-items: baseline; gap: 8px;
+    padding: 5px 2px;
+    font-size: 13px; color: #8b949e; line-height: 1.5;
+  }
+  .menu-mode-name {
+    flex: 0 0 auto;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 11px; font-weight: 700;
+    letter-spacing: .06em;
+    color: #5f95b8;
+  }
+  .menu-mode-desc { color: #8b949e; }
   #achievements {
     justify-content: flex-start;
     overflow-y: auto; touch-action: pan-y;
@@ -672,6 +697,75 @@
     margin: 16px 0 22px;
   }
   .tr-metrics .stat { flex: 1 1 40%; }
+
+  /* ===== PROFILE: 六角形レーダーチャート・能力別リスト・日別履歴・エクスポート ===== */
+  #profile { justify-content: flex-start; overflow-y: auto; touch-action: pan-y; padding-top: max(32px, env(safe-area-inset-top)); }
+  #prChartWrap svg { overflow: visible; }
+  .prof-legend {
+    display: flex; gap: 18px; justify-content: center;
+    font-size: 12px; color: #8b949e;
+    margin-top: 4px;
+  }
+  .prof-legend-dot {
+    display: inline-block; width: 9px; height: 9px;
+    border-radius: 50%; margin-right: 5px;
+  }
+  .prof-rows {
+    width: 100%; max-width: 420px;
+    display: flex; flex-direction: column; gap: 8px;
+    margin: 14px 0 4px;
+  }
+  .prof-row {
+    text-align: left;
+    background: #161b22; border: 1px solid #30363d;
+    border-radius: 10px; padding: 12px 14px;
+    cursor: pointer;
+  }
+  .prof-row:active { transform: scale(.98); }
+  .prof-row-top { display: flex; align-items: center; justify-content: space-between; }
+  .prof-row-name {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 14px; font-weight: 700; letter-spacing: .08em;
+    color: #2ea8ff;
+  }
+  .prof-row-score {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 20px; font-weight: 700;
+    font-variant-numeric: tabular-nums;
+  }
+  .prof-row-score span { font-size: 13px; font-weight: 600; margin-left: 4px; }
+  .prof-delta-up   { color: #3fb950; }
+  .prof-delta-down { color: #f85149; }
+  .prof-delta-flat { color: #8b949e; }
+  .prof-weak-badge {
+    display: inline-block; margin-left: 8px;
+    font-size: 10px; font-weight: 700;
+    color: #f85149;
+    border: 1px solid rgba(248,81,73,.5);
+    border-radius: 999px;
+    padding: 2px 8px;
+    vertical-align: 1px;
+  }
+  .prof-row-desc { font-size: 12px; color: #8b949e; margin-top: 5px; line-height: 1.5; }
+  .prof-row-weak-hint { font-size: 12px; color: #f85149; margin-top: 4px; }
+  .prof-hist-list {
+    width: 100%;
+    display: flex; flex-direction: column; gap: 8px;
+    margin-bottom: 18px;
+  }
+  .prof-hist-item {
+    display: flex; align-items: center; justify-content: space-between;
+    background: #161b22; border: 1px solid #30363d;
+    border-radius: 10px; padding: 10px 14px;
+    cursor: pointer;
+  }
+  .prof-hist-item.sel { border-color: #2ea8ff; box-shadow: 0 0 12px rgba(46,168,255,.25); }
+  .prof-hist-date { font-size: 13px; color: #e6edf3; font-weight: 600; }
+  .prof-mini { display: flex; gap: 6px; margin-top: 3px; }
+  .prof-mini span { font-size: 10px; color: #5f7a94; font-variant-numeric: tabular-nums; }
+  .prof-export-row { display: flex; gap: 10px; width: 100%; }
+  .prof-export-btn { flex: 1; margin-top: 0; font-size: 14px; padding: 12px 8px; }
+  .prof-export-btn:disabled { opacity: .35; }
 </style>
 </head>
 <body>
@@ -715,13 +809,29 @@
         <div class="cat-name">TRAINING</div>
         <div class="cat-desc" data-i18n="trDesc"></div>
       </button>
-      <button class="cat soon" id="catPr">
+      <button class="cat" id="catPr">
         <div class="cat-name">PROFILE</div>
         <div class="cat-desc" data-i18n="prDesc"></div>
-        <div class="cat-soon" data-i18n="soon"></div>
       </button>
     </div>
     <button class="achBtn" id="achBtn">🏆 ACHIEVEMENTS <span id="achBtnCount">0/25</span></button>
+
+    <!-- SCORE ATTACKの3モード紹介 (メニュー直下・情報密度低め) -->
+    <div class="menu-modes">
+      <div class="menu-modes-label">MODES</div>
+      <div class="menu-mode-row">
+        <span class="menu-mode-name">BALANCED</span>
+        <span class="menu-mode-desc" data-i18n="d_normal"></span>
+      </div>
+      <div class="menu-mode-row">
+        <span class="menu-mode-name">PRECISION</span>
+        <span class="menu-mode-desc" data-i18n="d_acc"></span>
+      </div>
+      <div class="menu-mode-row">
+        <span class="menu-mode-name">SPEED</span>
+        <span class="menu-mode-desc" data-i18n="d_speed"></span>
+      </div>
+    </div>
   </div>
 
   <!-- SCORE ATTACK -->
@@ -800,8 +910,43 @@
 
   <div id="profile" class="screen hidden">
     <h2 class="scr-head">PROFILE</h2>
-    <p class="stub-desc" data-i18n="prDesc"></p>
-    <div class="soon-badge" data-i18n="soon"></div>
+    <p class="stub-desc" data-i18n="prDesc" style="margin-bottom:10px;"></p>
+
+    <!-- ASSESSMENT未実施: 案内文+ASSESSMENTへのボタン -->
+    <div id="prNoData" class="hidden">
+      <p class="stub-desc" data-i18n="prNoData"></p>
+      <button class="btn" id="prGoAssessmentBtn" data-i18n="prGoAssessment"></button>
+    </div>
+
+    <!-- 六角形レーダーチャート (最新=シアン実線 / 前回=グレー点線) -->
+    <div id="prChartWrap" class="chartWrap hidden">
+      <svg id="prChart" viewBox="0 0 340 320" xmlns="http://www.w3.org/2000/svg"></svg>
+      <div class="prof-legend">
+        <span><span class="prof-legend-dot" style="background:#2ea8ff"></span><span id="prLegendLatestText"></span></span>
+        <span id="prLegendPrev" class="hidden"><span class="prof-legend-dot" style="background:#5f7a94"></span><span id="prLegendPrevText"></span></span>
+      </div>
+    </div>
+
+    <!-- 能力別リスト (最新スコア・前回比・説明・WEAKESTバッジ。行タップでTRAINING起動) -->
+    <div id="prAbilityWrap" class="hidden" style="width:100%;max-width:420px;">
+      <div class="prof-rows" id="prAbilityRows"></div>
+    </div>
+
+    <!-- 日別履歴 (直近14日・行タップで「最新」表示を切替) -->
+    <div id="prHistWrap" class="hidden" style="width:100%;max-width:420px;">
+      <div class="rec-head" data-i18n="prHistTitle"></div>
+      <div class="prof-hist-list" id="prHistList"></div>
+    </div>
+
+    <!-- データエクスポート -->
+    <div id="prExportWrap" style="width:100%;max-width:420px;">
+      <div class="rec-head">DATA EXPORT</div>
+      <div class="prof-export-row">
+        <button class="btn ghost prof-export-btn" id="prExportJsonBtn" data-i18n="prExportJsonBtn"></button>
+        <button class="btn ghost prof-export-btn" id="prExportCsvBtn" data-i18n="prExportCsvBtn"></button>
+      </div>
+    </div>
+
     <button class="btn ghost" data-back data-i18n="backMenu">メニューへ</button>
   </div>
 
@@ -1038,6 +1183,16 @@
   STR.tr_k_streak = ['最長ストリーク', 'Longest streak'];
   STR.tr_k_signed = ['早押し/遅押し傾向', 'Early/late tendency'];
   STR.tr_k_hits = ['命中', 'Hits'];
+
+  // ===== PROFILE: 新規UI文字列 (ja[0]/en[1] の2要素のみ。能力名・DATA EXPORT等のゲーム語彙は英語固定) =====
+  STR.prNoData = ['まだASSESSMENTのデータがありません', 'No ASSESSMENT data yet'];
+  STR.prGoAssessment = ['ASSESSMENTへ', 'Go to ASSESSMENT'];
+  STR.prLatestFmt = ['最新 ({d})', 'Latest ({d})'];
+  STR.prPrevFmt = ['前回 ({d})', 'Previous ({d})'];
+  STR.prWeakHint = ['TRAININGの該当課題で重点練習しよう', 'Practice this task in TRAINING to improve'];
+  STR.prHistTitle = ['履歴 (直近14日)', 'History (last 14 days)'];
+  STR.prExportJsonBtn = ['JSONをエクスポート', 'Export JSON'];
+  STR.prExportCsvBtn = ['CSVをエクスポート', 'Export CSV'];
 
   // ===== 実績の説明文 (25個・実績名は英語固定、説明のみi18n) =====
   STR.ad_first_play = ['初めて1プレイを完了', 'Complete your first round', '完成首次游玩', '첫 플레이 완료', 'Completa tu primera partida', 'Complete sua primeira partida', 'Terminez votre première partie', 'Schließe deine erste Runde ab', 'Завершите первую игру', 'Selesaikan permainan pertama'];
@@ -2893,6 +3048,199 @@
     show('asResult');
   }
 
+  // ===================================================================
+  // ===== PROFILE: 六角形レーダーチャート・能力別リスト・日別履歴・エクスポート =====
+  // db.assessment.runs (直近30run) を端末ローカル日付でグループ化し、
+  // その日の代表値(全run平均・小数1桁)を軸に表示する。既存のASSESSMENT/TRAINING
+  // ロジックは変更せず、db.assessment.runs / db.training / TR_ORDER / TR_META / TR_START を読むだけ。
+  // ===================================================================
+  let PR_SELECTED = 0; // prDailyList()の何番目(0=最新)を「最新」側として表示するか
+
+  // db.assessment.runsを日付(YYYY-MM-DD・端末ローカル)でグループ化し、日別代表値を新しい順で返す
+  // 戻り値: [{ date, scores:{taskId:avg|null}, total:avg|null, runCount }, ...]
+  function prDailyList() {
+    const groups = {};
+    db.assessment.runs.forEach(r => {
+      const d = new Date(r.ts);
+      const key = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+      (groups[key] = groups[key] || []).push(r);
+    });
+    return Object.keys(groups).sort().reverse().map(date => {
+      const runs = groups[date];
+      const scores = {};
+      TR_ORDER.forEach(id => {
+        const vals = runs.map(r => r.tasks[id] && r.tasks[id].score).filter(v => v != null);
+        scores[id] = vals.length ? +(vals.reduce((a, b) => a + b, 0) / vals.length).toFixed(1) : null;
+      });
+      const valid = TR_ORDER.map(id => scores[id]).filter(v => v != null);
+      const total = valid.length ? +(valid.reduce((a, b) => a + b, 0) / valid.length).toFixed(1) : null;
+      return { date, scores, total, runCount: runs.length };
+    });
+  }
+  function prFmtDate(dateStr) {
+    const p = dateStr.split('-');
+    return `${+p[1]}/${+p[2]}`;
+  }
+
+  // ===== 六角形レーダーチャートSVG =====
+  // 6軸固定順(TR_ORDER): PERCEPTION(上) → 時計回りに FLICK, PRECISION, TRACKING, SWITCHING, TIMING
+  const PR_CH = { cx: 170, cy: 150, r: 82 };
+  function prPoint(i, radius) {
+    const ang = -Math.PI / 2 + i * (Math.PI / 3);
+    return [PR_CH.cx + Math.cos(ang) * radius, PR_CH.cy + Math.sin(ang) * radius];
+  }
+  function prPolygonPoints(scores) {
+    return TR_ORDER.map((id, i) => {
+      const v = scores[id];
+      const ratio = v == null ? 0 : Math.max(0, Math.min(100, v)) / 100;
+      return prPoint(i, PR_CH.r * ratio).map(n => n.toFixed(1)).join(',');
+    }).join(' ');
+  }
+  function renderRadarChart(latest, prev) {
+    let s = '';
+    // 目盛り: 25/50/75/100の同心六角形 (控えめなグリッド線)
+    [25, 50, 75, 100].forEach(pct => {
+      const pts = TR_ORDER.map((_, i) => prPoint(i, PR_CH.r * pct / 100).map(n => n.toFixed(1)).join(',')).join(' ');
+      s += `<polygon points="${pts}" fill="none" stroke="#21262d" stroke-width="1"/>`;
+    });
+    // 軸線 (中心→各頂点)
+    TR_ORDER.forEach((_, i) => {
+      const [x, y] = prPoint(i, PR_CH.r);
+      s += `<line x1="${PR_CH.cx}" y1="${PR_CH.cy}" x2="${x.toFixed(1)}" y2="${y.toFixed(1)}" stroke="#21262d" stroke-width="1"/>`;
+    });
+    // 前回 (グレー系の点線ポリゴン・塗りなし。存在しない場合は非表示)
+    if (prev) {
+      s += `<polygon points="${prPolygonPoints(prev.scores)}" fill="none" stroke="#5f7a94" stroke-width="1.5" stroke-dasharray="4 3"/>`;
+    }
+    // 最新 (シアンの半透明塗り+実線ポリゴン)
+    s += `<polygon points="${prPolygonPoints(latest.scores)}" fill="rgba(46,168,255,.22)" stroke="#2ea8ff" stroke-width="2"/>`;
+    // 軸ラベル (各頂点の外側・英語名固定・はみ出さないよう左右でtext-anchorを振り分け)
+    TR_ORDER.forEach((id, i) => {
+      const [x, y] = prPoint(i, PR_CH.r * 1.32);
+      let anchor = 'middle';
+      if (x < PR_CH.cx - 4) anchor = 'end'; else if (x > PR_CH.cx + 4) anchor = 'start';
+      s += `<text x="${x.toFixed(1)}" y="${y.toFixed(1)}" fill="#a8b6c2" font-size="11" text-anchor="${anchor}" dominant-baseline="middle" font-family="inherit">${TR_META[id].name}</text>`;
+    });
+    $('prChart').innerHTML = s;
+  }
+
+  // ===== 能力別リスト: 最新スコア・前回比・説明・WEAKESTバッジ =====
+  function renderAbilityRows(latest, prev) {
+    const wrap = $('prAbilityRows');
+    wrap.innerHTML = '';
+    let weakestId = null, weakestV = Infinity;
+    TR_ORDER.forEach(id => {
+      const v = latest.scores[id];
+      if (v != null && v < weakestV) { weakestV = v; weakestId = id; }
+    });
+    TR_ORDER.forEach(id => {
+      const v = latest.scores[id];
+      const pv = prev ? prev.scores[id] : null;
+      let deltaHtml = '';
+      if (v != null && pv != null) {
+        const delta = +(v - pv).toFixed(1);
+        const cls = delta > 0 ? 'prof-delta-up' : delta < 0 ? 'prof-delta-down' : 'prof-delta-flat';
+        const arrow = delta > 0 ? ' ↑' : delta < 0 ? ' ↓' : '';
+        deltaHtml = `<span class="${cls}">${delta > 0 ? '+' : ''}${delta}${arrow}</span>`;
+      }
+      const isWeak = id === weakestId;
+      const row = document.createElement('div');
+      row.className = 'prof-row';
+      row.innerHTML =
+        `<div class="prof-row-top">` +
+          `<div><span class="prof-row-name">${TR_META[id].name}</span>${isWeak ? '<span class="prof-weak-badge">WEAKEST</span>' : ''}</div>` +
+          `<div class="prof-row-score">${v != null ? v : '-'}${deltaHtml}</div>` +
+        `</div>` +
+        `<div class="prof-row-desc">${T(TR_META[id].descKey)}</div>` +
+        (isWeak ? `<div class="prof-row-weak-hint">${T('prWeakHint')}</div>` : '');
+      // 行タップで該当TRAINING課題を直接起動 (profile画面を隠してからTR_START。TR側の画面制御はTRAININGと同じ)
+      row.addEventListener('click', () => { $('profile').classList.add('hidden'); TR_START[id](); });
+      wrap.appendChild(row);
+    });
+  }
+
+  // ===== 日別履歴: 直近14日 (データがある日のみ)。行タップで「最新」側を切替 =====
+  function renderHistoryList(days) {
+    const wrap = $('prHistList');
+    wrap.innerHTML = '';
+    days.slice(0, 14).forEach((d, i) => {
+      const item = document.createElement('div');
+      item.className = 'prof-hist-item' + (i === PR_SELECTED ? ' sel' : '');
+      const mini = TR_ORDER.map(id => `<span>${d.scores[id] != null ? Math.round(d.scores[id]) : '-'}</span>`).join('');
+      item.innerHTML =
+        `<div><div class="prof-hist-date">${prFmtDate(d.date)}</div><div class="prof-mini">${mini}</div></div>` +
+        `<div class="prof-row-score">${d.total != null ? d.total : '-'}</div>`;
+      item.addEventListener('click', () => { PR_SELECTED = i; renderProfile(); });
+      wrap.appendChild(item);
+    });
+  }
+
+  function renderProfile() {
+    const days = prDailyList();
+    const hasData = days.length > 0;
+    $('prNoData').classList.toggle('hidden', hasData);
+    $('prChartWrap').classList.toggle('hidden', !hasData);
+    $('prAbilityWrap').classList.toggle('hidden', !hasData);
+    $('prHistWrap').classList.toggle('hidden', !hasData);
+    if (hasData) {
+      if (PR_SELECTED >= days.length) PR_SELECTED = 0;
+      const latest = days[PR_SELECTED];
+      const prev = days[PR_SELECTED + 1] || null;
+      renderRadarChart(latest, prev);
+      $('prLegendLatestText').textContent = T('prLatestFmt').replace('{d}', prFmtDate(latest.date));
+      $('prLegendPrev').classList.toggle('hidden', !prev);
+      if (prev) $('prLegendPrevText').textContent = T('prPrevFmt').replace('{d}', prFmtDate(prev.date));
+      renderAbilityRows(latest, prev);
+      renderHistoryList(days);
+    }
+    $('prExportCsvBtn').disabled = db.assessment.runs.length === 0;
+  }
+
+  // ===== データエクスポート (Blob + createObjectURL + 一時<a download>) =====
+  function prDownloadBlob(content, filename, mime) {
+    const blob = new Blob([content], { type: mime });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  }
+  function prDateStamp() {
+    const d = new Date();
+    return d.getFullYear() + String(d.getMonth() + 1).padStart(2, '0') + String(d.getDate()).padStart(2, '0');
+  }
+  // JSONエクスポート: db全体 + メタ情報
+  function prExportJson() {
+    const payload = Object.assign({}, db, { exported_at: new Date().toISOString(), app: 'touch-aim' });
+    prDownloadBlob(JSON.stringify(payload, null, 2), `touchaim_export_${prDateStamp()}.json`, 'application/json');
+  }
+  function prCsvCell(v) {
+    if (v == null) return '';
+    const s = String(v);
+    return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+  }
+  // CSVエクスポート: ASSESSMENTのrunを1行1runでフラット化。UTF-8 BOM付き
+  function prExportCsv() {
+    if (!db.assessment.runs.length) return;
+    const cols = ['ts_iso', 'date', 'seed', 'assessment_version', 'test_config_version', 'score_formula_version',
+      'perception', 'flick', 'precision', 'tracking', 'switching', 'timing', 'total_avg', 'w', 'h', 'dpr', 'portrait'];
+    const lines = [cols.join(',')];
+    db.assessment.runs.forEach(r => {
+      const d = new Date(r.ts);
+      const date = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+      const env = r.env || {};
+      // TR_ORDER分をフラットに展開 (perception..timing)
+      const taskScores = TR_ORDER.map(id => (r.tasks[id] ? r.tasks[id].score : ''));
+      const flat = [d.toISOString(), date, r.seed, r.assessment_version, r.test_config_version, r.score_formula_version,
+        ...taskScores, r.totalAvg, env.w != null ? env.w : '', env.h != null ? env.h : '', env.dpr != null ? env.dpr : '', env.portrait != null ? env.portrait : ''];
+      lines.push(flat.map(prCsvCell).join(','));
+    });
+    const csv = '﻿' + lines.join('\r\n'); // UTF-8 BOM付き (Excelでの文字化け防止)
+    prDownloadBlob(csv, `touchaim_assessment_${prDateStamp()}.csv`, 'text/csv;charset=utf-8');
+  }
+
   // ===== ボタン =====
   $('startBtn').addEventListener('click', startCountdown);
   $('retryBtn').addEventListener('click', startCountdown);
@@ -2914,7 +3262,10 @@
   $('asResumeBtn').addEventListener('click', asResume);
   $('asDiscardBtn').addEventListener('click', () => { db.assessment.pending = null; saveDB(); asRenderStart(); });
   $('asCancelBtn').addEventListener('click', asCancelPending);
-  $('catPr').addEventListener('click', () => show('profile'));
+  $('catPr').addEventListener('click', () => { PR_SELECTED = 0; renderProfile(); show('profile'); });
+  $('prGoAssessmentBtn').addEventListener('click', () => { asRenderStart(); show('assessment'); });
+  $('prExportJsonBtn').addEventListener('click', prExportJson);
+  $('prExportCsvBtn').addEventListener('click', prExportCsv);
   $('achBtn').addEventListener('click', () => { renderAchievements(); show('achievements'); });
   document.querySelectorAll('[data-back]').forEach(b => b.addEventListener('click', () => show('menu')));
   // 言語セレクタ
