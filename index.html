@@ -459,6 +459,21 @@
     font-size: 13px; padding: 6px 8px;
     font-family: inherit;
   }
+  #bgmBtn {
+    position: absolute;
+    top: calc(12px + env(safe-area-inset-top)); left: 16px;
+    min-width: 76px;
+    background: #161b22; color: #8b949e;
+    border: 1px solid #30363d; border-radius: 8px;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 14px; font-weight: 700; letter-spacing: .08em;
+    padding: 6px 9px; cursor: pointer;
+  }
+  #bgmBtn.on {
+    color: #2ea8ff; border-color: rgba(46,168,255,.55);
+    box-shadow: 0 0 12px rgba(46,168,255,.16);
+  }
+  #bgmBtn:active { transform: scale(.96); }
   .modes {
     display: flex; gap: 8px;
     width: 100%; max-width: 420px;
@@ -696,6 +711,66 @@
 
   #trField { position: absolute; inset: 0; z-index: 12; }
 
+  /* 1発ごとのTRAINING評価 (SCORE ATTACKの.floatと同系統) */
+  .tr-feedback {
+    position: absolute; transform: translate(-50%, -100%);
+    z-index: 18; pointer-events: none; text-align: center;
+    white-space: nowrap; font-variant-numeric: tabular-nums;
+    animation: trFloatUp 1s ease-out forwards;
+    text-shadow: 0 2px 8px rgba(0,0,0,.85);
+  }
+  .tr-feedback .tr-grade {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 30px; font-weight: 900; line-height: 1;
+    letter-spacing: .12em;
+  }
+  .tr-feedback .tr-main {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 22px; font-weight: 700; margin-top: 3px;
+  }
+  .tr-feedback .tr-sub { font-size: 12px; margin-top: 2px; color: currentColor; opacity: .86; }
+  .tr-feedback.tr-s { color: #ffdf5d; text-shadow: 0 0 17px rgba(255,223,93,.5); }
+  .tr-feedback.tr-a { color: #39d5ff; text-shadow: 0 0 15px rgba(57,213,255,.45); }
+  .tr-feedback.tr-b { color: #3fb950; }
+  .tr-feedback.tr-c { color: #8b949e; }
+  .tr-feedback.tr-d { color: #a83b3b; }
+  @keyframes trFloatUp {
+    0% { opacity: 0; transform: translate(-50%,-82%) scale(.75); }
+    16% { opacity: 1; transform: translate(-50%,-100%) scale(1.08); }
+    100% { opacity: 0; transform: translate(-50%,-150%) scale(1); }
+  }
+  .tr-shake { animation: trShake .3s ease-in-out !important; }
+  @keyframes trShake {
+    0%, 100% { margin-left: 0; }
+    20%, 60% { margin-left: -4px; }
+    40%, 80% { margin-left: 4px; }
+  }
+  .tr-pop { animation: trTargetPop .15s ease-out !important; }
+  @keyframes trTargetPop {
+    from { transform: translate(-50%,-50%) scale(1.15); }
+    to { transform: translate(-50%,-50%) scale(1); }
+  }
+  /* TRACKINGは指が円内にある間だけ緑色にして状態を明示 */
+  .target.tracking-target.on {
+    background:
+      radial-gradient(circle, #fff 0 6%, transparent 6.5%),
+      radial-gradient(circle, rgba(63,185,80,.95) 0 22%, rgba(63,185,80,.55) 22% 50%, rgba(63,185,80,.14) 50.5% 75%, rgba(63,185,80,.06) 75% 100%);
+    border-color: rgba(126,231,135,.95);
+    box-shadow: 0 0 28px rgba(63,185,80,.5), inset 0 0 20px rgba(63,185,80,.34);
+  }
+  .tr-fail-flash {
+    position: absolute; inset: 0; z-index: 17; pointer-events: none;
+    background: rgba(248,81,73,.28); animation: trFailFlash .25s ease-out forwards;
+  }
+  @keyframes trFailFlash { from { opacity: 1; } to { opacity: 0; } }
+  .tr-timing-mark {
+    position: absolute; transform: translate(-50%,-50%);
+    z-index: 17; pointer-events: none; color: #ffdf5d;
+    font-family: 'Orbitron', sans-serif; font-size: 22px; font-weight: 900;
+    text-shadow: 0 0 10px currentColor;
+  }
+  .tr-timing-mark.miss { color: #f85149; }
+
   #trMsg {
     position: absolute; left: 0; right: 0; top: 40%;
     transform: translateY(-50%);
@@ -868,6 +943,7 @@
 
   <!-- メインメニュー (4分類) -->
   <div id="menu" class="screen">
+    <button id="bgmBtn" type="button"></button>
     <select id="langSel"></select>
     <h1>TOUCH AIM</h1>
     <div class="sub" data-i18n="sub">出現する円をすばやく・中心を狙ってタップ</div>
@@ -1316,6 +1392,15 @@
   STR.tr_k_hits = ['命中', 'Hits'];
   STR.tr_k_best = ['ベスト', 'Best'];
   STR.trVsLast = ['前回比', 'vs last'];
+  STR.bgmOn = ['♪ ON', '♪ ON'];
+  STR.bgmOff = ['♪ OFF', '♪ OFF'];
+  STR.trMiss = ['MISS', 'MISS'];
+  STR.trDeviation = ['ズレ {px}px ({pct}%)', 'OFFSET {px}px ({pct}%)'];
+  STR.trMoveOffset = ['移動 {ms}ms / ズレ {px}px', 'MOVE {ms}ms / OFFSET {px}px'];
+  STR.trEarly = ['EARLY', 'EARLY'];
+  STR.trLate = ['LATE', 'LATE'];
+  STR.trStay = ['滞在率 {pct}%', 'IN ZONE {pct}%'];
+  STR.trSwitch = ['切替 {ms}ms', 'SWITCH {ms}ms'];
 
   // ===== PROFILE: 新規UI文字列 (ja[0]/en[1] の2要素のみ。能力名・DATA EXPORT等のゲーム語彙は英語固定) =====
   STR.prNoData = ['まだASSESSMENTのデータがありません', 'No ASSESSMENT data yet'];
@@ -1411,9 +1496,13 @@
   db.stats.flawless ??= { normal: false, acc: false, speed: false }; // 完全クリア達成フラグ
   db.training ??= {};                       // { taskId: { runs: [{ts, raw, summary}] } } (直近20runのみ保持)
   db.assessment ??= { daily: null, pending: null, runs: [] }; // daily:{date,count} / pending:中断再開用 / runs:直近30件
+  db.settings ??= {};
+  const bgmWasUnset = db.settings.bgm === undefined;
+  db.settings.bgm ??= true;                  // プロシージャルBGMは既定ON
   function saveDB() {
     try { localStorage.setItem(DB_KEY, JSON.stringify(db)); } catch (e) { /* 保存不能でも続行 */ }
   }
+  if (bgmWasUnset) saveDB();                 // 初回既定値もsettingsへ永続化
   if (MODES[db.settings.mode]) mode = db.settings.mode;
 
   let lang = db.settings.lang;
@@ -1429,6 +1518,7 @@
   function applyLang() {
     document.documentElement.lang = lang;
     document.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = T(el.dataset.i18n); });
+    updateBgmButton();
   }
 
   const $ = id => document.getElementById(id);
@@ -1478,6 +1568,82 @@
       o.connect(g).connect(ac.destination);
       o.start(); o.stop(ac.currentTime + .3);
     } catch (e) { /* サウンド非対応でも続行 */ }
+  }
+
+  // ===== プロシージャルBGM (効果音とは別AudioContextで完全停止可能) =====
+  let bgmAc = null, bgmMaster = null, bgmTimer = 0, bgmNextAt = 0, bgmStep = 0;
+  const bgmNodes = new Set();
+  const BGM_BPM = 84;
+  const BGM_STEP_SEC = 60 / BGM_BPM / 4; // 16分音符
+  const BGM_CHORDS = [
+    { bass: 110.00, pad: [220.00, 261.63, 329.63], arp: [220.00, 261.63, 329.63, 440.00] }, // Am
+    { bass: 87.31,  pad: [174.61, 220.00, 261.63], arp: [174.61, 220.00, 261.63, 349.23] }, // F
+    { bass: 65.41,  pad: [130.81, 164.81, 196.00], arp: [130.81, 164.81, 196.00, 261.63] }, // C
+    { bass: 98.00,  pad: [196.00, 246.94, 293.66], arp: [196.00, 246.94, 293.66, 392.00] }, // G
+  ];
+  function bgmVoice(freq, type, at, dur, gain, filterHz) {
+    if (!bgmAc || !bgmMaster) return;
+    const o = bgmAc.createOscillator(), g = bgmAc.createGain();
+    o.type = type; o.frequency.setValueAtTime(freq, at);
+    g.gain.setValueAtTime(.0001, at);
+    g.gain.exponentialRampToValueAtTime(gain, at + Math.min(.04, dur * .18));
+    g.gain.exponentialRampToValueAtTime(.0001, at + dur);
+    if (filterHz) {
+      const f = bgmAc.createBiquadFilter();
+      f.type = 'lowpass'; f.frequency.setValueAtTime(filterHz, at); f.Q.value = .65;
+      o.connect(f).connect(g);
+    } else {
+      o.connect(g);
+    }
+    g.connect(bgmMaster);
+    bgmNodes.add(o); o.addEventListener('ended', () => bgmNodes.delete(o), { once: true });
+    o.start(at); o.stop(at + dur + .03);
+  }
+  function bgmScheduleStep(step, at) {
+    const chord = BGM_CHORDS[Math.floor(step / 16) % BGM_CHORDS.length];
+    const inChord = step % 16;
+    if (inChord === 0) {
+      bgmVoice(chord.bass, 'triangle', at, BGM_STEP_SEC * 15.8, .24, 520);
+      chord.pad.forEach((f, i) => bgmVoice(f, 'sine', at + i * .012, BGM_STEP_SEC * 15.8, .075, 880));
+    }
+    const arpFreq = chord.arp[[0, 1, 2, 1, 3, 2, 1, 2][inChord % 8]];
+    bgmVoice(arpFreq * 2, 'sine', at, BGM_STEP_SEC * .62, .022, 1500);
+  }
+  function bgmPump() {
+    if (!bgmAc || !db.settings.bgm || bgmAc.state !== 'running') return;
+    while (bgmNextAt < bgmAc.currentTime + .45) {
+      bgmScheduleStep(bgmStep, bgmNextAt);
+      bgmNextAt += BGM_STEP_SEC;
+      bgmStep = (bgmStep + 1) % 64;
+    }
+  }
+  async function bgmStart() {
+    if (!db.settings.bgm) return;
+    try {
+      if (!bgmAc) {
+        bgmAc = new (window.AudioContext || window.webkitAudioContext)();
+        bgmMaster = bgmAc.createGain();
+        bgmMaster.gain.value = .06;
+        bgmMaster.connect(bgmAc.destination);
+      }
+      await bgmAc.resume();
+      if (!db.settings.bgm) { await bgmAc.suspend(); return; }
+      bgmNextAt = bgmAc.currentTime + .05; bgmStep = 0;
+      clearInterval(bgmTimer);
+      bgmPump(); bgmTimer = setInterval(bgmPump, 100);
+    } catch (e) { /* BGM非対応でもゲームは続行 */ }
+  }
+  async function bgmStop() {
+    clearInterval(bgmTimer); bgmTimer = 0;
+    bgmNodes.forEach(o => { try { o.stop(); } catch (e) { /* 停止済みなら無視 */ } });
+    bgmNodes.clear();
+    try { if (bgmAc && bgmAc.state !== 'closed') await bgmAc.suspend(); } catch (e) { /* 停止不能でも続行 */ }
+  }
+  function updateBgmButton() {
+    const el = $('bgmBtn');
+    el.textContent = T(db.settings.bgm ? 'bgmOn' : 'bgmOff');
+    el.classList.toggle('on', db.settings.bgm);
+    el.setAttribute('aria-pressed', db.settings.bgm ? 'true' : 'false');
   }
 
   // ===== 評価 (素点基準・表示と音程の対応) =====
@@ -2434,6 +2600,47 @@
   }
   function trHideMsg() { $('trMsg').classList.add('hidden'); }
 
+  // ===== TRAINING: 1発評価とリアルタイム演出の共通基盤 =====
+  function trGrade(taskId, value) {
+    if (taskId === 'precision') return value >= .9 ? 'S' : value >= .75 ? 'A' : value >= .55 ? 'B' : value >= .35 ? 'C' : 'D';
+    if (taskId === 'tracking') return value >= 85 ? 'S' : value >= 70 ? 'A' : value >= 55 ? 'B' : value >= 40 ? 'C' : 'D';
+    if (taskId === 'perception') return value <= 220 ? 'S' : value <= 280 ? 'A' : value <= 350 ? 'B' : value <= 450 ? 'C' : 'D';
+    if (taskId === 'flick') return value <= 180 ? 'S' : value <= 250 ? 'A' : value <= 350 ? 'B' : value <= 500 ? 'C' : 'D';
+    if (taskId === 'switching') return value <= 300 ? 'S' : value <= 450 ? 'A' : value <= 650 ? 'B' : value <= 900 ? 'C' : 'D';
+    if (taskId === 'timing') return value <= .15 ? 'S' : value <= .35 ? 'A' : value <= .6 ? 'B' : value <= 1 ? 'C' : 'D';
+    return 'D';
+  }
+  function trFeedback(x, y, grade, mainText, subText) {
+    const fld = $('trField');
+    const el = document.createElement('div');
+    el.className = 'tr-feedback tr-' + String(grade || 'D').toLowerCase();
+    el.style.left = Math.max(58, Math.min(innerWidth - 58, x)) + 'px';
+    el.style.top = Math.max(112, Math.min(innerHeight - 28, y)) + 'px';
+    const g = document.createElement('div'); g.className = 'tr-grade'; g.textContent = grade || 'D';
+    const m = document.createElement('div'); m.className = 'tr-main'; m.textContent = mainText || '';
+    el.appendChild(g); el.appendChild(m);
+    if (subText) { const s = document.createElement('div'); s.className = 'tr-sub'; s.textContent = subText; el.appendChild(s); }
+    fld.appendChild(el);
+    setTimeout(() => el.remove(), 1050);
+    return el;
+  }
+  function trGradeSound(grade) {
+    if (grade === 'S') { beep(988, .08, .12); setTimeout(() => beep(1319, .12, .11), 70); return; }
+    beep({ A: 880, B: 659, C: 494, D: 330 }[grade] || 330, grade === 'D' ? .12 : .09, .11);
+  }
+  function trShake(el) {
+    if (!el) return;
+    el.classList.remove('tr-shake'); void el.offsetWidth; el.classList.add('tr-shake');
+    setTimeout(() => el.classList.remove('tr-shake'), 310);
+  }
+  function trFailFlash() {
+    const el = document.createElement('div'); el.className = 'tr-fail-flash';
+    $('trField').appendChild(el); setTimeout(() => el.remove(), 270);
+  }
+  function trFmt(key, vars) {
+    return Object.entries(vars || {}).reduce((s, [k, v]) => s.replaceAll('{' + k + '}', v), T(key));
+  }
+
   // ===== 課題の記録保存 (直近20runのみ保持) =====
   function saveTrainingRun(taskId, raw, summary) {
     db.training[taskId] = db.training[taskId] || { runs: [] };
@@ -2642,7 +2849,7 @@
     trShowMsg(T('trHoldPad'));
 
     let phase = 'wait'; // wait -> holding -> shown -> awaitTap
-    let delayTimer = 0, spawnAt = 0, padPointerId = null, pendingReaction = 0;
+    let delayTimer = 0, finishTimer = 0, spawnAt = 0, padPointerId = null, pendingReaction = 0, feedbackAt = 0;
     let tgX = 0, tgY = 0, tgR = 0; // 表示中ターゲットの中心・半径 (完了タップの的中判定用)
 
     function cleanup() {
@@ -2651,6 +2858,7 @@
       pad.removeEventListener('pointercancel', onPadUp);
       fld.removeEventListener('pointerdown', onFieldDown);
       clearTimeout(delayTimer);
+      clearTimeout(finishTimer);
     }
     function onPadDown(e) {
       if (phase !== 'wait') return;
@@ -2681,14 +2889,19 @@
         D.falseStarts++;
         D.raw.push({ reactionMs: null, falseStart: true });
         cleanup();
+        trFailFlash(); boo(); buzz(35);
         trShowMsg(T('trFalseStart'));
         setTimeout(perceptionNextTrial, 700);
         return;
       }
       if (phase === 'shown') {
         pendingReaction = performance.now() - spawnAt;
+        feedbackAt = performance.now();
         phase = 'awaitTap';
         pad.classList.remove('active');
+        const grade = trGrade('perception', pendingReaction);
+        trFeedback(innerWidth / 2, rect.top + 125, grade, Math.round(pendingReaction) + 'ms', '');
+        trGradeSound(grade);
         trShowMsg(T('trTapTarget'));
       }
     }
@@ -2701,8 +2914,12 @@
       D.trial++;
       cleanup();
       trHideMsg();
-      if (D.trial >= D.total) { finishPerception(); return; }
-      perceptionNextTrial();
+      const wait = Math.max(120, 1000 - (performance.now() - feedbackAt));
+      finishTimer = setTimeout(() => {
+        if (!TR || TR !== D) return;
+        if (D.trial >= D.total) { finishPerception(); return; }
+        perceptionNextTrial();
+      }, wait);
     }
     pad.addEventListener('pointerdown', onPadDown);
     pad.addEventListener('pointerup', onPadUp);
@@ -2756,7 +2973,7 @@
     tx = Math.min(rect.right - tr_, Math.max(rect.left + tr_, tx));
     ty = Math.min(rect.bottom - tr_, Math.max(rect.top + tr_, ty));
 
-    let phase = 'wait', delayTimer = 0, spawnAt = 0, releaseAt = 0, padPointerId = null, reaction = 0;
+    let phase = 'wait', delayTimer = 0, finishTimer = 0, spawnAt = 0, releaseAt = 0, padPointerId = null, reaction = 0, tg = null;
 
     function cleanup() {
       pad.removeEventListener('pointerdown', onPadDown);
@@ -2764,6 +2981,7 @@
       pad.removeEventListener('pointercancel', onPadUp);
       fld.removeEventListener('pointerdown', onFieldDown);
       clearTimeout(delayTimer);
+      clearTimeout(finishTimer);
     }
     function onPadDown(e) {
       if (phase !== 'wait') return;
@@ -2775,7 +2993,7 @@
       delayTimer = setTimeout(() => {
         if (phase !== 'holding') return;
         phase = 'shown';
-        const tg = document.createElement('div');
+        tg = document.createElement('div');
         tg.className = 'target';
         tg.style.width = tg.style.height = (tr_ * 2) + 'px';
         tg.style.left = tx + 'px'; tg.style.top = ty + 'px';
@@ -2805,11 +3023,23 @@
       const now = performance.now();
       const d = Math.hypot(e.clientX - tx, e.clientY - ty);
       const hit = d <= tr_;
-      D.raw.push({ reactionMs: reaction, moveMs: now - releaseAt, errPx: Math.round(d), dir: FLICK_DIRS[dirIdx], hit });
+      const moveMs = now - releaseAt;
+      D.raw.push({ reactionMs: reaction, moveMs, errPx: Math.round(d), dir: FLICK_DIRS[dirIdx], hit });
       D.trial++;
       cleanup();
-      if (D.trial >= D.total) { finishFlick(); return; }
-      flickNextTrial();
+      if (hit) {
+        const grade = trGrade('flick', moveMs);
+        trFeedback(e.clientX, e.clientY, grade, trFmt('trMoveOffset', { ms: Math.round(moveMs), px: Math.round(d) }), '');
+        trGradeSound(grade);
+      } else {
+        trShake(tg); boo();
+        trFeedback(e.clientX, e.clientY, 'D', T('trMiss'), trFmt('trMoveOffset', { ms: Math.round(moveMs), px: Math.round(d) }));
+      }
+      finishTimer = setTimeout(() => {
+        if (!TR || TR !== D) return;
+        if (D.trial >= D.total) { finishFlick(); return; }
+        flickNextTrial();
+      }, 620);
     }
     pad.addEventListener('pointerdown', onPadDown);
     pad.addEventListener('pointerup', onPadUp);
@@ -2847,7 +3077,7 @@
     const fld = $('trField');
     fld.innerHTML = '';
     const rect = trPlayAreaRect();
-    const r = Math.max(18, Math.round(baseRadius() * 0.55));
+    const r = Math.max(18, Math.round(baseRadius() * 0.7));
     const tx = rect.left + r + RNG() * Math.max(1, rect.w - 2 * r);
     const ty = rect.top + r + RNG() * Math.max(1, rect.h - 2 * r);
     const tg = document.createElement('div');
@@ -2874,13 +3104,25 @@
       const hit = d <= r;
       D.raw.push({ errRatio: hit ? +(d / r).toFixed(3) : null, dx: Math.round(e.clientX - tx), dy: Math.round(e.clientY - ty), hit });
       tg.style.opacity = '.35';
+      if (hit) {
+        const grade = trGrade('precision', 1 - d / r);
+        trFeedback(e.clientX, e.clientY, grade, trFmt('trDeviation', { px: Math.round(d), pct: Math.round(d / r * 100) }), '');
+        trGradeSound(grade);
+      } else {
+        trShake(tg); boo();
+        trFeedback(e.clientX, e.clientY, 'D', T('trMiss'), trFmt('trDeviation', { px: Math.round(d), pct: Math.round(d / r * 100) }));
+      }
       clearTimeout(nextTimer);
       nextTimer = setTimeout(advance, 650); // タップ後は650msで次弾 (テンポ改善)
     }
     fld.addEventListener('pointerdown', onDown);
     nextTimer = setTimeout(() => {
-      if (!tapped) D.raw.push({ errRatio: null, dx: null, dy: null, hit: false });
-      advance();
+      if (!tapped) {
+        tapped = true;
+        D.raw.push({ errRatio: null, dx: null, dy: null, hit: false });
+        trShake(tg); boo(); trFeedback(tx, ty, 'D', T('trMiss'), '');
+        nextTimer = setTimeout(advance, 520);
+      }
     }, 1600);
     TR.cleanup = () => { clearTimeout(nextTimer); fld.removeEventListener('pointerdown', onDown); };
   }
@@ -2909,7 +3151,7 @@
     const D = TR;
     D.duration = durationOverride || 20000;
     D.samples = []; D.inZoneFrames = 0; D.totalFrames = 0; D.sumDist = 0;
-    D.lastInZone = true; D.awayStart = null; D.recoverTimes = [];
+    D.lastInZone = true; D.awayStart = null; D.recoverTimes = []; D.feedbackInZone = null;
     D.fingerX = innerWidth / 2; D.fingerY = innerHeight / 2; D.engaged = false;
 
     const fld = $('trField');
@@ -2917,7 +3159,7 @@
     const rect = trPlayAreaRect();
     const r = Math.max(20, Math.round(baseRadius() * 0.6));
     const tg = document.createElement('div');
-    tg.className = 'target';
+    tg.className = 'target tracking-target';
     tg.style.width = tg.style.height = (r * 2) + 'px';
     fld.appendChild(tg);
 
@@ -2958,6 +3200,12 @@
 
       const dist = D.engaged ? Math.hypot(D.fingerX - tx, D.fingerY - ty) : r * 3;
       const inZone = D.engaged && dist <= r;
+      tg.classList.toggle('on', inZone);
+      if (D.feedbackInZone !== null && D.feedbackInZone !== inZone) {
+        if (inZone) beep(660, .05, .08);
+        else { trShake(tg); beep(220, .06, .1); }
+      }
+      D.feedbackInZone = inZone;
       D.totalFrames++; D.sumDist += dist;
       if (inZone) D.inZoneFrames++;
       if (D.lastInZone && !inZone) D.awayStart = now;
@@ -2979,18 +3227,26 @@
   }
   function finishTracking() {
     const D = TR;
-    if (!D || D.task !== 'tracking') return;
+    if (!D || D.task !== 'tracking' || D.finishing) return;
+    D.finishing = true;
     if (D.cleanup) D.cleanup();
     const summary = {
       inZoneRatio: D.totalFrames ? D.inZoneFrames / D.totalFrames : 0,
       avgDist: D.totalFrames ? D.sumDist / D.totalFrames : 0,
       avgRecover: trMean(D.recoverTimes),
     };
-    trFinishTask('tracking', { samples: D.samples, recoverTimes: D.recoverTimes }, summary, [
-      ['tr_k_inZone', Math.round(summary.inZoneRatio * 100) + '%'],
-      ['tr_k_avgDist', Math.round(summary.avgDist) + 'px'],
-      ['tr_k_recover', summary.avgRecover != null ? Math.round(summary.avgRecover) + 'ms' : '-'],
-    ]);
+    const pct = Math.round(summary.inZoneRatio * 100);
+    const grade = trGrade('tracking', pct);
+    trFeedback(innerWidth / 2, innerHeight / 2, grade, trFmt('trStay', { pct }), '');
+    trGradeSound(grade);
+    D.finishTimer = setTimeout(() => {
+      if (!TR || TR !== D) return;
+      trFinishTask('tracking', { samples: D.samples, recoverTimes: D.recoverTimes }, summary, [
+        ['tr_k_inZone', pct + '%'],
+        ['tr_k_avgDist', Math.round(summary.avgDist) + 'px'],
+        ['tr_k_recover', summary.avgRecover != null ? Math.round(summary.avgRecover) + 'ms' : '-'],
+      ]);
+    }, 900);
   }
 
   // ===== 5. SWITCHING (切替: 3的を番号順にタップ) =====
@@ -3028,6 +3284,7 @@
       D.targets.push({ num, x, y, r, el: tg, done: false });
     });
     D.lastTapAt = performance.now();
+    let finishTimer = 0;
 
     function onDown(e) {
       let best = null, bestRatio = Infinity;
@@ -3039,27 +3296,36 @@
       if (!best) return;
       const now = performance.now();
       if (best.num === D.expected) {
+        const gap = now - D.lastTapAt;
         best.done = true;
         best.el.style.opacity = '.25';
-        D.gapMs.push(now - D.lastTapAt);
+        D.gapMs.push(gap);
         D.lastTapAt = now;
         D.streak++;
         if (D.streak > D.bestStreak) D.bestStreak = D.streak;
         D.expected++;
+        const grade = trGrade('switching', gap);
+        beep([523, 659, 784][best.num - 1], .07, .1);
+        best.el.classList.remove('tr-pop'); void best.el.offsetWidth; best.el.classList.add('tr-pop');
+        trFeedback(best.x, best.y, grade, trFmt('trSwitch', { ms: Math.round(gap) }), '');
         if (D.expected > 3) {
           fld.removeEventListener('pointerdown', onDown);
           D.set++;
-          if (D.set >= D.total) { finishSwitching(); return; }
-          switchingNextSet();
+          setTimeout(() => beep(1047, .11, .1), 80);
+          finishTimer = setTimeout(() => {
+            if (!TR || TR !== D) return;
+            if (D.set >= D.total) { finishSwitching(); return; }
+            switchingNextSet();
+          }, 540);
         }
       } else {
         D.wrongTaps++;
         D.streak = 0;
-        buzz(30);
+        trShake(best.el); boo(); buzz(30);
       }
     }
     fld.addEventListener('pointerdown', onDown);
-    TR.cleanup = () => fld.removeEventListener('pointerdown', onDown);
+    TR.cleanup = () => { fld.removeEventListener('pointerdown', onDown); clearTimeout(finishTimer); };
   }
   function finishSwitching() {
     const D = TR;
@@ -3101,7 +3367,7 @@
     fld.appendChild(tg);
 
     const startT = performance.now();
-    let tapped = false, rafId = 0;
+    let tapped = false, rafId = 0, finishTimer = 0;
 
     function curX(now) { return x0 + dir * speed * ((now - startT) / 1000); }
     function onDown(e) {
@@ -3116,7 +3382,15 @@
       D.raw.push({ errPx: Math.round(Math.abs(signedErr)), signedErr: Math.round(signedErr), speedLevel, hit });
       fld.removeEventListener('pointerdown', onDown);
       cancelAnimationFrame(rafId);
-      advance();
+      const errMs = Math.round(Math.abs(signedErr) / speed * 1000);
+      const grade = trGrade('timing', hit ? Math.abs(signedErr) / r : Infinity);
+      const mark = document.createElement('div');
+      mark.className = 'tr-timing-mark' + (hit ? '' : ' miss'); mark.textContent = hit ? '•' : '×';
+      mark.style.left = e.clientX + 'px'; mark.style.top = e.clientY + 'px'; fld.appendChild(mark);
+      const direction = signedErr < 0 ? T('trEarly') : T('trLate');
+      trFeedback(e.clientX, e.clientY - 18, grade, `${direction} ${errMs}ms`, '');
+      if (hit) trGradeSound(grade); else boo();
+      finishTimer = setTimeout(advance, 650);
     }
     fld.addEventListener('pointerdown', onDown);
 
@@ -3128,14 +3402,18 @@
           tapped = true;
           D.raw.push({ errPx: null, signedErr: null, speedLevel, hit: false });
           fld.removeEventListener('pointerdown', onDown);
-          advance();
+          const mx = Math.max(rect.left + r, Math.min(rect.right - r, cx));
+          const mark = document.createElement('div'); mark.className = 'tr-timing-mark miss'; mark.textContent = '×';
+          mark.style.left = mx + 'px'; mark.style.top = y + 'px'; fld.appendChild(mark);
+          trFeedback(mx, y - 18, 'D', T('trMiss'), ''); boo();
+          finishTimer = setTimeout(advance, 650);
         }
         return;
       }
       rafId = requestAnimationFrame(frame);
     }
     rafId = requestAnimationFrame(frame);
-    TR.cleanup = () => { fld.removeEventListener('pointerdown', onDown); cancelAnimationFrame(rafId); };
+    TR.cleanup = () => { fld.removeEventListener('pointerdown', onDown); cancelAnimationFrame(rafId); clearTimeout(finishTimer); };
 
     function advance() {
       D.trial++;
@@ -3641,6 +3919,13 @@
   $('prExportJsonBtn').addEventListener('click', prExportJson);
   $('prExportCsvBtn').addEventListener('click', prExportCsv);
   $('achBtn').addEventListener('click', () => { renderAchievements(); show('achievements'); });
+  $('bgmBtn').addEventListener('click', () => {
+    db.settings.bgm = !db.settings.bgm;
+    saveDB(); updateBgmButton();
+    if (db.settings.bgm) bgmStart(); else bgmStop();
+  });
+  // 自動再生制限を越えるため、最初のユーザー操作をBGM開始の合図にする
+  document.addEventListener('pointerdown', () => { if (db.settings.bgm) bgmStart(); }, { once: true });
   document.querySelectorAll('[data-back]').forEach(b => b.addEventListener('click', () => show('menu')));
   // 言語セレクタ
   const sel = $('langSel');
