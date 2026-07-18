@@ -407,6 +407,19 @@
     margin-top: 4px;
   }
   .as-total-label { font-size: 13px; color: #8b949e; letter-spacing: .12em; margin-bottom: 20px; }
+  /* PROVISIONAL表記 (暫定採点であることを示すグレー系の控えめなバッジ) */
+  .prov-badge {
+    display: inline-block;
+    font-size: 10px; font-weight: 700;
+    color: #8b949e;
+    border: 1px solid #30414f;
+    border-radius: 999px;
+    padding: 2px 9px;
+    letter-spacing: .08em;
+    vertical-align: 1px;
+  }
+  .prov-row { margin: 2px 0 6px; }
+  .prov-note { font-size: 11px; color: #5f7a94; margin: 4px 0 2px; line-height: 1.5; max-width: 340px; }
   .as-rows { width: 100%; max-width: 420px; display: flex; flex-direction: column; gap: 8px; margin-bottom: 22px; }
   .as-row {
     display: flex; justify-content: space-between; align-items: center;
@@ -697,6 +710,17 @@
     margin: 16px 0 22px;
   }
   .tr-metrics .stat { flex: 1 1 40%; }
+  /* 自己ベスト更新・前回比 (実績解除トーストと同系統だが控えめなインライン表示) */
+  .tr-best-badge {
+    color: #ffdf5d; font-family: 'Orbitron', sans-serif;
+    font-size: 15px; font-weight: 700; letter-spacing: .08em;
+    margin: 2px 0 8px;
+    text-shadow: 0 0 12px rgba(255,223,93,.5);
+  }
+  .tr-delta-line {
+    font-size: 13px; margin: 0 0 8px;
+    font-variant-numeric: tabular-nums;
+  }
 
   /* ===== PROFILE: 六角形レーダーチャート・能力別リスト・日別履歴・エクスポート ===== */
   #profile { justify-content: flex-start; overflow-y: auto; touch-action: pan-y; padding-top: max(32px, env(safe-area-inset-top)); }
@@ -766,6 +790,25 @@
   .prof-export-row { display: flex; gap: 10px; width: 100%; }
   .prof-export-btn { flex: 1; margin-top: 0; font-size: 14px; padding: 12px 8px; }
   .prof-export-btn:disabled { opacity: .35; }
+
+  /* ===== PROFILE: 今日の処方カード (WEAKEST能力を3セット練習する処方) ===== */
+  .prof-rx-card {
+    background: #161b22; border: 1px solid #30414f; border-radius: 12px;
+    padding: 14px 16px; text-align: left; margin: 0 0 4px;
+  }
+  .prof-rx-main {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 15px; font-weight: 700; letter-spacing: .05em;
+    color: #2ea8ff; margin-bottom: 6px;
+  }
+  .prof-rx-target { font-size: 13px; color: #8b949e; margin-bottom: 8px; }
+  .prof-rx-progress {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 18px; font-weight: 700; color: #e6edf3;
+    font-variant-numeric: tabular-nums;
+  }
+  .prof-rx-done { font-size: 14px; color: #ffdf5d; font-weight: 700; margin-bottom: 10px; }
+  .prof-rx-btn { width: 100%; margin-top: 8px; font-size: 14px; padding: 12px 8px; }
 </style>
 </head>
 <body>
@@ -870,6 +913,8 @@
   <!-- TRAINING: 課題別リザルト (共通1画面・課題ごとに指標を出し分け) -->
   <div id="trResult" class="screen hidden">
     <div class="scr-head" id="trResultName" style="margin-bottom:6px;">PERCEPTION</div>
+    <div class="tr-best-badge hidden" id="trBestBadge">★ NEW BEST!</div>
+    <div class="tr-delta-line hidden" id="trDeltaLine"></div>
     <div class="tr-metrics" id="trMetrics"></div>
     <button class="btn" id="trRetryBtn">RETRY</button>
     <button class="btn ghost" id="trBackHubBtn" data-i18n="trBackHub">課題一覧へ</button>
@@ -904,6 +949,8 @@
     <h2 class="scr-head">ASSESSMENT RESULT</h2>
     <div class="as-total" id="asTotalScore">0</div>
     <div class="as-total-label" data-i18n="asTotalLabel">総合スコア</div>
+    <div class="prov-row"><span class="prov-badge">PROVISIONAL</span></div>
+    <div class="prov-note" data-i18n="provisionalNote"></div>
     <div class="as-rows" id="asRows"></div>
     <button class="btn ghost" data-back data-i18n="backMenu">メニューへ</button>
   </div>
@@ -920,10 +967,25 @@
 
     <!-- 六角形レーダーチャート (最新=シアン実線 / 前回=グレー点線) -->
     <div id="prChartWrap" class="chartWrap hidden">
+      <div class="prov-row"><span class="prov-badge">PROVISIONAL</span></div>
       <svg id="prChart" viewBox="0 0 340 320" xmlns="http://www.w3.org/2000/svg"></svg>
       <div class="prof-legend">
         <span><span class="prof-legend-dot" style="background:#2ea8ff"></span><span id="prLegendLatestText"></span></span>
         <span id="prLegendPrev" class="hidden"><span class="prof-legend-dot" style="background:#5f7a94"></span><span id="prLegendPrevText"></span></span>
+      </div>
+      <div class="prov-note" data-i18n="provisionalNote"></div>
+    </div>
+
+    <!-- 今日の処方: WEAKEST能力を3セット練習する処方カード (ASSESSMENT未実施なら非表示) -->
+    <div id="prPrescription" class="hidden" style="width:100%;max-width:420px;">
+      <div class="rec-head" data-i18n="prRxTitle"></div>
+      <div class="prof-rx-card">
+        <div class="prof-rx-main" id="prRxMain"></div>
+        <div class="prof-rx-target"><span data-i18n="prRxTargetLabel"></span>: <span id="prRxTarget"></span></div>
+        <div class="prof-rx-progress" id="prRxProgress"></div>
+        <div class="prof-rx-done hidden" id="prRxDoneMsg" data-i18n="prRxDoneMsg"></div>
+        <button class="btn ghost prof-rx-btn hidden" id="prRxGoTrainBtn" data-i18n="prRxGoTrainBtn"></button>
+        <button class="btn prof-rx-btn hidden" id="prRxGoAssessBtn" data-i18n="prRxGoAssessBtn"></button>
       </div>
     </div>
 
@@ -1151,6 +1213,7 @@
   STR.asStarting = ['まもなく開始…', 'Starting soon…'];
   STR.asCancelBtn = ['中止', 'Cancel'];
   STR.asTotalLabel = ['総合スコア', 'Overall score'];
+  STR.provisionalNote = ['スコアは暫定換算です。換算式は今後調整されます', 'Scores use a provisional formula that may be adjusted later'];
 
   // ===== TRAINING: 新規UI文字列 (ja[0]/en[1] の2要素のみ。他言語はen→jaへ自動フォールバック) =====
   STR.trBackHub = ['課題一覧へ', 'Back to tasks'];
@@ -1183,6 +1246,8 @@
   STR.tr_k_streak = ['最長ストリーク', 'Longest streak'];
   STR.tr_k_signed = ['早押し/遅押し傾向', 'Early/late tendency'];
   STR.tr_k_hits = ['命中', 'Hits'];
+  STR.tr_k_best = ['ベスト', 'Best'];
+  STR.trVsLast = ['前回比', 'vs last'];
 
   // ===== PROFILE: 新規UI文字列 (ja[0]/en[1] の2要素のみ。能力名・DATA EXPORT等のゲーム語彙は英語固定) =====
   STR.prNoData = ['まだASSESSMENTのデータがありません', 'No ASSESSMENT data yet'];
@@ -1193,6 +1258,12 @@
   STR.prHistTitle = ['履歴 (直近14日)', 'History (last 14 days)'];
   STR.prExportJsonBtn = ['JSONをエクスポート', 'Export JSON'];
   STR.prExportCsvBtn = ['CSVをエクスポート', 'Export CSV'];
+  STR.prRxTitle = ['今日の処方', "Today's Prescription"];
+  STR.prRxFmt = ['{t} を3セット', 'Do 3 sets of {t}'];
+  STR.prRxTargetLabel = ['目標', 'Target'];
+  STR.prRxDoneMsg = ['再測定で成果を確認しよう', 'Retake the assessment to check your progress'];
+  STR.prRxGoAssessBtn = ['ASSESSMENTへ', 'Go to ASSESSMENT'];
+  STR.prRxGoTrainBtn = ['この課題を練習', 'Practice this task'];
 
   // ===== 実績の説明文 (25個・実績名は英語固定、説明のみi18n) =====
   STR.ad_first_play = ['初めて1プレイを完了', 'Complete your first round', '完成首次游玩', '첫 플레이 완료', 'Completa tu primera partida', 'Complete sua primeira partida', 'Terminez votre première partie', 'Schließe deine erste Runde ab', 'Завершите первую игру', 'Selesaikan permainan pertama'];
@@ -2273,7 +2344,31 @@
     renderTrHub();
     show('training');
   }
-  function showTrResult(taskId, name, rows) {
+  // ===== 課題ごとの代表指標 (自己ベスト比較・前回比・処方カードで共用) =====
+  // 値が小さいほど良い課題(反応/移動/切替時間など)はtrue、大きいほど良い課題(滞在率・命中数)はfalse
+  const TR_LOWER_BETTER = { perception: true, flick: true, precision: true, tracking: false, switching: true, timing: false };
+  function trRepMetric(taskId, s) {
+    if (!s) return null;
+    switch (taskId) {
+      case 'perception': return s.median;
+      case 'flick': return s.moveMedian;
+      case 'precision': return s.avgErrRatio != null ? s.avgErrRatio * 100 : null;
+      case 'tracking': return s.inZoneRatio != null ? s.inZoneRatio * 100 : null;
+      case 'switching': return s.gapMedian;
+      case 'timing': return s.hits;
+      default: return null;
+    }
+  }
+  function trRepMetricFmt(taskId, v) {
+    if (v == null) return '-';
+    switch (taskId) {
+      case 'perception': case 'flick': case 'switching': return Math.round(v) + 'ms';
+      case 'precision': case 'tracking': return Math.round(v) + '%';
+      case 'timing': return String(Math.round(v));
+      default: return String(Math.round(v));
+    }
+  }
+  function showTrResult(taskId, name, rows, extra) {
     if (TR && TR.cleanup) { try { TR.cleanup(); } catch (e) { /* 片付け失敗でも続行 */ } }
     TR = null;
     state = 'title';
@@ -2282,6 +2377,28 @@
     $('trField').innerHTML = '';
     trHideMsg();
     $('trResultName').textContent = name;
+    const bestEl = $('trBestBadge');
+    if (extra && extra.isBest) {
+      bestEl.classList.remove('hidden');
+      // 実績解除トーストと同系統の2音チャイム(音程違い)+ buzz
+      beep(659, .09, .16);
+      setTimeout(() => beep(880, .13, .16), 90);
+      buzz([12, 24, 12]);
+    } else {
+      bestEl.classList.add('hidden');
+    }
+    const deltaEl = $('trDeltaLine');
+    if (extra && extra.delta) {
+      const { diff, good, flat } = extra.delta;
+      const cls = flat ? 'prof-delta-flat' : (good ? 'prof-delta-up' : 'prof-delta-down');
+      const arrow = flat ? '' : (good ? ' ↑' : ' ↓');
+      const sign = diff > 0 ? '+' : diff < 0 ? '-' : '';
+      deltaEl.className = 'tr-delta-line ' + cls;
+      deltaEl.textContent = `${T('trVsLast')}: ${sign}${trRepMetricFmt(taskId, Math.abs(diff))}${arrow}`;
+      deltaEl.classList.remove('hidden');
+    } else {
+      deltaEl.classList.add('hidden');
+    }
     const wrap = $('trMetrics');
     wrap.innerHTML = '';
     rows.forEach(([labelKey, value]) => {
@@ -2305,12 +2422,31 @@
       asOnTaskDone(taskId, raw, summary);
       return;
     }
+    // 自己ベスト比較・前回比は保存前(=今回runを含まない過去run)の状態を基準に判定する
+    const prevRuns = (db.training[taskId] && db.training[taskId].runs) || [];
+    const lowerBetter = TR_LOWER_BETTER[taskId];
+    const curVal = trRepMetric(taskId, summary);
+    let isBest = false, delta = null;
+    if (curVal != null) {
+      const prevVals = prevRuns.map(r => trRepMetric(taskId, r.summary)).filter(v => v != null);
+      if (prevVals.length) {
+        const bestPrev = lowerBetter ? Math.min(...prevVals) : Math.max(...prevVals);
+        isBest = lowerBetter ? curVal < bestPrev : curVal > bestPrev;
+        const lastVal = trRepMetric(taskId, prevRuns[prevRuns.length - 1].summary);
+        if (lastVal != null) {
+          const diff = curVal - lastVal;
+          delta = { diff, good: lowerBetter ? diff < 0 : diff > 0, flat: diff === 0 };
+        }
+      } else {
+        isBest = true; // 初回runは無条件でベスト扱い (SCORE ATTACKのNEW BESTと同じ考え方)
+      }
+    }
     saveTrainingRun(taskId, raw, summary);
-    showTrResult(taskId, TR_META[taskId].name, rows);
+    showTrResult(taskId, TR_META[taskId].name, rows, { isBest, delta });
   }
 
   // ===== 課題ハブ =====
-  // 課題1件のsummaryから代表指標1行を作る (TRAINING課題カード・ASSESSMENT結果画面で共用)
+  // 課題1件のsummaryから代表指標1行を作る (ASSESSMENT結果画面・処方カードで使用)
   function summaryKeyMetric(taskId, s) {
     if (!s) return '';
     switch (taskId) {
@@ -2323,10 +2459,15 @@
       default: return '';
     }
   }
-  function trLastSummaryLine(taskId) {
+  // 課題ハブカード用: 全runの中から自己ベストの代表指標を1行にして返す
+  function trBestLine(taskId) {
     const rec = db.training[taskId];
-    const run = rec && rec.runs.length ? rec.runs[rec.runs.length - 1] : null;
-    return run ? summaryKeyMetric(taskId, run.summary) : '';
+    if (!rec || !rec.runs.length) return '';
+    const lowerBetter = TR_LOWER_BETTER[taskId];
+    const vals = rec.runs.map(r => trRepMetric(taskId, r.summary)).filter(v => v != null);
+    if (!vals.length) return '';
+    const best = lowerBetter ? Math.min(...vals) : Math.max(...vals);
+    return `${T('tr_k_best')}: ${trRepMetricFmt(taskId, best)}`;
   }
   function renderTrHub() {
     const wrap = $('trList');
@@ -2335,9 +2476,9 @@
       const meta = TR_META[id];
       const card = document.createElement('div');
       card.className = 'tr-card';
-      const last = trLastSummaryLine(id);
+      const best = trBestLine(id);
       card.innerHTML = `<div class="tr-card-name">${meta.name}</div><div class="tr-card-desc">${T(meta.descKey)}</div>` +
-        (last ? `<div class="tr-card-last">${last}</div>` : '');
+        (best ? `<div class="tr-card-last">${best}</div>` : '');
       card.addEventListener('click', () => TR_START[id]());
       wrap.appendChild(card);
     });
@@ -2369,6 +2510,7 @@
 
     let phase = 'wait'; // wait -> holding -> shown -> awaitTap
     let delayTimer = 0, spawnAt = 0, padPointerId = null, pendingReaction = 0;
+    let tgX = 0, tgY = 0, tgR = 0; // 表示中ターゲットの中心・半径 (完了タップの的中判定用)
 
     function cleanup() {
       pad.removeEventListener('pointerdown', onPadDown);
@@ -2390,6 +2532,7 @@
         const r = Math.round(baseRadius() * 1.3);
         const tx = Math.max(rect.left + r, Math.min(rect.right - r, innerWidth / 2 + (RNG() * 2 - 1) * innerWidth * 0.28));
         const ty = rect.top + r + RNG() * Math.max(1, rect.h * 0.4);
+        tgX = tx; tgY = ty; tgR = r;
         const tg = document.createElement('div');
         tg.className = 'target';
         tg.style.width = tg.style.height = (r * 2) + 'px';
@@ -2416,8 +2559,11 @@
         trShowMsg(T('trTapTarget'));
       }
     }
-    function onFieldDown() {
+    function onFieldDown(e) {
       if (phase !== 'awaitTap') return;
+      // 表示中ターゲットの円内タップのときだけ試行成立。円外はペナルティなしで無視 (メッセージは出したまま)
+      const d = Math.hypot(e.clientX - tgX, e.clientY - tgY);
+      if (d > tgR) return;
       D.raw.push({ reactionMs: pendingReaction, falseStart: false });
       D.trial++;
       cleanup();
@@ -2577,7 +2723,16 @@
     tg.style.left = tx + 'px'; tg.style.top = ty + 'px';
     fld.appendChild(tg);
     let tapped = false;
+    let nextTimer = 0;
 
+    // タップ済み(命中/範囲内ミス)なら短い間隔で次弾、無反応のままなら従来どおりのタイムアウトで次弾
+    function advance() {
+      fld.removeEventListener('pointerdown', onDown);
+      clearTimeout(nextTimer);
+      D.trial++;
+      if (D.trial >= D.total) { finishPrecision(); return; }
+      precisionSpawn();
+    }
     function onDown(e) {
       if (tapped) return;
       const d = Math.hypot(e.clientX - tx, e.clientY - ty);
@@ -2586,14 +2741,13 @@
       const hit = d <= r;
       D.raw.push({ errRatio: hit ? +(d / r).toFixed(3) : null, dx: Math.round(e.clientX - tx), dy: Math.round(e.clientY - ty), hit });
       tg.style.opacity = '.35';
+      clearTimeout(nextTimer);
+      nextTimer = setTimeout(advance, 650); // タップ後は650msで次弾 (テンポ改善)
     }
     fld.addEventListener('pointerdown', onDown);
-    const nextTimer = setTimeout(() => {
-      fld.removeEventListener('pointerdown', onDown);
+    nextTimer = setTimeout(() => {
       if (!tapped) D.raw.push({ errRatio: null, dx: null, dy: null, hit: false });
-      D.trial++;
-      if (D.trial >= D.total) { finishPrecision(); return; }
-      precisionSpawn();
+      advance();
     }, 1600);
     TR.cleanup = () => { clearTimeout(nextTimer); fld.removeEventListener('pointerdown', onDown); };
   }
@@ -2823,7 +2977,9 @@
       const now = performance.now();
       const cx = curX(now);
       const signedErr = dir * (cx - e.clientX);
-      const hit = Math.abs(signedErr) <= r;
+      // 命中は横方向(signedErr)だけでなく縦方向(タップYが中心Yからr以内)も満たす必要がある
+      const vertErr = e.clientY - y;
+      const hit = Math.abs(signedErr) <= r && Math.abs(vertErr) <= r;
       D.raw.push({ errPx: Math.round(Math.abs(signedErr)), signedErr: Math.round(signedErr), speedLevel, hit });
       fld.removeEventListener('pointerdown', onDown);
       cancelAnimationFrame(rafId);
@@ -2873,7 +3029,7 @@
   // 「短縮試行数」「seed付き決定的な乱数」「db.assessmentへの保存」だけを分岐させる。
   // ===================================================================
   const ASSESSMENT_VERSION = 1;
-  const TEST_CONFIG_VERSION = 1;
+  const TEST_CONFIG_VERSION = 2; // PRECISIONのタップ後前倒し(650ms)反映 (P1-2)
   const SCORE_FORMULA_VERSION = 1;
   const AS_RESUME_MS = 30 * 60 * 1000; // 中断からの再開が有効な時間 (30分)
   const AS_DAILY_LIMIT = 2;
@@ -3176,11 +3332,55 @@
     });
   }
 
+  // ===== 今日の処方: WEAKEST能力を3セット練習する処方カード =====
+  const PR_RX_SETS = 3;
+  // 課題1件について、ローカル日付が今日のTRAINING run数を数える (db.training[taskId].runs の ts を使用)
+  function prTodayRunCount(taskId) {
+    const rec = db.training[taskId];
+    if (!rec) return 0;
+    const today = asToday(); // ASSESSMENTの日付キーと同じ端末ローカル日付を流用
+    return rec.runs.filter(r => {
+      const d = new Date(r.ts);
+      const key = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+      return key === today;
+    }).length;
+  }
+  // latest: prDailyList()の該当日 (0-100スコア)。WEAKESTの判定は能力別リストと同じ基準を使う。
+  // 目標値はASSESSMENT最新1回のrawな代表指標を基準に、良い方向へ10%動かした具体値。
+  function renderPrescription(latest) {
+    const wrap = $('prPrescription');
+    if (!db.assessment.runs.length) { wrap.classList.add('hidden'); return; }
+    let weakId = null, weakV = Infinity;
+    TR_ORDER.forEach(id => {
+      const v = latest.scores[id];
+      if (v != null && v < weakV) { weakV = v; weakId = id; }
+    });
+    const lastRun = db.assessment.runs[db.assessment.runs.length - 1];
+    const taskData = weakId && lastRun ? lastRun.tasks[weakId] : null;
+    const curVal = taskData ? trRepMetric(weakId, taskData.summary) : null;
+    if (!weakId || curVal == null) { wrap.classList.add('hidden'); return; }
+    const lowerBetter = TR_LOWER_BETTER[weakId];
+    const target = lowerBetter ? curVal * 0.9 : curVal * 1.1;
+    wrap.classList.remove('hidden');
+    $('prRxMain').textContent = T('prRxFmt').replace('{t}', TR_META[weakId].name);
+    $('prRxTarget').textContent = trRepMetricFmt(weakId, target);
+    const done = prTodayRunCount(weakId);
+    const achieved = done >= PR_RX_SETS;
+    $('prRxProgress').classList.toggle('hidden', achieved);
+    if (!achieved) $('prRxProgress').textContent = `${done}/${PR_RX_SETS}`;
+    $('prRxDoneMsg').classList.toggle('hidden', !achieved);
+    $('prRxGoTrainBtn').classList.toggle('hidden', achieved);
+    $('prRxGoAssessBtn').classList.toggle('hidden', !achieved);
+    $('prRxGoTrainBtn').onclick = () => { $('profile').classList.add('hidden'); TR_START[weakId](); };
+    $('prRxGoAssessBtn').onclick = () => { $('profile').classList.add('hidden'); asRenderStart(); show('assessment'); };
+  }
+
   function renderProfile() {
     const days = prDailyList();
     const hasData = days.length > 0;
     $('prNoData').classList.toggle('hidden', hasData);
     $('prChartWrap').classList.toggle('hidden', !hasData);
+    $('prPrescription').classList.toggle('hidden', !hasData);
     $('prAbilityWrap').classList.toggle('hidden', !hasData);
     $('prHistWrap').classList.toggle('hidden', !hasData);
     if (hasData) {
@@ -3191,6 +3391,7 @@
       $('prLegendLatestText').textContent = T('prLatestFmt').replace('{d}', prFmtDate(latest.date));
       $('prLegendPrev').classList.toggle('hidden', !prev);
       if (prev) $('prLegendPrevText').textContent = T('prPrevFmt').replace('{d}', prFmtDate(prev.date));
+      renderPrescription(latest);
       renderAbilityRows(latest, prev);
       renderHistoryList(days);
     }
