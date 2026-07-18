@@ -200,7 +200,7 @@
 3. ~~大分類メニューとSCORE ATTACK移設。~~ 完了 (2026-07-18): 4分類メニュー、BALANCED/PRECISION/SPEED改名、TRAINING/ASSESSMENT/PROFILEは準備中スタブ。
 4. ~~25実績と実績一覧、解除演出、既存記録から判定できる範囲の移行。~~ 完了 (2026-07-18): `ACHIEVEMENTS`配列+`checkAchievements()`、系統フィルタ付きトースト通知、一覧画面(メニューの🏆ボタン)、説明文10言語。累計/連続系統計は `db.stats` に蓄積。判定は各ラウンド終了時のみ(過去記録の遡及解除はbest系のみ実質有効)。Sonnetサブエージェント実装・Fableレビュー済み。
 5. ~~6つのTRAINING課題。~~ 完了 (2026-07-18): ハブ+6課題(PERCEPTION/FLICK/PRECISION/TRACKING/SWITCHING/TIMING)。反応/移動を pointerdown/up で分離計測。生データ+集計を `db.training.<taskId>.runs` に直近20run保存。UI文字列はja/enのみ(翻訳は指示待ち運用)。Sonnet実装・Fableレビュー済み。メニューのTRAINING準備中バッジ除去済み。
-6. ASSESSMENTの固定／seed付き課題、1日2回、再開、暫定採点。
+6. ~~ASSESSMENTの固定／seed付き課題、1日2回、再開、暫定採点。~~ 完了 (2026-07-18): mulberry32のseed付きPRNG(種目ごとにsaltした独立ストリーム)、1日2回(完走時カウント・日付変更でリセット)、30分以内の種目単位再開、score_formula_version:1の暫定0-100採点(rawから再計算可能)、env(画面/DPR/UA)付きでrunを直近30件保存。TRAINING単体はMath.randomのまま挙動不変。Sonnet実装・Fableレビュー済み。
 7. PROFILEの六角形チャート、履歴比較、弱点説明。
 8. JSON/CSVエクスポート。匿名サーバー送信は別段階で、ユーザー同意を伴って追加。
 9. 全10言語、縦横画面、タッチ端末、デスクトップで確認。
