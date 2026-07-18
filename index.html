@@ -1304,7 +1304,7 @@
       tFull: 350, tZero: 1300,
       combine: (tf, acc) => Math.pow(tf, 1.3) * (0.4 + 0.6 * acc),
       ranks: [.78, .6, .42, .22],
-      sizeMul: 1.15, lifeMs: 600, gapTotal: 3200, // 大きめの的・超短寿命・速いテンポ (最悪ケース 700+9×600+3200=9.3s)
+      sizeMul: 1.15, lifeMs: 800, lifeEndMs: 400, gapTotal: 3200, // 大きめの的・寿命が800→400msへ徐々に短縮 (最悪ケース 700+Σ(800..400)+3200≈9.9s)
     },
   };
   let mode = localStorage.getItem('touchaim_mode') || 'normal';
@@ -1348,7 +1348,7 @@
     close: ['閉じる', 'Close', '关闭', '닫기', 'Cerrar', 'Fechar', 'Fermer', 'Schließen', 'Закрыть', 'Tutup'],
     replayNote: ['黄=タップ位置 / 赤=空振り / 薄い輪郭=消えた円', 'Yellow = tap / Red = whiff / Faint = expired circle', '黄=点击位置 / 红=落空 / 淡圈=已消失的圆', '노랑=탭 위치 / 빨강=헛스윙 / 옅은 원=사라진 원', 'Amarillo = toque / Rojo = fallo / Tenue = círculo expirado', 'Amarelo = toque / Vermelho = erro / Fraco = círculo expirado', 'Jaune = toucher / Rouge = raté / Pâle = cercle disparu', 'Gelb = Tipp / Rot = Fehlschlag / Blass = abgelaufen', 'Жёлтый = нажатие / Красный = промах / Бледный = исчезнувший круг', 'Kuning = ketukan / Merah = meleset / Pudar = lingkaran hilang'],
     rBasic: ['基本', 'Basics', '基本', '기본', 'Básico', 'Básico', 'Bases', 'Grundlagen', 'Основы', 'Dasar'],
-    rBasicP: ['25秒の間に10個の円がランダムなタイミング・位置・大きさで出現します(常に1個ずつ。寿命はモードにより0.6〜2秒)。すばやく中心を狙ってタップ。反応時間は1/1000秒単位で計測されます。', '10 circles appear within 25 seconds at random times, positions and sizes (one at a time; lifetime is 0.6-2s depending on mode). Tap fast and aim for the center. Reaction time is measured to the millisecond.'],
+    rBasicP: ['25秒の間に10個の円がランダムなタイミング・位置・大きさで出現します(常に1個ずつ。寿命はモードにより0.4〜2秒で、SPEEDでは後半ほど短くなります)。すばやく中心を狙ってタップ。反応時間は1/1000秒単位で計測されます。', '10 circles appear within 25 seconds at random times, positions and sizes (one at a time; lifetime is 0.4-2s depending on mode, shrinking over the round in SPEED). Tap fast and aim for the center. Reaction time is measured to the millisecond.'],
     rScore: ['スコア', 'Scoring', '得分', '점수', 'Puntuación', 'Pontuação', 'Score', 'Punkte', 'Очки', 'Skor'],
     rScoreP: ['1発の得点 = 速さ × 中心精度 × 円の小ささ(基準1000点)。小さい円ほど倍率が高く、10個の平均は常に×1.00。速さと精度の配分はモードで変わります。', 'Points per hit = speed × accuracy × circle size (base 1000). Smaller circles score higher, and the 10-circle average is always ×1.00. Each mode weighs speed vs accuracy differently.', '单次得分 = 速度 × 精度 × 圆圈大小（基准1000分）。圆越小倍率越高，10个圆的平均始终为×1.00。各模式对速度与精度的权重不同。', '1회 득점 = 속도 × 정확도 × 원의 크기(기준 1000점). 작은 원일수록 배율이 높고, 10개 평균은 항상 ×1.00입니다. 속도와 정확도의 비중은 모드마다 다릅니다.', 'Puntos por acierto = velocidad × precisión × tamaño (base 1000). Los círculos pequeños puntúan más y la media de los 10 siempre es ×1,00. Cada modo pondera distinto velocidad y precisión.', 'Pontos por acerto = velocidade × precisão × tamanho (base 1000). Círculos menores valem mais e a média dos 10 é sempre ×1,00. Cada modo pesa velocidade e precisão de forma diferente.', 'Points par tir = vitesse × précision × taille (base 1000). Les petits cercles rapportent plus et la moyenne des 10 est toujours ×1,00. Chaque mode pondère différemment vitesse et précision.', 'Punkte pro Treffer = Tempo × Präzision × Kreisgröße (Basis 1000). Kleinere Kreise bringen mehr, der Schnitt der 10 ist immer ×1,00. Jeder Modus gewichtet Tempo und Präzision anders.', 'Очки за попадание = скорость × точность × размер круга (база 1000). Маленькие круги дают больше, среднее по 10 всегда ×1,00. Режимы по-разному взвешивают скорость и точность.', 'Poin per ketukan = kecepatan × akurasi × ukuran lingkaran (dasar 1000). Lingkaran kecil bernilai lebih; rata-rata 10 lingkaran selalu ×1,00. Tiap mode menimbang kecepatan vs akurasi secara berbeda.'],
     rGrade: ['評価', 'Grades', '评价', '등급', 'Calificación', 'Avaliação', 'Notes', 'Wertung', 'Оценка', 'Penilaian'],
@@ -2159,9 +2159,14 @@
     field.appendChild(el);
 
     const tg = { el, x, y, r, sizeF: scoreSizeF, idx, spawnAt: performance.now() };
-    tg.lifeTimer = setTimeout(() => timeoutTarget(tg), replay.life);
+    // 寿命: lifeEndMs があるモードはターゲット番号に応じて線形に短縮 (SPEED: 800→400ms)
+    const m = MODES[mode];
+    const life = m.lifeEndMs !== undefined
+      ? Math.round(m.lifeMs + (m.lifeEndMs - m.lifeMs) * (idx / (TARGETS - 1)))
+      : m.lifeMs;
+    tg.lifeTimer = setTimeout(() => timeoutTarget(tg), life);
     active.push(tg);
-    replay.targets[idx] = { x, y, r, spawnT: tg.spawnAt - roundStart, endT: null, tap: null };
+    replay.targets[idx] = { x, y, r, life, spawnT: tg.spawnAt - roundStart, endT: null, tap: null };
   }
 
   function timeoutTarget(tg) {
@@ -2390,7 +2395,7 @@
     const tg = replay && replay.targets[idx];
     if (!tg) return;
     openReplayOverlay();
-    const end = tg.endT !== null ? tg.endT : Math.min(tg.spawnT + replay.life, replay.duration);
+    const end = tg.endT !== null ? tg.endT : Math.min(tg.spawnT + (tg.life ?? replay.life), replay.duration);
     rp = { mode: 'single', tg, segLen: end - tg.spawnT, vt: 0, last: performance.now(), raf: 0 };
     $('replaySpeed').classList.add('hidden');
     $('replayInfo').textContent = tg.tap
@@ -2508,7 +2513,7 @@
     // ターゲット: 生存中は実体、消滅後は薄い輪郭を残す
     for (const tg of replay.targets) {
       if (!tg || t < tg.spawnT) continue;
-      const end = tg.endT !== null ? tg.endT : Math.min(tg.spawnT + replay.life, replay.duration);
+      const end = tg.endT !== null ? tg.endT : Math.min(tg.spawnT + (tg.life ?? replay.life), replay.duration);
       if (t <= end) {
         const s = Math.min(1, (t - tg.spawnT) / 120);
         drawTargetShape(tg.x, tg.y, tg.r * s, false);
