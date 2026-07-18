@@ -418,6 +418,10 @@
   }
   .tr-intro-actions { text-align: center; }
   .tr-intro-actions .btn { width: 100%; max-width: 320px; }
+  .tr-intro-actions .tr-demo-btn {
+    border-color: #2ea8ff;
+    box-shadow: 0 0 22px rgba(46,168,255,.26);
+  }
 
   #asResult { justify-content: flex-start; overflow-y: auto; touch-action: pan-y; padding-top: max(28px, env(safe-area-inset-top)); }
   .as-total {
@@ -710,6 +714,47 @@
   #trAbortBtn:active { background: #30363d; }
 
   #trField { position: absolute; inset: 0; z-index: 12; }
+
+  /* ===== TRAINING: 実演プレイヤー (本番の見た目だけを使う独立レイヤー) ===== */
+  .tr-demo-badge {
+    position: absolute; top: max(76px, calc(66px + env(safe-area-inset-top))); right: 14px;
+    z-index: 24; padding: 5px 11px; border-radius: 999px;
+    font-family: 'Orbitron', sans-serif; font-size: 11px; font-weight: 800;
+    letter-spacing: .16em; color: #0a0e14; background: #ffdf5d;
+    box-shadow: 0 0 18px rgba(255,223,93,.38); pointer-events: none;
+  }
+  .tr-demo-skip {
+    position: absolute; left: 50%; bottom: max(20px, env(safe-area-inset-bottom));
+    transform: translateX(-50%); z-index: 24; width: calc(100% - 36px);
+    text-align: center; color: #9dc4e8; font-size: 13px; letter-spacing: .05em;
+    text-shadow: 0 2px 10px #000; pointer-events: none;
+  }
+  .tr-demo-ready {
+    position: absolute; left: 50%; top: 46%; transform: translate(-50%,-50%);
+    z-index: 26; width: 100%; text-align: center; pointer-events: none;
+    font-family: 'Orbitron', sans-serif; font-size: clamp(24px, 8vw, 38px); font-weight: 900;
+    color: #ffdf5d; letter-spacing: .08em; text-shadow: 0 0 26px rgba(255,223,93,.55);
+    animation: trDemoReady .8s ease-out forwards;
+  }
+  @keyframes trDemoReady {
+    0% { opacity: 0; transform: translate(-50%,-50%) scale(.75); }
+    22%, 72% { opacity: 1; transform: translate(-50%,-50%) scale(1); }
+    100% { opacity: 0; transform: translate(-50%,-50%) scale(1.06); }
+  }
+  .tr-demo-finger {
+    position: absolute; z-index: 23; width: 56px; height: 72px;
+    transform: translate(-50%,-5%) scale(1); transform-origin: 50% 10%;
+    filter: drop-shadow(0 5px 7px rgba(0,0,0,.58));
+    pointer-events: none; opacity: 0;
+    transition: left .58s cubic-bezier(.2,.8,.25,1), top .58s cubic-bezier(.2,.8,.25,1),
+                transform .1s ease, opacity .18s ease;
+  }
+  .tr-demo-finger.fast { transition-duration: .21s, .21s, .1s, .18s; }
+  .tr-demo-finger.slow { transition-duration: 1.05s, 1.05s, .1s, .18s; }
+  .tr-demo-finger.down { transform: translate(-50%,-5%) scale(.86); }
+  .tr-demo-finger svg { width: 100%; height: 100%; overflow: visible; }
+  .tr-demo-target { transition: left .48s linear, top .48s linear, opacity .2s ease; }
+  .tr-demo-target.tr-demo-linear { transition: left 3.2s linear; }
 
   /* 1発ごとのTRAINING評価 (SCORE ATTACKの.floatと同系統) */
   .tr-feedback {
@@ -1052,7 +1097,8 @@
       <div class="tr-intro-steps" id="trIntroSteps"></div>
       <div class="tr-intro-measured" id="trIntroMeasured"></div>
       <div class="tr-intro-actions">
-        <button class="btn" id="trIntroStartBtn" data-i18n="trIntroStart">START</button>
+        <button class="btn tr-demo-btn" id="trIntroDemoBtn" data-i18n="trIntroDemo">実演を見る</button>
+        <button class="btn ghost" id="trIntroStartBtn" data-i18n="trIntroStart">すぐ始める</button>
         <button class="btn ghost" id="trIntroBackBtn" data-i18n="trIntroBack">戻る</button>
       </div>
     </div>
@@ -1335,8 +1381,12 @@
   // ===== TRAINING: 新規UI文字列 (ja[0]/en[1] の2要素のみ。他言語はen→jaへ自動フォールバック) =====
   STR.trBackHub = ['課題一覧へ', 'Back to tasks'];
   STR.trIntroHow = ['遊び方', 'HOW TO PLAY'];
-  STR.trIntroStart = ['START', 'START'];
+  STR.trIntroDemo = ['実演を見る', 'Watch demo'];
+  STR.trIntroStart = ['すぐ始める', 'Start now'];
   STR.trIntroBack = ['戻る', 'Back'];
+  STR.trDemoBadge = ['DEMO', 'DEMO'];
+  STR.trDemoSkip = ['実演中… タップでスキップ', 'Demo playing... Tap to skip'];
+  STR.trDemoTry = ['やってみよう!', 'Your turn!'];
   STR.trIntro_perception_1 = ['1. 画面下の丸いパッドに指を置いたまま待つ', '1. Hold your finger on the round pad at the bottom'];
   STR.trIntro_perception_2 = ['2. 円が出た瞬間、指をパッと離す', '2. The moment a circle appears, lift your finger'];
   STR.trIntro_perception_3 = ['3. その円をタップして1回終了。全{n}回', '3. Tap that circle to finish the rep. {n} reps total'];
@@ -2536,6 +2586,7 @@
   let TR_LAST_TASK = null;  // リトライ用に直近実行した課題id
   let TR_MODE = 'solo';     // 'solo'(TRAINING単体練習) | 'assessment'(ASSESSMENT通し測定)
   let TR_INTRO = null;      // 共通イントロの遷移元と開始対象 { taskId, mode, returnScreen }
+  let TR_DEMO = null;       // 実演専用状態。本番のTR・計測・保存とは完全に分離する
 
   // ===== ASSESSMENT用: seed付きPRNG (mulberry32) =====
   // TRAINING単体練習は従来どおり Math.random() を直接使う。ASSESSMENT実行中のみ
@@ -3434,6 +3485,219 @@
 
   const TR_START = { perception: startPerception, flick: startFlick, precision: startPrecision, tracking: startTracking, switching: startSwitching, timing: startTiming };
 
+  // ===== TRAINING: 6課題の実演プレイヤー =====
+  // 本番関数は一切呼ばず、同じCSSの見た目だけを固定シーケンスで動かす。
+  // タイマーはすべてTR_DEMOへ登録し、スキップ・中止・画面変更時にまとめて破棄する。
+  function trDemoAt(ms, fn) {
+    if (!TR_DEMO) return 0;
+    const owner = TR_DEMO;
+    const id = setTimeout(() => { if (TR_DEMO === owner) fn(); }, ms);
+    owner.timers.push(id);
+    return id;
+  }
+  function trDemoFinger(x, y) {
+    const wrap = document.createElement('div');
+    wrap.className = 'tr-demo-finger';
+    wrap.style.left = x + 'px'; wrap.style.top = y + 'px';
+    // 白い手+薄い縁取りのインラインSVG。先端座標をleft/topへ合わせて動かす。
+    wrap.innerHTML = '<svg viewBox="0 0 56 72" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M27 4c-4 0-7 3-7 7v25l-4-5c-3-4-8-4-11-1-3 3-2 7 0 10l13 21c3 5 8 7 14 7h6c8 0 14-6 14-14V31c0-4-3-7-7-7-2 0-4 1-5 3v-4c0-4-3-7-7-7-2 0-4 1-6 3v-8c0-4-3-7-7-7Z" fill="#fff" stroke="#b9d2e8" stroke-width="2" stroke-linejoin="round"/><path d="M20 36V12M27 36V20M40 36v-9" fill="none" stroke="#b9d2e8" stroke-width="2" stroke-linecap="round"/></svg>';
+    $('trField').appendChild(wrap);
+    requestAnimationFrame(() => { if (wrap.isConnected) wrap.style.opacity = '1'; });
+    return wrap;
+  }
+  function trDemoMove(finger, x, y, speed) {
+    finger.classList.remove('fast', 'slow');
+    if (speed) finger.classList.add(speed);
+    finger.style.left = x + 'px'; finger.style.top = y + 'px';
+  }
+  function trDemoTarget(x, y, r, extraClass) {
+    const el = document.createElement('div');
+    el.className = 'target tr-demo-target' + (extraClass ? ' ' + extraClass : '');
+    el.style.width = el.style.height = (r * 2) + 'px';
+    el.style.left = x + 'px'; el.style.top = y + 'px';
+    $('trField').appendChild(el);
+    return el;
+  }
+  function trDemoPad(x, y, r) {
+    const el = document.createElement('div'); el.className = 'trpad';
+    el.style.width = el.style.height = (r * 2) + 'px';
+    el.style.left = x + 'px'; el.style.top = y + 'px';
+    $('trField').appendChild(el); return el;
+  }
+  function trDemoPress(finger, target) {
+    if (!finger) return;
+    finger.classList.add('down');
+    if (target) { target.classList.remove('tr-pop'); void target.offsetWidth; target.classList.add('tr-pop'); }
+  }
+  function trDemoRelease(finger) { finger.classList.remove('down'); }
+  function trDemoFeedback(x, y, grade, main, sub, target) {
+    trDemoPress(TR_DEMO && TR_DEMO.finger, target);
+    trFeedback(x, y, grade, main, sub || '');
+    trGradeSound(grade);
+    trDemoAt(130, () => { if (TR_DEMO && TR_DEMO.finger) trDemoRelease(TR_DEMO.finger); });
+  }
+  function trDemoDecorate() {
+    const badge = document.createElement('div'); badge.className = 'tr-demo-badge'; badge.textContent = T('trDemoBadge');
+    const skip = document.createElement('div'); skip.className = 'tr-demo-skip'; skip.textContent = T('trDemoSkip');
+    $('trField').append(badge, skip);
+  }
+  function trDemoFinish() {
+    if (!TR_DEMO || TR_DEMO.finishing) return;
+    TR_DEMO.finishing = true;
+    const ready = document.createElement('div'); ready.className = 'tr-demo-ready'; ready.textContent = T('trDemoTry');
+    $('trField').appendChild(ready);
+    trDemoAt(800, trDemoStartReal);
+  }
+  function trDemoCleanup() {
+    if (!TR_DEMO) return null;
+    const ctx = TR_DEMO.ctx;
+    TR_DEMO.timers.forEach(clearTimeout);
+    window.removeEventListener('resize', trSkipDemo);
+    window.removeEventListener('pagehide', trDemoPageHide);
+    const fld = $('trField');
+    fld.removeEventListener('pointerdown', trSkipDemo);
+    fld.innerHTML = '';
+    $('trHud').classList.add('hidden'); fld.classList.add('hidden'); trHideMsg();
+    TR_DEMO = null;
+    return ctx;
+  }
+  function trStartIntroContext(ctx) {
+    if (!ctx) return;
+    if (ctx.mode === 'assessment') { asStartTask(ctx.taskId); return; }
+    TR_MODE = 'solo'; RNG = Math.random;
+    TR_START[ctx.taskId]();
+  }
+  function trDemoStartReal() { trStartIntroContext(trDemoCleanup()); }
+  function trDemoPageHide() { trDemoCleanup(); }
+  function trSkipDemo() {
+    if (!TR_DEMO || TR_DEMO.finishing) return;
+    trDemoStartReal();
+  }
+  function trStartDemoFromIntro() {
+    if (!TR_INTRO || TR_DEMO) return;
+    const ctx = TR_INTRO; TR_INTRO = null;
+    state = 'training';
+    $('trIntro').classList.add('hidden');
+    $('trHud').classList.remove('hidden');
+    $('trTaskName').textContent = TR_META[ctx.taskId].name;
+    trSetProgress(0, null); trHideMsg();
+    const fld = $('trField'); fld.innerHTML = ''; fld.classList.remove('hidden');
+    TR_DEMO = { ctx, timers: [], finger: null, finishing: false };
+    trDemoDecorate();
+    fld.addEventListener('pointerdown', trSkipDemo);
+    window.addEventListener('resize', trSkipDemo);
+    window.addEventListener('pagehide', trDemoPageHide);
+    TR_DEMO_SEQUENCES[ctx.taskId]();
+  }
+
+  function trDemoPerception() {
+    const rect = trPlayAreaRect(), x = innerWidth / 2, padY = rect.bottom - 72;
+    const tx = rect.left + rect.w * .72, ty = rect.top + rect.h * .30;
+    const pad = trDemoPad(x, padY, 46), finger = trDemoFinger(x, rect.bottom + 76); TR_DEMO.finger = finger;
+    let tg = null;
+    trDemoAt(350, () => trDemoMove(finger, x, padY, 'slow'));
+    trDemoAt(1050, () => { trDemoPress(finger, pad); pad.classList.add('active'); });
+    trDemoAt(2250, () => { tg = trDemoTarget(tx, ty, 38); });
+    trDemoAt(2497, () => {
+      trDemoRelease(finger); pad.classList.remove('active');
+      trFeedback(x, rect.top + 150, 'A', '247ms', ''); trGradeSound('A');
+    });
+    trDemoAt(2850, () => trDemoMove(finger, tx, ty, 'fast'));
+    trDemoAt(3140, () => trDemoFeedback(tx, ty, 'A', '247ms', '', tg));
+    trDemoAt(3900, trDemoFinish);
+  }
+  function trDemoFlick() {
+    const rect = trPlayAreaRect(), x = innerWidth / 2, y = rect.top + rect.h * .58;
+    const tx = rect.left + rect.w * .78, ty = rect.top + rect.h * .23;
+    const pad = trDemoPad(x, y, 40), finger = trDemoFinger(x, rect.bottom + 70); TR_DEMO.finger = finger;
+    let tg = null;
+    trDemoAt(300, () => trDemoMove(finger, x, y, 'slow'));
+    trDemoAt(900, () => { trDemoPress(finger, pad); pad.classList.add('active'); });
+    trDemoAt(1800, () => { tg = trDemoTarget(tx, ty, 34); });
+    trDemoAt(2050, () => { trDemoRelease(finger); pad.classList.remove('active'); trDemoMove(finger, tx - 8, ty, 'fast'); });
+    trDemoAt(2260, () => trDemoFeedback(tx - 8, ty, 'A', trFmt('trMoveOffset', { ms: 210, px: 8 }), '', tg));
+    trDemoAt(3600, trDemoFinish);
+  }
+  function trDemoPrecision() {
+    const rect = trPlayAreaRect(), r = Math.max(18, Math.round(baseRadius() * .7));
+    const p1 = { x: rect.left + rect.w * .32, y: rect.top + rect.h * .32 };
+    const p2 = { x: rect.left + rect.w * .70, y: rect.top + rect.h * .62 };
+    const finger = trDemoFinger(innerWidth / 2, rect.bottom + 70); TR_DEMO.finger = finger;
+    let tg = null;
+    trDemoAt(450, () => { tg = trDemoTarget(p1.x, p1.y, r); });
+    trDemoAt(700, () => trDemoMove(finger, p1.x + 3, p1.y, 'slow'));
+    trDemoAt(1850, () => trDemoFeedback(p1.x + 3, p1.y, 'S', trFmt('trDeviation', { px: 3, pct: 6 }), '', tg));
+    trDemoAt(2400, () => { tg.style.opacity = '.25'; tg = trDemoTarget(p2.x, p2.y, r); });
+    trDemoAt(2700, () => trDemoMove(finger, p2.x + 24, p2.y, 'slow'));
+    trDemoAt(3850, () => trDemoFeedback(p2.x + 24, p2.y, 'C', trFmt('trDeviation', { px: 24, pct: 48 }), '', tg));
+    trDemoAt(4800, trDemoFinish);
+  }
+  function trDemoTracking() {
+    const rect = trPlayAreaRect(), r = Math.max(22, Math.round(baseRadius() * .6));
+    const pts = [
+      [rect.left + rect.w * .25, rect.top + rect.h * .35],
+      [rect.left + rect.w * .48, rect.top + rect.h * .28],
+      [rect.left + rect.w * .70, rect.top + rect.h * .46],
+      [rect.left + rect.w * .54, rect.top + rect.h * .64],
+      [rect.left + rect.w * .34, rect.top + rect.h * .54],
+    ];
+    const tg = trDemoTarget(pts[0][0], pts[0][1], r, 'tracking-target');
+    const finger = trDemoFinger(pts[0][0], rect.bottom + 70); TR_DEMO.finger = finger;
+    trDemoAt(350, () => trDemoMove(finger, pts[0][0], pts[0][1], 'slow'));
+    trDemoAt(1050, () => { trDemoPress(finger, tg); tg.classList.add('on'); beep(660, .05, .08); });
+    [pts[1], pts[2], pts[3]].forEach((p, i) => trDemoAt(1350 + i * 550, () => {
+      tg.style.left = p[0] + 'px'; tg.style.top = p[1] + 'px'; trDemoMove(finger, p[0], p[1]);
+    }));
+    trDemoAt(3000, () => {
+      tg.style.left = pts[4][0] + 'px'; tg.style.top = pts[4][1] + 'px';
+      trDemoMove(finger, pts[4][0] + r * 2.2, pts[4][1], 'fast'); tg.classList.remove('on');
+      trShake(tg); beep(220, .08, .1);
+    });
+    trDemoAt(3550, () => { trDemoMove(finger, pts[4][0], pts[4][1], 'fast'); tg.classList.add('on'); beep(880, .08, .1); });
+    trDemoAt(4400, trDemoFinish);
+  }
+  function trDemoSwitching() {
+    const rect = trPlayAreaRect(), r = Math.max(27, Math.round(baseRadius() * .7));
+    const pts = [
+      [rect.left + rect.w * .25, rect.top + rect.h * .36],
+      [rect.left + rect.w * .72, rect.top + rect.h * .27],
+      [rect.left + rect.w * .55, rect.top + rect.h * .66],
+    ];
+    const targets = pts.map((p, i) => {
+      const tg = trDemoTarget(p[0], p[1], r); const label = document.createElement('div');
+      label.className = 'trnum'; label.textContent = i + 1; tg.appendChild(label); return tg;
+    });
+    const finger = trDemoFinger(innerWidth / 2, rect.bottom + 70); TR_DEMO.finger = finger;
+    pts.forEach((p, i) => {
+      const moveAt = 550 + i * 850, tapAt = moveAt + 520;
+      trDemoAt(moveAt, () => trDemoMove(finger, p[0], p[1], i ? 'fast' : 'slow'));
+      trDemoAt(tapAt, () => {
+        trDemoPress(finger, targets[i]); beep([523, 659, 784][i], .08, .1);
+        trFeedback(p[0], p[1], ['B', 'A', 'S'][i], trFmt('trSwitch', { ms: [410, 290, 230][i] }), '');
+        targets[i].style.opacity = '.25'; trDemoAt(130, () => trDemoRelease(finger));
+        if (i === 2) { trDemoAt(100, () => beep(1047, .12, .1)); }
+      });
+    });
+    trDemoAt(3850, trDemoFinish);
+  }
+  function trDemoTiming() {
+    const rect = trPlayAreaRect(), r = Math.max(22, Math.round(baseRadius() * .6));
+    const y = rect.top + rect.h * .48, hitX = rect.left + rect.w * .68;
+    const tg = trDemoTarget(rect.left - r, y, r, 'tr-demo-linear');
+    const finger = trDemoFinger(hitX, rect.bottom + 70); TR_DEMO.finger = finger;
+    trDemoAt(250, () => trDemoMove(finger, hitX, y, 'slow'));
+    trDemoAt(550, () => { tg.style.left = rect.right + r + 'px'; });
+    trDemoAt(2500, () => {
+      tg.classList.remove('tr-demo-linear'); tg.style.transition = 'none'; tg.style.left = hitX + 'px';
+      trDemoFeedback(hitX, y, 'S', `${T('trEarly')} 12ms`, '', tg);
+    });
+    trDemoAt(4000, trDemoFinish);
+  }
+  const TR_DEMO_SEQUENCES = {
+    perception: trDemoPerception, flick: trDemoFlick, precision: trDemoPrecision,
+    tracking: trDemoTracking, switching: trDemoSwitching, timing: trDemoTiming,
+  };
+
   // ===== 課題開始前の共通イントロ =====
   // TRAININGは通常試行数、ASSESSMENTは短縮試行数を同じ文面の{n}へ差し込む。
   const TR_INTRO_TOTALS = { perception: 10, flick: 8, precision: 12, tracking: 20, switching: 8, timing: 10 };
@@ -3457,14 +3721,8 @@
   }
   function trStartFromIntro() {
     if (!TR_INTRO) return;
-    const { taskId, mode } = TR_INTRO;
-    TR_INTRO = null;
-    if (mode === 'assessment') {
-      asStartTask(taskId);
-      return;
-    }
-    TR_MODE = 'solo'; RNG = Math.random;
-    TR_START[taskId]();
+    const ctx = TR_INTRO; TR_INTRO = null;
+    trStartIntroContext(ctx);
   }
   function trBackFromIntro() {
     if (!TR_INTRO) return;
@@ -3905,10 +4163,11 @@
   // メニューの4分類
   $('catSa').addEventListener('click', () => { renderTitle(); show('title'); });
   $('catTr').addEventListener('click', () => { renderTrHub(); show('training'); });
-  $('trAbortBtn').addEventListener('click', trAbort);
+  $('trAbortBtn').addEventListener('click', () => { if (TR_DEMO) trSkipDemo(); else trAbort(); });
   $('trRetryBtn').addEventListener('click', () => { if (TR_LAST_TASK) TR_START[TR_LAST_TASK](); });
   $('trBackHubBtn').addEventListener('click', () => { renderTrHub(); show('training'); });
   $('trIntroStartBtn').addEventListener('click', trStartFromIntro);
+  $('trIntroDemoBtn').addEventListener('click', trStartDemoFromIntro);
   $('trIntroBackBtn').addEventListener('click', trBackFromIntro);
   $('catAs').addEventListener('click', () => { asRenderStart(); show('assessment'); });
   $('asStartBtn').addEventListener('click', asStartNew);
