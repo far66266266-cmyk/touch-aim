@@ -515,6 +515,13 @@
     cursor: pointer;
   }
   .achBtn:active { transform: scale(.98); }
+  .achNext {
+    width: 100%; max-width: 420px;
+    margin-top: 8px;
+    font-size: 11.5px; color: #5f95b8;
+    letter-spacing: .04em;
+    text-align: left; padding: 0 2px;
+  }
 
   /* ===== メニュー: SCORE ATTACKの3モード紹介 (ACHIEVEMENTSボタン直下・控えめな情報密度) ===== */
   .menu-modes {
@@ -568,6 +575,10 @@
   }
   .ach-desc { font-size: 13px; color: #8b949e; margin-top: 3px; line-height: 1.5; }
   .ach-date { font-size: 11px; color: #5f7a94; margin-top: 4px; }
+  .ach-prog { display: flex; align-items: center; gap: 8px; margin-top: 7px; }
+  .ach-prog-track { flex: 1 1 auto; height: 4px; border-radius: 2px; background: #21262d; overflow: hidden; }
+  .ach-prog-fill { height: 100%; background: #2ea8ff; border-radius: 2px; }
+  .ach-prog-num { flex: 0 0 auto; font-size: 11px; color: #5f95b8; font-variant-numeric: tabular-nums; }
 
   /* ===== 実績解除トースト ===== */
   #achToast {
@@ -858,6 +869,7 @@
       </button>
     </div>
     <button class="achBtn" id="achBtn">🏆 ACHIEVEMENTS <span id="achBtnCount">0/25</span></button>
+    <div class="achNext hidden" id="achNext"></div>
 
     <!-- SCORE ATTACKの3モード紹介 (メニュー直下・情報密度低め) -->
     <div class="menu-modes">
@@ -1114,7 +1126,7 @@
   // ===== 設定 =====
   const TARGETS       = 10;      // 1ラウンドのターゲット数
   const ROUND_MS      = 25000;   // 制限時間
-  const TARGET_LIFE   = 2000;    // ターゲットの寿命(ms) 超過でミス
+  // ターゲットの寿命(ms、超過でミス)はモード別 (MODES[mode].lifeMs)。リプレイはreplay.lifeで記録時の値を参照する
   const MAX_PTS       = 1000;    // 1ターゲットの満点
   const COMBO_ZONE    = 0.50;    // コンボ判定: 中心からこの半径比以内 (青い芯)
   const COMBO_STEP    = 0.03;    // 1コンボごとの倍率上昇
@@ -1122,25 +1134,29 @@
   const WHIFF_PENALTY = 100;     // 空振りの減点
   const EXCELLENT_PTS = 800;     // 単体スコアでEXCELLENT演出になるライン
 
-  // ===== モード定義 (円の出現ルール・サイズは全モード共通、配点だけ変える) =====
+  // ===== モード定義 (配点に加えて円の出現ルール(大きさ・寿命・出現テンポ)もモード別に変える。SCORE ATTACKのみに適用) =====
+  // sizeMul: ターゲット半径の倍率 / lifeMs: ターゲット寿命(ms) / gapTotal: 出現間隔9個の合計(ms、最初の1個の待ちは含まない)
   const MODES = {
     normal: {
       name: 'ノーマル', desc: '速さと精度をバランスよく評価',
       tFull: 350, tZero: 1700,
       combine: (tf, acc) => tf * (0.1 + 0.9 * acc),
       ranks: [.9, .72, .5, .28],
+      sizeMul: 1.0, lifeMs: 2000, gapTotal: 4500, // 現行そのまま
     },
     acc: {
       name: '精度重視', desc: '中心精度が得点の大半を決める。時間の影響は小さめ',
       tFull: 600, tZero: 2000,
       combine: (tf, acc) => (0.4 + 0.6 * tf) * Math.pow(acc, 1.5),
       ranks: [.78, .6, .42, .22],
+      sizeMul: 0.78, lifeMs: 2000, gapTotal: 6000, // 小さい的・ゆったり出現 (最悪ケース 700+9×2000+6000=24.7s)
     },
     speed: {
       name: '速度重視', desc: '反応の速さが得点の大半を決める。精度の影響は小さめ',
       tFull: 350, tZero: 1300,
       combine: (tf, acc) => Math.pow(tf, 1.3) * (0.4 + 0.6 * acc),
       ranks: [.78, .6, .42, .22],
+      sizeMul: 1.15, lifeMs: 1400, gapTotal: 3200, // 大きめの的・短寿命・速いテンポ (最悪ケース 700+9×1400+3200=16.5s)
     },
   };
   let mode = localStorage.getItem('touchaim_mode') || 'normal';
@@ -1155,9 +1171,9 @@
     m_normal: ['ノーマル', 'Normal', '普通', '노멀', 'Normal', 'Normal', 'Normal', 'Normal', 'Обычный', 'Normal'],
     m_acc: ['精度重視', 'Precision', '精准', '정확도', 'Precisión', 'Precisão', 'Précision', 'Präzision', 'Точность', 'Presisi'],
     m_speed: ['速度重視', 'Speed', '速度', '스피드', 'Velocidad', 'Velocidade', 'Vitesse', 'Tempo', 'Скорость', 'Kecepatan'],
-    d_normal: ['速さと精度をバランスよく評価', 'Balanced scoring of speed and accuracy', '速度与精度均衡计分', '속도와 정확도를 균형 있게 평가', 'Puntuación equilibrada de velocidad y precisión', 'Pontuação equilibrada de velocidade e precisão', 'Score équilibré entre vitesse et précision', 'Ausgewogene Wertung aus Tempo und Präzision', 'Сбалансированная оценка скорости и точности', 'Skor seimbang antara kecepatan dan akurasi'],
-    d_acc: ['中心精度が得点の大半を決める。時間の影響は小さめ', 'Accuracy dominates the score; time matters less', '精度决定大部分得分，时间影响较小', '정확도가 점수 대부분을 결정, 시간 영향은 작음', 'La precisión domina; el tiempo influye menos', 'A precisão domina; o tempo pesa menos', 'La précision domine ; le temps compte moins', 'Präzision zählt am meisten; Zeit weniger', 'Точность решает больше; время влияет меньше', 'Akurasi paling menentukan; waktu kurang berpengaruh'],
-    d_speed: ['反応の速さが得点の大半を決める。精度の影響は小さめ', 'Reaction speed dominates; accuracy matters less', '反应速度决定大部分得分，精度影响较小', '반응 속도가 점수 대부분을 결정, 정확도 영향은 작음', 'La velocidad domina; la precisión influye menos', 'A velocidade domina; a precisão pesa menos', 'La vitesse domine ; la précision compte moins', 'Tempo zählt am meisten; Präzision weniger', 'Скорость решает больше; точность влияет меньше', 'Kecepatan paling menentukan; akurasi kurang berpengaruh'],
+    d_normal: ['標準ルール。速さと精度をバランスよく評価', 'Standard rules — balanced scoring of speed and accuracy'],
+    d_acc: ['的が小さめ・出現ゆったり。中心精度が得点を決める', 'Smaller targets, more relaxed pacing — accuracy decides your score'],
+    d_speed: ['的は大きめだがすぐ消える。反応速度が得点を決める', 'Bigger targets that vanish fast — reaction speed decides your score'],
     rulesBtn: ['ルール・遊び方', 'How to Play', '规则玩法', '규칙·플레이 방법', 'Reglas', 'Regras', 'Règles', 'Regeln', 'Правила', 'Aturan'],
     noRec: ['まだ記録がありません', 'No records yet', '暂无记录', '아직 기록이 없습니다', 'Sin registros todavía', 'Nenhum registro ainda', 'Aucun record pour l’instant', 'Noch keine Einträge', 'Пока нет записей', 'Belum ada rekor'],
     thScore: ['スコア', 'Score', '得分', '점수', 'Puntos', 'Pontos', 'Score', 'Punkte', 'Очки', 'Skor'],
@@ -1184,7 +1200,7 @@
     close: ['閉じる', 'Close', '关闭', '닫기', 'Cerrar', 'Fechar', 'Fermer', 'Schließen', 'Закрыть', 'Tutup'],
     replayNote: ['黄=タップ位置 / 赤=空振り / 薄い輪郭=消えた円', 'Yellow = tap / Red = whiff / Faint = expired circle', '黄=点击位置 / 红=落空 / 淡圈=已消失的圆', '노랑=탭 위치 / 빨강=헛스윙 / 옅은 원=사라진 원', 'Amarillo = toque / Rojo = fallo / Tenue = círculo expirado', 'Amarelo = toque / Vermelho = erro / Fraco = círculo expirado', 'Jaune = toucher / Rouge = raté / Pâle = cercle disparu', 'Gelb = Tipp / Rot = Fehlschlag / Blass = abgelaufen', 'Жёлтый = нажатие / Красный = промах / Бледный = исчезнувший круг', 'Kuning = ketukan / Merah = meleset / Pudar = lingkaran hilang'],
     rBasic: ['基本', 'Basics', '基本', '기본', 'Básico', 'Básico', 'Bases', 'Grundlagen', 'Основы', 'Dasar'],
-    rBasicP: ['25秒の間に10個の円がランダムなタイミング・位置・大きさで出現します(常に1個ずつ・2秒で消滅)。すばやく中心を狙ってタップ。反応時間は1/1000秒単位で計測されます。', '10 circles appear within 25 seconds at random times, positions and sizes (one at a time, gone after 2s). Tap fast and aim for the center. Reaction time is measured to the millisecond.', '25秒内会出现10个圆圈，时间、位置、大小均为随机（每次1个，2秒后消失）。快速点击并瞄准圆心。反应时间以毫秒为单位计量。', '25초 동안 10개의 원이 무작위 타이밍·위치·크기로 나타납니다(한 번에 1개, 2초 후 소멸). 빠르게 중심을 노려 탭하세요. 반응 시간은 1/1000초 단위로 측정됩니다.', 'Aparecen 10 círculos en 25 segundos con tiempo, posición y tamaño aleatorios (uno a la vez, desaparecen en 2 s). Toca rápido apuntando al centro. La reacción se mide al milisegundo.', '10 círculos aparecem em 25 segundos com tempo, posição e tamanho aleatórios (um por vez, somem em 2 s). Toque rápido mirando no centro. A reação é medida em milissegundos.', '10 cercles apparaissent en 25 secondes à des moments, positions et tailles aléatoires (un à la fois, disparu après 2 s). Touchez vite en visant le centre. La réaction est mesurée à la milliseconde.', 'In 25 Sekunden erscheinen 10 Kreise zu zufälligen Zeiten, Positionen und Größen (einzeln, weg nach 2 s). Tippe schnell und ziele auf die Mitte. Die Reaktionszeit wird auf die Millisekunde gemessen.', 'За 25 секунд появляются 10 кругов в случайное время, в случайных местах и размерах (по одному, исчезают через 2 с). Нажимайте быстро, целясь в центр. Реакция измеряется до миллисекунды.', '10 lingkaran muncul dalam 25 detik dengan waktu, posisi, dan ukuran acak (satu per satu, hilang setelah 2 dtk). Ketuk cepat, bidik tengah. Waktu reaksi diukur per milidetik.'],
+    rBasicP: ['25秒の間に10個の円がランダムなタイミング・位置・大きさで出現します(常に1個ずつ。寿命はモードにより1.4〜2秒)。すばやく中心を狙ってタップ。反応時間は1/1000秒単位で計測されます。', '10 circles appear within 25 seconds at random times, positions and sizes (one at a time; lifetime is 1.4-2s depending on mode). Tap fast and aim for the center. Reaction time is measured to the millisecond.'],
     rScore: ['スコア', 'Scoring', '得分', '점수', 'Puntuación', 'Pontuação', 'Score', 'Punkte', 'Очки', 'Skor'],
     rScoreP: ['1発の得点 = 速さ × 中心精度 × 円の小ささ(基準1000点)。小さい円ほど倍率が高く、10個の平均は常に×1.00。速さと精度の配分はモードで変わります。', 'Points per hit = speed × accuracy × circle size (base 1000). Smaller circles score higher, and the 10-circle average is always ×1.00. Each mode weighs speed vs accuracy differently.', '单次得分 = 速度 × 精度 × 圆圈大小（基准1000分）。圆越小倍率越高，10个圆的平均始终为×1.00。各模式对速度与精度的权重不同。', '1회 득점 = 속도 × 정확도 × 원의 크기(기준 1000점). 작은 원일수록 배율이 높고, 10개 평균은 항상 ×1.00입니다. 속도와 정확도의 비중은 모드마다 다릅니다.', 'Puntos por acierto = velocidad × precisión × tamaño (base 1000). Los círculos pequeños puntúan más y la media de los 10 siempre es ×1,00. Cada modo pondera distinto velocidad y precisión.', 'Pontos por acerto = velocidade × precisão × tamanho (base 1000). Círculos menores valem mais e a média dos 10 é sempre ×1,00. Cada modo pesa velocidade e precisão de forma diferente.', 'Points par tir = vitesse × précision × taille (base 1000). Les petits cercles rapportent plus et la moyenne des 10 est toujours ×1,00. Chaque mode pondère différemment vitesse et précision.', 'Punkte pro Treffer = Tempo × Präzision × Kreisgröße (Basis 1000). Kleinere Kreise bringen mehr, der Schnitt der 10 ist immer ×1,00. Jeder Modus gewichtet Tempo und Präzision anders.', 'Очки за попадание = скорость × точность × размер круга (база 1000). Маленькие круги дают больше, среднее по 10 всегда ×1,00. Режимы по-разному взвешивают скорость и точность.', 'Poin per ketukan = kecepatan × akurasi × ukuran lingkaran (dasar 1000). Lingkaran kecil bernilai lebih; rata-rata 10 lingkaran selalu ×1,00. Tiap mode menimbang kecepatan vs akurasi secara berbeda.'],
     rGrade: ['評価', 'Grades', '评价', '등급', 'Calificación', 'Avaliação', 'Notes', 'Wertung', 'Оценка', 'Penilaian'],
@@ -1194,7 +1210,7 @@
     rPenalty: ['ペナルティ', 'Penalties', '惩罚', '페널티', 'Penalizaciones', 'Penalidades', 'Pénalités', 'Strafen', 'Штрафы', 'Penalti'],
     rPenaltyP: ['空振り(円の外をタップ)は-100点。円を2秒以内にタップできないとTIME OUTで0点です。', 'Whiffs (tapping outside the circle) cost -100 points. Missing a circle for 2 seconds is a TIME OUT worth 0 points.', '落空（点击圆圈外）扣100分。2秒内未点击圆圈则TIME OUT，得0分。', '헛스윙(원 밖 탭)은 -100점. 2초 안에 원을 탭하지 못하면 TIME OUT으로 0점입니다.', 'Fallar el toque (fuera del círculo) resta 100 puntos. No tocar un círculo en 2 s es TIME OUT y vale 0.', 'Errar o toque (fora do círculo) custa -100 pontos. Não tocar em 2 s é TIME OUT e vale 0.', 'Un raté (hors du cercle) coûte -100 points. Ne pas toucher un cercle en 2 s est un TIME OUT à 0 point.', 'Fehlschläge (außerhalb des Kreises) kosten -100 Punkte. Wird ein Kreis 2 s nicht getroffen: TIME OUT, 0 Punkte.', 'Промах (нажатие вне круга) — минус 100 очков. Если не нажать круг за 2 с — TIME OUT, 0 очков.', 'Meleset (ketuk di luar lingkaran) -100 poin. Tidak mengetuk dalam 2 detik = TIME OUT, 0 poin.'],
     rMode: ['モードと記録', 'Modes & records', '模式与记录', '모드와 기록', 'Modos y registros', 'Modos e registros', 'Modes et records', 'Modi & Rekorde', 'Режимы и рекорды', 'Mode & rekor'],
-    rModeP: ['3つのモードは配点だけが異なり、円の出方は共通です。記録(ベスト・TOP10・グラフ)はモード別に、この端末のブラウザへ保存されます。', 'The three modes differ only in scoring; circles behave the same. Records (best, top 10, chart) are stored per mode in this device\'s browser.', '三种模式仅计分不同，圆圈的出现方式相同。记录（最佳、前10、图表）按模式保存在本设备的浏览器中。', '세 모드는 배점만 다르고 원의 등장 방식은 같습니다. 기록(베스트·TOP10·그래프)은 모드별로 이 기기의 브라우저에 저장됩니다.', 'Los tres modos solo cambian la puntuación; los círculos son iguales. Los registros (récord, top 10, gráfica) se guardan por modo en el navegador de este dispositivo.', 'Os três modos mudam só a pontuação; os círculos são iguais. Os registros (recorde, top 10, gráfico) ficam salvos por modo no navegador deste aparelho.', 'Les trois modes ne diffèrent que par le score ; les cercles sont identiques. Les records (meilleur, top 10, graphique) sont enregistrés par mode dans le navigateur de cet appareil.', 'Die drei Modi unterscheiden sich nur in der Wertung; die Kreise sind gleich. Rekorde (Best, Top 10, Diagramm) werden pro Modus im Browser dieses Geräts gespeichert.', 'Три режима отличаются только подсчётом очков; круги одинаковы. Рекорды (лучший, топ-10, график) хранятся по режимам в браузере этого устройства.', 'Ketiga mode hanya berbeda penilaian; perilaku lingkaran sama. Rekor (terbaik, top 10, grafik) disimpan per mode di browser perangkat ini.'],
+    rModeP: ['3つのモードは的の大きさ・寿命・出現テンポと配点が異なります。記録(ベスト・TOP10・グラフ)はモード別に、この端末のブラウザへ保存されます。', 'The three modes differ in target size, lifetime, spawn pace, and scoring. Records (best, top 10, chart) are stored per mode in this device\'s browser.'],
   };
   STR.saDesc = ['10ターゲット×25秒のスコアアタック', 'Score attack — 10 targets in 25 seconds', '25秒10个目标的比分挑战', '25초 10타깃 스코어 어택', 'Ataque de puntuación: 10 objetivos en 25 s', 'Ataque de pontuação: 10 alvos em 25 s', 'Score attack : 10 cibles en 25 s', 'Score Attack – 10 Ziele in 25 s', 'Скоростной зачёт: 10 целей за 25 с', 'Score attack — 10 target dalam 25 detik'];
   STR.trDesc = ['6つのエイム能力を個別に練習', 'Practice six aim skills individually', '分别训练6项瞄准能力', '6가지 에임 능력을 개별 연습', 'Entrena seis habilidades de puntería por separado', 'Treine seis habilidades de mira separadamente', 'Entraînez six aptitudes de visée séparément', 'Sechs Aim-Fähigkeiten einzeln trainieren', 'Тренируйте шесть навыков прицеливания по отдельности', 'Latih enam kemampuan aim secara terpisah'];
@@ -1290,6 +1306,7 @@
   STR.ad_hits300 = ['累計300ヒット', 'Hit 300 targets (cumulative)', '累计命中300次', '누적 명중 300회', 'Acierta 300 objetivos (acumulado)', 'Acerte 300 alvos (acumulado)', 'Touchez 300 cibles (cumulé)', 'Triff 300 Ziele (kumulativ)', 'Поразите 300 целей (всего)', 'Kenai 300 target (akumulasi)'];
   STR.ad_hits500 = ['累計500ヒット', 'Hit 500 targets (cumulative)', '累计命中500次', '누적 명중 500회', 'Acierta 500 objetivos (acumulado)', 'Acerte 500 alvos (acumulado)', 'Touchez 500 cibles (cumulé)', 'Triff 500 Ziele (kumulativ)', 'Поразите 500 целей (всего)', 'Kenai 500 target (akumulasi)'];
   STR.ad_hits1000 = ['累計1,000ヒット', 'Hit 1,000 targets (cumulative)', '累计命中1,000次', '누적 명중 1,000회', 'Acierta 1.000 objetivos (acumulado)', 'Acerte 1.000 alvos (acumulado)', 'Touchez 1 000 cibles (cumulé)', 'Triff 1.000 Ziele (kumulativ)', 'Поразите 1000 целей (всего)', 'Kenai 1.000 target (akumulasi)'];
+  STR.achNextFmt = ['次の実績: {n} {cur}/{max}', 'NEXT: {n} {cur}/{max}'];
   STR.ad_plays50 = ['SCORE ATTACKを累計50プレイ完了', 'Complete 50 SCORE ATTACK rounds (cumulative)', '累计完成50次SCORE ATTACK游玩', 'SCORE ATTACK 누적 50회 완료', 'Completa 50 partidas de SCORE ATTACK (acumulado)', 'Complete 50 partidas de SCORE ATTACK (acumulado)', 'Terminez 50 parties de SCORE ATTACK (cumulé)', 'Schließe 50 SCORE-ATTACK-Runden ab (kumulativ)', 'Завершите 50 игр SCORE ATTACK (всего)', 'Selesaikan 50 permainan SCORE ATTACK (akumulasi)'];
 
   // ===== ストレージ v2 (バージョン付き・一元化) =====
@@ -1471,14 +1488,16 @@
   }
 
   // 出現間隔10個: 前のターゲットの解決(ヒット/タイムアウト)後、この間隔で次を出す。
-  // 速く倒すほど次がすぐ来る方式。個々はランダムだが合計を固定し、プレイ間の運差を抑える。
-  // 全タイムアウトの最悪ケースでも 700 + 9×2000 + 4500 ≈ 23.2秒 < 25秒 に収まる。
+  // 速く倒すほど次がすぐ来る方式。個々はランダムだが合計(gapTotal、モード別)を固定し、プレイ間の運差を抑える。
+  // 最初の1個までの待ち(400-700ms)は全モード共通。
+  // 最悪ケース(全タイムアウト): normal 700+9×2000+4500≈23.2s / acc 700+9×2000+6000≈24.7s / speed 700+9×1400+3200≈16.5s (いずれも25秒以内)
   function makeSpawnGaps() {
-    const g = [400 + Math.random() * 400]; // 最初の1個までの待ち
-    // べき分布で偏らせる: 連続で来る瞬間と一呼吸空く瞬間が混ざる (合計は4.5秒固定)
+    const gapTotal = MODES[mode].gapTotal;
+    const g = [400 + Math.random() * 400]; // 最初の1個までの待ち (モード共通)
+    // べき分布で偏らせる: 連続で来る瞬間と一呼吸空く瞬間が混ざる (合計はgapTotal固定)
     const raw = Array.from({ length: TARGETS - 1 }, () => 120 + Math.pow(Math.random(), 1.7) * 1100);
     const sum = raw.reduce((s, x) => s + x, 0);
-    raw.forEach(x => g.push(x * 4500 / sum));
+    raw.forEach(x => g.push(x * gapTotal / sum));
     return g;
   }
 
@@ -1607,32 +1626,58 @@
   // ===== ローカル実績 (25個・端末内保存) =====
   // 実績名は全言語共通の英語固定。説明文のみ STR の ad_<id> でi18n
   // cond(db, roundData): roundData = { hits, records, avgT, avgA, maxCombo, rank, totalScore, roundWhiffs }
+  // secret: true の3つ(sharp95/flawless_all/trinity)だけ未解除時に???表示。他22個は未解除でも名前と条件文を公開する。
+  // prog(db): 計測可能なものだけ {cur, max} を返して進捗バー+数値を表示 (1プレイ完結条件など定義しづらいものは省略)
+  const bestMax3 = (db) => Math.max(db.sa.normal.best, db.sa.acc.best, db.sa.speed.best);
+  const count8kAll = (db) => [db.sa.normal.best, db.sa.acc.best, db.sa.speed.best].filter(s => s >= 8000).length;
+  const count9kAll = (db) => [db.sa.normal.best, db.sa.acc.best, db.sa.speed.best].filter(s => s >= 9000).length;
   const ACHIEVEMENTS = [
-    { id: 'first_play',   name: 'SYSTEM ONLINE',      series: null,    cond: (db) => db.stats.plays >= 1 },
-    { id: 'clean_runs',   name: 'CLEAN RUN',          series: null,    cond: (db) => db.stats.cleanRuns >= 5 },
-    { id: 'perfect_x3',   name: 'PERFECT CLEAR',      series: null,    cond: (db) => db.stats.perfectStreak >= 3 },
-    { id: 'flawless_all', name: 'FLAWLESS EXECUTION', series: null,    cond: (db) => db.stats.flawless.normal && db.stats.flawless.acc && db.stats.flawless.speed },
+    { id: 'first_play',   name: 'SYSTEM ONLINE',      series: null,    cond: (db) => db.stats.plays >= 1,
+      prog: (db) => ({ cur: db.stats.plays, max: 1 }) },
+    { id: 'clean_runs',   name: 'CLEAN RUN',          series: null,    cond: (db) => db.stats.cleanRuns >= 5,
+      prog: (db) => ({ cur: db.stats.cleanRuns, max: 5 }) },
+    { id: 'perfect_x3',   name: 'PERFECT CLEAR',      series: null,    cond: (db) => db.stats.perfectStreak >= 3,
+      prog: (db) => ({ cur: db.stats.perfectStreak, max: 3 }) },
+    { id: 'flawless_all', name: 'FLAWLESS EXECUTION', series: null,    secret: true,
+      cond: (db) => db.stats.flawless.normal && db.stats.flawless.acc && db.stats.flawless.speed },
     { id: 'sharp80',      name: 'SHARPSHOOTER',       series: 'sharp', cond: (db, r) => r.hits.length === 10 && r.hits.every(h => h.acc >= 0.80) },
     { id: 'sharp90',      name: 'DEAD CENTER',        series: 'sharp', cond: (db, r) => r.hits.length === 10 && r.hits.every(h => h.acc >= 0.90) },
-    { id: 'sharp95',      name: 'ZERO DEVIATION',     series: 'sharp', cond: (db, r) => r.avgA >= 0.95 && r.hits.length === 10 && r.hits.every(h => h.acc >= 0.90) },
+    { id: 'sharp95',      name: 'ZERO DEVIATION',     series: 'sharp', secret: true,
+      cond: (db, r) => r.avgA >= 0.95 && r.hits.length === 10 && r.hits.every(h => h.acc >= 0.90) },
     { id: 'quick400',     name: 'QUICK HAND',         series: 'quick', cond: (db, r) => r.hits.length === 10 && r.avgT <= 400 },
     { id: 'quick300',     name: 'LIGHTNING',          series: 'quick', cond: (db, r) => r.hits.length === 10 && r.avgT <= 300 },
-    { id: 'core50',       name: 'COMBO STARTER',      series: null,    cond: (db) => db.stats.coreHits >= 50 },
-    { id: 'combo_x3',     name: 'CORE MASTER',        series: null,    cond: (db) => db.stats.comboStreak >= 3 },
-    { id: 'score8k_all',  name: 'HIGH SCORER',        series: 'score', cond: (db) => db.sa.normal.best >= 8000 && db.sa.acc.best >= 8000 && db.sa.speed.best >= 8000 },
-    { id: 'score9k',      name: 'BREAKPOINT',         series: 'score', cond: (db) => db.sa.normal.best >= 9000 || db.sa.acc.best >= 9000 || db.sa.speed.best >= 9000 },
-    { id: 'score9k_all',  name: 'OVERDRIVE',          series: 'score', cond: (db) => db.sa.normal.best >= 9000 && db.sa.acc.best >= 9000 && db.sa.speed.best >= 9000 },
-    { id: 'score10k',     name: 'TRANSCENDENCE',      series: 'score', cond: (db) => db.sa.normal.best >= 10000 || db.sa.acc.best >= 10000 || db.sa.speed.best >= 10000 },
-    { id: 'srank_x3',     name: 'S RANK',             series: null,    cond: (db) => db.stats.sStreak >= 3 },
-    { id: 'master_bal',   name: 'BALANCED MASTER',    series: null,    cond: (db) => db.stats.sCount.normal >= 3 },
-    { id: 'master_pre',   name: 'PRECISION MASTER',   series: null,    cond: (db) => db.stats.sCount.acc >= 3 },
-    { id: 'master_spd',   name: 'SPEED MASTER',       series: null,    cond: (db) => db.stats.sCount.speed >= 3 },
-    { id: 'trinity',      name: 'TRINITY MASTER',     series: null,    cond: (db) => !!db.ach.master_bal && !!db.ach.master_pre && !!db.ach.master_spd },
-    { id: 'hits100',      name: 'TARGET HUNTER',      series: 'hits',  cond: (db) => db.stats.hits >= 100 },
-    { id: 'hits300',      name: 'TARGET BREAKER',     series: 'hits',  cond: (db) => db.stats.hits >= 300 },
-    { id: 'hits500',      name: 'TARGET REAPER',      series: 'hits',  cond: (db) => db.stats.hits >= 500 },
-    { id: 'hits1000',     name: 'TARGET SOVEREIGN',   series: 'hits',  cond: (db) => db.stats.hits >= 1000 },
-    { id: 'plays50',      name: 'VETERAN',            series: null,    cond: (db) => db.stats.plays >= 50 },
+    { id: 'core50',       name: 'COMBO STARTER',      series: null,    cond: (db) => db.stats.coreHits >= 50,
+      prog: (db) => ({ cur: db.stats.coreHits, max: 50 }) },
+    { id: 'combo_x3',     name: 'CORE MASTER',        series: null,    cond: (db) => db.stats.comboStreak >= 3,
+      prog: (db) => ({ cur: db.stats.comboStreak, max: 3 }) },
+    { id: 'score8k_all',  name: 'HIGH SCORER',        series: 'score', cond: (db) => db.sa.normal.best >= 8000 && db.sa.acc.best >= 8000 && db.sa.speed.best >= 8000,
+      prog: (db) => ({ cur: count8kAll(db), max: 3 }) },
+    { id: 'score9k',      name: 'BREAKPOINT',         series: 'score', cond: (db) => db.sa.normal.best >= 9000 || db.sa.acc.best >= 9000 || db.sa.speed.best >= 9000,
+      prog: (db) => ({ cur: bestMax3(db), max: 9000 }) },
+    { id: 'score9k_all',  name: 'OVERDRIVE',          series: 'score', cond: (db) => db.sa.normal.best >= 9000 && db.sa.acc.best >= 9000 && db.sa.speed.best >= 9000,
+      prog: (db) => ({ cur: count9kAll(db), max: 3 }) },
+    { id: 'score10k',     name: 'TRANSCENDENCE',      series: 'score', cond: (db) => db.sa.normal.best >= 10000 || db.sa.acc.best >= 10000 || db.sa.speed.best >= 10000,
+      prog: (db) => ({ cur: bestMax3(db), max: 10000 }) },
+    { id: 'srank_x3',     name: 'S RANK',             series: null,    cond: (db) => db.stats.sStreak >= 3,
+      prog: (db) => ({ cur: db.stats.sStreak, max: 3 }) },
+    { id: 'master_bal',   name: 'BALANCED MASTER',    series: null,    cond: (db) => db.stats.sCount.normal >= 3,
+      prog: (db) => ({ cur: db.stats.sCount.normal, max: 3 }) },
+    { id: 'master_pre',   name: 'PRECISION MASTER',   series: null,    cond: (db) => db.stats.sCount.acc >= 3,
+      prog: (db) => ({ cur: db.stats.sCount.acc, max: 3 }) },
+    { id: 'master_spd',   name: 'SPEED MASTER',       series: null,    cond: (db) => db.stats.sCount.speed >= 3,
+      prog: (db) => ({ cur: db.stats.sCount.speed, max: 3 }) },
+    { id: 'trinity',      name: 'TRINITY MASTER',     series: null,    secret: true,
+      cond: (db) => !!db.ach.master_bal && !!db.ach.master_pre && !!db.ach.master_spd },
+    { id: 'hits100',      name: 'TARGET HUNTER',      series: 'hits',  cond: (db) => db.stats.hits >= 100,
+      prog: (db) => ({ cur: db.stats.hits, max: 100 }) },
+    { id: 'hits300',      name: 'TARGET BREAKER',     series: 'hits',  cond: (db) => db.stats.hits >= 300,
+      prog: (db) => ({ cur: db.stats.hits, max: 300 }) },
+    { id: 'hits500',      name: 'TARGET REAPER',      series: 'hits',  cond: (db) => db.stats.hits >= 500,
+      prog: (db) => ({ cur: db.stats.hits, max: 500 }) },
+    { id: 'hits1000',     name: 'TARGET SOVEREIGN',   series: 'hits',  cond: (db) => db.stats.hits >= 1000,
+      prog: (db) => ({ cur: db.stats.hits, max: 1000 }) },
+    { id: 'plays50',      name: 'VETERAN',            series: null,    cond: (db) => db.stats.plays >= 50,
+      prog: (db) => ({ cur: db.stats.plays, max: 50 }) },
   ];
 
   // 未解除の実績を表の順に判定し、条件を満たしたものをすべて解除する。
@@ -1694,6 +1739,7 @@
   // ===== 実績一覧画面 =====
   function updateAchBtn() {
     $('achBtnCount').textContent = `${Object.keys(db.ach).length}/${ACHIEVEMENTS.length}`;
+    renderAchNextHint();
   }
   function renderAchievements() {
     $('achCount').textContent = `${Object.keys(db.ach).length}/${ACHIEVEMENTS.length}`;
@@ -1708,12 +1754,37 @@
         const d = new Date(unlockedAt);
         dateStr = `<div class="ach-date">${d.getMonth() + 1}/${d.getDate()}</div>`;
       }
-      // 未解除は名前・条件とも非開示 (???)
-      const nm = unlockedAt ? a.name : '???';
-      const ds = unlockedAt ? T('ad_' + a.id) : '???';
-      div.innerHTML = `<div class="ach-name">${nm}</div><div class="ach-desc">${ds}</div>${dateStr}`;
+      // 秘密実績(sharp95/flawless_all/trinity)だけ未解除時に???表示。他は未解除でも名前と条件文を公開する
+      const hide = !unlockedAt && a.secret;
+      const nm = hide ? '???' : a.name;
+      const ds = hide ? '???' : T('ad_' + a.id);
+      let progStr = '';
+      if (!unlockedAt && !hide && a.prog) {
+        const p = a.prog(db);
+        const cur = Math.min(p.cur, p.max);
+        const pct = Math.max(0, Math.min(100, (cur / p.max) * 100));
+        progStr = `<div class="ach-prog"><div class="ach-prog-track"><div class="ach-prog-fill" style="width:${pct}%"></div></div>` +
+          `<div class="ach-prog-num">${cur.toLocaleString()} / ${p.max.toLocaleString()}</div></div>`;
+      }
+      div.innerHTML = `<div class="ach-name">${nm}</div><div class="ach-desc">${ds}</div>${progStr}${dateStr}`;
       wrap.appendChild(div);
     });
+  }
+
+  // ===== メニューの「NEXT: あと少し」表示 (未解除のうち進捗率が最も高い1件) =====
+  function renderAchNextHint() {
+    const el = $('achNext');
+    let best = null, bestPct = -1;
+    for (const a of ACHIEVEMENTS) {
+      if (db.ach[a.id] || a.secret || !a.prog) continue;
+      const p = a.prog(db);
+      const pct = p.max > 0 ? Math.min(1, p.cur / p.max) : 0;
+      if (pct > bestPct) { bestPct = pct; best = { a, p }; }
+    }
+    if (!best) { el.classList.add('hidden'); return; }
+    const cur = Math.min(best.p.cur, best.p.max);
+    el.textContent = T('achNextFmt').replace('{n}', best.a.name).replace('{cur}', cur.toLocaleString()).replace('{max}', best.p.max.toLocaleString());
+    el.classList.remove('hidden');
   }
 
   function renderTitle() {
@@ -1769,7 +1840,9 @@
     resolved = 0;
     totalScore = 0;
     records = new Array(TARGETS).fill(null);
-    replay = { targets: new Array(TARGETS).fill(null), taps: [], duration: 0 };
+    // life: このラウンドのターゲット寿命(モード別)をリプレイに記録。
+    // モード切替後にリプレイを再生しても、記録時のモードの寿命で正しく再現するため。
+    replay = { targets: new Array(TARGETS).fill(null), taps: [], duration: 0, life: MODES[mode].lifeMs };
     field.innerHTML = '';
     maxCombo = 0;
     roundWhiffs = 0;
@@ -1802,7 +1875,7 @@
   function spawnTarget(idx, sizeF) {
     if (state !== 'play') return;
     nextIdx = idx + 1;
-    const r = Math.max(24, Math.round(baseRadius() / sizeF));
+    const r = Math.max(24, Math.round(baseRadius() / sizeF * MODES[mode].sizeMul));
     const hudH = 76 + r;
     const x = r + 8 + Math.random() * (innerWidth - 2 * (r + 8));
     const y = hudH + Math.random() * (innerHeight - hudH - r - 8);
@@ -1815,7 +1888,7 @@
     field.appendChild(el);
 
     const tg = { el, x, y, r, sizeF, idx, spawnAt: performance.now() };
-    tg.lifeTimer = setTimeout(() => timeoutTarget(tg), TARGET_LIFE);
+    tg.lifeTimer = setTimeout(() => timeoutTarget(tg), replay.life);
     active.push(tg);
     replay.targets[idx] = { x, y, r, spawnT: tg.spawnAt - roundStart, endT: null, tap: null };
   }
@@ -2043,7 +2116,7 @@
     const tg = replay && replay.targets[idx];
     if (!tg) return;
     openReplayOverlay();
-    const end = tg.endT !== null ? tg.endT : Math.min(tg.spawnT + TARGET_LIFE, replay.duration);
+    const end = tg.endT !== null ? tg.endT : Math.min(tg.spawnT + replay.life, replay.duration);
     rp = { mode: 'single', tg, segLen: end - tg.spawnT, vt: 0, last: performance.now(), raf: 0 };
     $('replaySpeed').classList.add('hidden');
     $('replayInfo').textContent = tg.tap
@@ -2161,7 +2234,7 @@
     // ターゲット: 生存中は実体、消滅後は薄い輪郭を残す
     for (const tg of replay.targets) {
       if (!tg || t < tg.spawnT) continue;
-      const end = tg.endT !== null ? tg.endT : Math.min(tg.spawnT + TARGET_LIFE, replay.duration);
+      const end = tg.endT !== null ? tg.endT : Math.min(tg.spawnT + replay.life, replay.duration);
       if (t <= end) {
         const s = Math.min(1, (t - tg.spawnT) / 120);
         drawTargetShape(tg.x, tg.y, tg.r * s, false);
@@ -3485,6 +3558,7 @@
     saveDB();
     applyLang();
     renderTitle();
+    updateAchBtn();
     if (!$('achievements').classList.contains('hidden')) renderAchievements();
   });
   document.querySelectorAll('.modebtn').forEach(b => {
