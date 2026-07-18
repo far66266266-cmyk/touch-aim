@@ -536,6 +536,107 @@
     text-shadow: 0 0 14px rgba(255,223,93,.5);
     margin-top: 2px;
   }
+
+  /* ===== TRAINING: 課題ハブ ===== */
+  #training {
+    justify-content: flex-start;
+    overflow-y: auto; touch-action: pan-y;
+    padding-top: max(32px, env(safe-area-inset-top));
+  }
+  .tr-list {
+    width: 100%; max-width: 420px;
+    display: flex; flex-direction: column; gap: 10px;
+    margin: 6px 0 18px;
+  }
+  .tr-card {
+    text-align: left;
+    background: #161b22; color: #e6edf3;
+    border: 1px solid #30414f; border-radius: 12px;
+    padding: 14px 16px;
+    cursor: pointer;
+  }
+  .tr-card:active { transform: scale(.98); }
+  .tr-card-name {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 16px; font-weight: 700;
+    letter-spacing: .1em;
+    color: #2ea8ff;
+  }
+  .tr-card-desc { font-size: 13px; color: #8b949e; margin-top: 4px; line-height: 1.5; }
+  .tr-card-last {
+    font-size: 12px; color: #5f7a94; margin-top: 6px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* ===== TRAINING: プレイ中オーバーレイ (SCORE ATTACKのhud/fieldとは別要素) ===== */
+  #trHud {
+    position: absolute; top: 0; left: 0; right: 0;
+    height: 64px;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 16px;
+    padding-top: env(safe-area-inset-top);
+    font-variant-numeric: tabular-nums;
+    z-index: 15;
+  }
+  #trHud .label { font-size: 11px; color: #5f7a94; letter-spacing: .2em; font-weight: 600; }
+  #trHud .val {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 24px; font-weight: 700; line-height: 1.1;
+  }
+  #trAbortBtn {
+    background: #21262d; color: #e6edf3; border: 1px solid #30363d;
+    border-radius: 8px; font-size: 15px; padding: 8px 15px;
+  }
+  #trAbortBtn:active { background: #30363d; }
+
+  #trField { position: absolute; inset: 0; z-index: 12; }
+
+  #trMsg {
+    position: absolute; left: 0; right: 0; top: 40%;
+    transform: translateY(-50%);
+    text-align: center; z-index: 14; pointer-events: none;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 20px; font-weight: 700; letter-spacing: .1em;
+    color: #9dc4e8;
+    text-shadow: 0 2px 10px rgba(0,0,0,.8);
+  }
+
+  /* 待機パッド (押さえ続ける起点) */
+  .trpad {
+    position: absolute;
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    background: radial-gradient(circle, rgba(255,223,93,.22) 0 60%, rgba(255,223,93,.06) 60% 100%);
+    border: 2px solid rgba(255,223,93,.55);
+    box-shadow: 0 0 18px rgba(255,223,93,.2);
+  }
+  .trpad.active {
+    border-color: #ffdf5d;
+    box-shadow: 0 0 26px rgba(255,223,93,.5);
+  }
+
+  /* SWITCHING用の的の番号ラベル */
+  .trnum {
+    position: absolute; top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 700; font-size: 20px;
+    color: #0a0e14;
+    pointer-events: none;
+  }
+
+  /* ===== TRAINING: 課題別リザルト ===== */
+  #trResult {
+    justify-content: flex-start;
+    overflow-y: auto; touch-action: pan-y;
+    padding-top: max(28px, env(safe-area-inset-top));
+  }
+  .tr-metrics {
+    display: flex; flex-wrap: wrap; gap: 8px;
+    width: 100%; max-width: 420px;
+    margin: 16px 0 22px;
+  }
+  .tr-metrics .stat { flex: 1 1 40%; }
 </style>
 </head>
 <body>
@@ -552,6 +653,15 @@
   <div id="field"></div>
   <div id="combo" class="hidden"></div>
 
+  <!-- TRAINING プレイ中オーバーレイ (SCORE ATTACKのhud/fieldとは独立) -->
+  <div id="trHud" class="hidden">
+    <div><div class="label">TASK</div><div class="val" id="trTaskName">PERCEPTION</div></div>
+    <div style="text-align:center"><div class="label">TRIAL</div><div class="val" id="trProgress">0/10</div></div>
+    <div style="text-align:right"><button id="trAbortBtn">&times;</button></div>
+  </div>
+  <div id="trField" class="hidden"></div>
+  <div id="trMsg" class="hidden"></div>
+
   <!-- メインメニュー (4分類) -->
   <div id="menu" class="screen">
     <select id="langSel"></select>
@@ -567,10 +677,9 @@
         <div class="cat-desc" data-i18n="asDesc"></div>
         <div class="cat-soon" data-i18n="soon"></div>
       </button>
-      <button class="cat soon" id="catTr">
+      <button class="cat" id="catTr">
         <div class="cat-name">TRAINING</div>
         <div class="cat-desc" data-i18n="trDesc"></div>
-        <div class="cat-soon" data-i18n="soon"></div>
       </button>
       <button class="cat soon" id="catPr">
         <div class="cat-name">PROFILE</div>
@@ -606,13 +715,23 @@
     <button class="btn ghost" data-back data-i18n="backMenu">メニューへ</button>
   </div>
 
-  <!-- TRAINING / ASSESSMENT / PROFILE (準備中スタブ) -->
+  <!-- TRAINING: 6課題の個別練習ハブ -->
   <div id="training" class="screen hidden">
     <h2 class="scr-head">TRAINING</h2>
-    <p class="stub-desc" data-i18n="trDesc"></p>
-    <div class="soon-badge" data-i18n="soon"></div>
+    <p class="stub-desc" data-i18n="trDesc" style="margin-bottom:6px;"></p>
+    <div class="tr-list" id="trList"></div>
     <button class="btn ghost" data-back data-i18n="backMenu">メニューへ</button>
   </div>
+
+  <!-- TRAINING: 課題別リザルト (共通1画面・課題ごとに指標を出し分け) -->
+  <div id="trResult" class="screen hidden">
+    <div class="scr-head" id="trResultName" style="margin-bottom:6px;">PERCEPTION</div>
+    <div class="tr-metrics" id="trMetrics"></div>
+    <button class="btn" id="trRetryBtn">RETRY</button>
+    <button class="btn ghost" id="trBackHubBtn" data-i18n="trBackHub">課題一覧へ</button>
+  </div>
+
+  <!-- ASSESSMENT / PROFILE (準備中スタブ) -->
   <div id="assessment" class="screen hidden">
     <h2 class="scr-head">ASSESSMENT</h2>
     <p class="stub-desc" data-i18n="asDesc"></p>
@@ -817,6 +936,38 @@
   STR.soon = ['準備中', 'Coming soon', '敬请期待', '준비 중', 'Próximamente', 'Em breve', 'Bientôt', 'Demnächst', 'Скоро', 'Segera hadir'];
   STR.backMenu = ['メニューへ', 'Back to menu', '返回菜单', '메뉴로', 'Al menú', 'Ao menu', 'Retour au menu', 'Zum Menü', 'В меню', 'Ke menu'];
 
+  // ===== TRAINING: 新規UI文字列 (ja[0]/en[1] の2要素のみ。他言語はen→jaへ自動フォールバック) =====
+  STR.trBackHub = ['課題一覧へ', 'Back to tasks'];
+  STR.trD_perception = ['視認即応: 出現に反応してすぐ動作を開始する', 'Reaction: start moving the instant a target appears'];
+  STR.trD_flick = ['遠距離への一気の照準移動', 'Snap your aim across distance in one motion'];
+  STR.trD_precision = ['小さな的の中心に正確に止める', 'Stop precisely on small targets'];
+  STR.trD_tracking = ['動く的を指で追い続ける', 'Follow a moving target with your finger'];
+  STR.trD_switching = ['複数の的を順番どおり素早く切替', 'Switch between multiple targets in order, fast'];
+  STR.trD_timing = ['動く的の未来位置を一撃で迎撃', 'Intercept a moving target with a single tap'];
+  STR.trHoldPad = ['パッドを押さえたまま待つ', 'Hold the pad and wait'];
+  STR.trFalseStart = ['早すぎ! もう一度', 'Too early! Try again'];
+  STR.trTapTarget = ['的をタップ', 'Tap the target'];
+  STR.tr_k_median = ['反応 中央値', 'Reaction median'];
+  STR.tr_k_fastest = ['最速', 'Fastest'];
+  STR.tr_k_sd = ['ばらつき(SD)', 'Std. dev.'];
+  STR.tr_k_falseStarts = ['フライング', 'False starts'];
+  STR.tr_k_reaction = ['反応 中央値', 'Reaction median'];
+  STR.tr_k_move = ['移動時間 中央値', 'Move time median'];
+  STR.tr_k_err = ['平均誤差', 'Avg. error'];
+  STR.tr_k_miss = ['ミス数', 'Misses'];
+  STR.tr_k_errRatio = ['平均中心誤差', 'Avg. center error'];
+  STR.tr_k_sdRatio = ['誤差ばらつき', 'Error variance'];
+  STR.tr_k_dxdy = ['縦横バイアス(x,y)', 'Bias (x, y)'];
+  STR.tr_k_missRate = ['ミス率', 'Miss rate'];
+  STR.tr_k_inZone = ['滞在率', 'Time in zone'];
+  STR.tr_k_avgDist = ['平均中心距離', 'Avg. center distance'];
+  STR.tr_k_recover = ['平均復帰時間', 'Avg. recovery time'];
+  STR.tr_k_gap = ['切替時間 中央値', 'Switch time median'];
+  STR.tr_k_wrong = ['誤タップ', 'Wrong taps'];
+  STR.tr_k_streak = ['最長ストリーク', 'Longest streak'];
+  STR.tr_k_signed = ['早押し/遅押し傾向', 'Early/late tendency'];
+  STR.tr_k_hits = ['命中', 'Hits'];
+
   // ===== 実績の説明文 (25個・実績名は英語固定、説明のみi18n) =====
   STR.ad_first_play = ['初めて1プレイを完了', 'Complete your first round', '完成首次游玩', '첫 플레이 완료', 'Completa tu primera partida', 'Complete sua primeira partida', 'Terminez votre première partie', 'Schließe deine erste Runde ab', 'Завершите первую игру', 'Selesaikan permainan pertama'];
   STR.ad_clean_runs = ['空振りなしのラウンドを累計5回完了', 'Complete 5 whiff-free rounds (cumulative)', '累计完成5次无落空的回合', '헛스윙 없는 라운드 누적 5회 완료', 'Completa 5 rondas sin fallos (acumulado)', 'Complete 5 rodadas sem erros (acumulado)', 'Terminez 5 manches sans raté (cumulé)', 'Schließe 5 Runden ohne Fehlschlag ab (kumulativ)', 'Завершите 5 раундов без промахов (всего)', 'Selesaikan 5 ronde tanpa meleset (akumulasi)'];
@@ -892,6 +1043,7 @@
   db.stats.sStreak ??= 0;                   // Sランク連続回数
   db.stats.sCount ??= { normal: 0, acc: 0, speed: 0 };  // モード別Sランク累計
   db.stats.flawless ??= { normal: false, acc: false, speed: false }; // 完全クリア達成フラグ
+  db.training ??= {};                       // { taskId: { runs: [{ts, raw, summary}] } } (直近20runのみ保持)
   function saveDB() {
     try { localStorage.setItem(DB_KEY, JSON.stringify(db)); } catch (e) { /* 保存不能でも続行 */ }
   }
@@ -1046,7 +1198,7 @@
   const MODE_LABEL = { normal: 'BALANCED', acc: 'PRECISION', speed: 'SPEED' };
 
   function show(id) {
-    ['menu', 'title', 'training', 'assessment', 'profile', 'countdown', 'result', 'rules', 'achievements']
+    ['menu', 'title', 'training', 'assessment', 'profile', 'countdown', 'result', 'rules', 'achievements', 'trResult']
       .forEach(s => $(s).classList.toggle('hidden', s !== id));
   }
 
@@ -1772,6 +1924,676 @@
     $('replayOverlay').classList.add('hidden');
   });
 
+  // ===== TRAINING: 6つのエイム能力の個別練習 =====
+  // SCORE ATTACKとは完全に独立したDOM(#trHud/#trField/#trMsg)・状態(TR)で完結させる。
+  // SCORE ATTACKの `field` pointerdown リスナは `state !== 'play'` で無視するため、
+  // ここでは `state = 'training'` にして SCORE ATTACK 側が反応しないようにする。
+  const TR_ORDER = ['perception', 'flick', 'precision', 'tracking', 'switching', 'timing'];
+  const TR_META = {
+    perception: { name: 'PERCEPTION', descKey: 'trD_perception' },
+    flick:      { name: 'FLICK',      descKey: 'trD_flick' },
+    precision:  { name: 'PRECISION',  descKey: 'trD_precision' },
+    tracking:   { name: 'TRACKING',   descKey: 'trD_tracking' },
+    switching:  { name: 'SWITCHING',  descKey: 'trD_switching' },
+    timing:     { name: 'TIMING',     descKey: 'trD_timing' },
+  };
+  let TR = null;            // 現在実行中の課題の状態 (nullなら非アクティブ)
+  let TR_LAST_TASK = null;  // リトライ用に直近実行した課題id
+
+  // ===== 集計ヘルパー =====
+  function trMean(arr) {
+    const a = arr.filter(x => x !== null && x !== undefined);
+    if (!a.length) return null;
+    return a.reduce((s, x) => s + x, 0) / a.length;
+  }
+  function trMedian(arr) {
+    const a = arr.filter(x => x !== null && x !== undefined).slice().sort((x, y) => x - y);
+    if (!a.length) return null;
+    const m = Math.floor(a.length / 2);
+    return a.length % 2 ? a[m] : (a[m - 1] + a[m]) / 2;
+  }
+  function trStdDev(arr) {
+    const a = arr.filter(x => x !== null && x !== undefined);
+    if (a.length < 2) return null;
+    const m = trMean(a);
+    const v = a.reduce((s, x) => s + (x - m) * (x - m), 0) / (a.length - 1);
+    return Math.sqrt(v);
+  }
+  function shuffleArr(a) {
+    a = a.slice();
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+  }
+
+  // ===== 共通: プレイエリア・進捗表示・メッセージ =====
+  function trPlayAreaRect() {
+    const top = 82; // trHudの高さ分を確保
+    return { left: 10, top, right: innerWidth - 10, bottom: innerHeight - 10, w: innerWidth - 20, h: (innerHeight - 10) - top };
+  }
+  function trSetProgress(cur, total) {
+    $('trProgress').textContent = (total === null || total === undefined) ? '' : `${cur}/${total}`;
+  }
+  function trShowMsg(text) {
+    const el = $('trMsg');
+    el.textContent = text;
+    el.classList.remove('hidden');
+  }
+  function trHideMsg() { $('trMsg').classList.add('hidden'); }
+
+  // ===== 課題の記録保存 (直近20runのみ保持) =====
+  function saveTrainingRun(taskId, raw, summary) {
+    db.training[taskId] = db.training[taskId] || { runs: [] };
+    db.training[taskId].runs.push({ ts: Date.now(), raw, summary });
+    db.training[taskId].runs = db.training[taskId].runs.slice(-20);
+    saveDB();
+  }
+
+  // ===== 課題開始/中断の共通処理 =====
+  function trEnterPlay(taskId, total) {
+    TR_LAST_TASK = taskId;
+    state = 'training';
+    TR = { task: taskId, raw: [] };
+    $('training').classList.add('hidden');
+    $('trHud').classList.remove('hidden');
+    const fld = $('trField');
+    fld.classList.remove('hidden');
+    fld.innerHTML = '';
+    $('trTaskName').textContent = TR_META[taskId].name;
+    trSetProgress(0, total === undefined ? null : total);
+    trHideMsg();
+  }
+  function trAbort() {
+    if (TR && TR.cleanup) { try { TR.cleanup(); } catch (e) { /* 片付け失敗でも続行 */ } }
+    TR = null;
+    state = 'title';
+    $('trHud').classList.add('hidden');
+    $('trField').classList.add('hidden');
+    $('trField').innerHTML = '';
+    trHideMsg();
+    renderTrHub();
+    show('training');
+  }
+  function showTrResult(taskId, name, rows) {
+    if (TR && TR.cleanup) { try { TR.cleanup(); } catch (e) { /* 片付け失敗でも続行 */ } }
+    TR = null;
+    state = 'title';
+    $('trHud').classList.add('hidden');
+    $('trField').classList.add('hidden');
+    $('trField').innerHTML = '';
+    trHideMsg();
+    $('trResultName').textContent = name;
+    const wrap = $('trMetrics');
+    wrap.innerHTML = '';
+    rows.forEach(([labelKey, value]) => {
+      const d = document.createElement('div');
+      d.className = 'stat';
+      d.innerHTML = `<div class="v">${value}</div><div class="k">${T(labelKey)}</div>`;
+      wrap.appendChild(d);
+    });
+    show('trResult');
+  }
+
+  // ===== 課題ハブ =====
+  function trLastSummaryLine(taskId) {
+    const rec = db.training[taskId];
+    const run = rec && rec.runs.length ? rec.runs[rec.runs.length - 1] : null;
+    if (!run) return '';
+    const s = run.summary;
+    switch (taskId) {
+      case 'perception': return s.median != null ? `${T('tr_k_median')}: ${Math.round(s.median)}ms` : '';
+      case 'flick': return s.reactionMedian != null ? `${T('tr_k_reaction')}: ${Math.round(s.reactionMedian)}ms` : '';
+      case 'precision': return s.avgErrRatio != null ? `${T('tr_k_errRatio')}: ${Math.round(s.avgErrRatio * 100)}%` : '';
+      case 'tracking': return `${T('tr_k_inZone')}: ${Math.round(s.inZoneRatio * 100)}%`;
+      case 'switching': return s.gapMedian != null ? `${T('tr_k_gap')}: ${Math.round(s.gapMedian)}ms` : '';
+      case 'timing': return `${T('tr_k_hits')}: ${s.hits}/10`;
+      default: return '';
+    }
+  }
+  function renderTrHub() {
+    const wrap = $('trList');
+    wrap.innerHTML = '';
+    TR_ORDER.forEach(id => {
+      const meta = TR_META[id];
+      const card = document.createElement('div');
+      card.className = 'tr-card';
+      const last = trLastSummaryLine(id);
+      card.innerHTML = `<div class="tr-card-name">${meta.name}</div><div class="tr-card-desc">${T(meta.descKey)}</div>` +
+        (last ? `<div class="tr-card-last">${last}</div>` : '');
+      card.addEventListener('click', () => TR_START[id]());
+      wrap.appendChild(card);
+    });
+  }
+
+  // ===== 1. PERCEPTION (反応: 待機パッド離脱までを計測) =====
+  function startPerception() {
+    const total = 10;
+    trEnterPlay('perception', total);
+    TR.total = total; TR.trial = 0; TR.falseStarts = 0;
+    perceptionNextTrial();
+  }
+  function perceptionNextTrial() {
+    const D = TR;
+    if (!D || D.task !== 'perception') return;
+    trSetProgress(D.trial, D.total);
+    const fld = $('trField');
+    fld.innerHTML = '';
+    const rect = trPlayAreaRect();
+    const padR = 46;
+    const padX = innerWidth / 2, padY = rect.bottom - padR - 20;
+    const pad = document.createElement('div');
+    pad.className = 'trpad';
+    pad.style.width = pad.style.height = (padR * 2) + 'px';
+    pad.style.left = padX + 'px'; pad.style.top = padY + 'px';
+    fld.appendChild(pad);
+    trShowMsg(T('trHoldPad'));
+
+    let phase = 'wait'; // wait -> holding -> shown -> awaitTap
+    let delayTimer = 0, spawnAt = 0, padPointerId = null, pendingReaction = 0;
+
+    function cleanup() {
+      pad.removeEventListener('pointerdown', onPadDown);
+      pad.removeEventListener('pointerup', onPadUp);
+      pad.removeEventListener('pointercancel', onPadUp);
+      fld.removeEventListener('pointerdown', onFieldDown);
+      clearTimeout(delayTimer);
+    }
+    function onPadDown(e) {
+      if (phase !== 'wait') return;
+      phase = 'holding';
+      padPointerId = e.pointerId;
+      pad.classList.add('active');
+      trHideMsg();
+      const wait = 1200 + Math.random() * 2300;
+      delayTimer = setTimeout(() => {
+        if (phase !== 'holding') return;
+        phase = 'shown';
+        const r = Math.round(baseRadius() * 1.3);
+        const tx = Math.max(rect.left + r, Math.min(rect.right - r, innerWidth / 2 + (Math.random() * 2 - 1) * innerWidth * 0.28));
+        const ty = rect.top + r + Math.random() * Math.max(1, rect.h * 0.4);
+        const tg = document.createElement('div');
+        tg.className = 'target';
+        tg.style.width = tg.style.height = (r * 2) + 'px';
+        tg.style.left = tx + 'px'; tg.style.top = ty + 'px';
+        fld.appendChild(tg);
+        spawnAt = performance.now();
+      }, wait);
+    }
+    function onPadUp(e) {
+      if (padPointerId !== null && e.pointerId !== padPointerId) return;
+      if (phase === 'holding') {
+        // フライング: 出現前に離した。試行はやり直し(カウントしない)
+        D.falseStarts++;
+        D.raw.push({ reactionMs: null, falseStart: true });
+        cleanup();
+        trShowMsg(T('trFalseStart'));
+        setTimeout(perceptionNextTrial, 700);
+        return;
+      }
+      if (phase === 'shown') {
+        pendingReaction = performance.now() - spawnAt;
+        phase = 'awaitTap';
+        pad.classList.remove('active');
+        trShowMsg(T('trTapTarget'));
+      }
+    }
+    function onFieldDown() {
+      if (phase !== 'awaitTap') return;
+      D.raw.push({ reactionMs: pendingReaction, falseStart: false });
+      D.trial++;
+      cleanup();
+      trHideMsg();
+      if (D.trial >= D.total) { finishPerception(); return; }
+      perceptionNextTrial();
+    }
+    pad.addEventListener('pointerdown', onPadDown);
+    pad.addEventListener('pointerup', onPadUp);
+    pad.addEventListener('pointercancel', onPadUp);
+    fld.addEventListener('pointerdown', onFieldDown);
+    TR.cleanup = cleanup;
+  }
+  function finishPerception() {
+    const D = TR;
+    const succ = D.raw.filter(r => !r.falseStart).map(r => r.reactionMs);
+    const summary = { median: trMedian(succ), fastest: succ.length ? Math.min(...succ) : null, sd: trStdDev(succ), falseStarts: D.falseStarts, count: succ.length };
+    saveTrainingRun('perception', D.raw, summary);
+    showTrResult('perception', 'PERCEPTION', [
+      ['tr_k_median', summary.median != null ? Math.round(summary.median) + 'ms' : '-'],
+      ['tr_k_fastest', summary.fastest != null ? Math.round(summary.fastest) + 'ms' : '-'],
+      ['tr_k_sd', summary.sd != null ? Math.round(summary.sd) + 'ms' : '-'],
+      ['tr_k_falseStarts', D.falseStarts],
+    ]);
+  }
+
+  // ===== 2. FLICK (振り向き: 反応と移動時間を分離計測) =====
+  const FLICK_DIRS = [0, 45, 90, 135, 180, 225, 270, 315];
+  function startFlick() {
+    const total = 8;
+    trEnterPlay('flick', total);
+    TR.total = total; TR.trial = 0;
+    TR.order = shuffleArr(FLICK_DIRS.map((d, i) => i));
+    flickNextTrial();
+  }
+  function flickNextTrial() {
+    const D = TR;
+    if (!D || D.task !== 'flick') return;
+    trSetProgress(D.trial, D.total);
+    const fld = $('trField');
+    fld.innerHTML = '';
+    const rect = trPlayAreaRect();
+    const padR = 40;
+    const cx = innerWidth / 2, cy = rect.top + rect.h / 2;
+    const pad = document.createElement('div');
+    pad.className = 'trpad';
+    pad.style.width = pad.style.height = (padR * 2) + 'px';
+    pad.style.left = cx + 'px'; pad.style.top = cy + 'px';
+    fld.appendChild(pad);
+    trShowMsg(T('trHoldPad'));
+
+    const dirIdx = D.order[D.trial];
+    const angle = FLICK_DIRS[dirIdx] * Math.PI / 180;
+    const dist = Math.min(rect.w, rect.h) * 0.35;
+    const tr_ = Math.max(20, Math.round(baseRadius() * 0.55));
+    let tx = cx + Math.cos(angle) * dist, ty = cy + Math.sin(angle) * dist;
+    tx = Math.min(rect.right - tr_, Math.max(rect.left + tr_, tx));
+    ty = Math.min(rect.bottom - tr_, Math.max(rect.top + tr_, ty));
+
+    let phase = 'wait', delayTimer = 0, spawnAt = 0, releaseAt = 0, padPointerId = null, reaction = 0;
+
+    function cleanup() {
+      pad.removeEventListener('pointerdown', onPadDown);
+      pad.removeEventListener('pointerup', onPadUp);
+      pad.removeEventListener('pointercancel', onPadUp);
+      fld.removeEventListener('pointerdown', onFieldDown);
+      clearTimeout(delayTimer);
+    }
+    function onPadDown(e) {
+      if (phase !== 'wait') return;
+      phase = 'holding';
+      padPointerId = e.pointerId;
+      pad.classList.add('active');
+      trHideMsg();
+      const wait = 500 + Math.random() * 900;
+      delayTimer = setTimeout(() => {
+        if (phase !== 'holding') return;
+        phase = 'shown';
+        const tg = document.createElement('div');
+        tg.className = 'target';
+        tg.style.width = tg.style.height = (tr_ * 2) + 'px';
+        tg.style.left = tx + 'px'; tg.style.top = ty + 'px';
+        fld.appendChild(tg);
+        spawnAt = performance.now();
+      }, wait);
+    }
+    function onPadUp(e) {
+      if (padPointerId !== null && e.pointerId !== padPointerId) return;
+      if (phase === 'holding') {
+        clearTimeout(delayTimer);
+        cleanup();
+        trShowMsg(T('trFalseStart'));
+        setTimeout(flickNextTrial, 500);
+        return;
+      }
+      if (phase === 'shown') {
+        releaseAt = performance.now();
+        reaction = releaseAt - spawnAt;
+        phase = 'moving';
+        pad.classList.remove('active');
+        trHideMsg();
+      }
+    }
+    function onFieldDown(e) {
+      if (phase !== 'moving') return;
+      const now = performance.now();
+      const d = Math.hypot(e.clientX - tx, e.clientY - ty);
+      const hit = d <= tr_;
+      D.raw.push({ reactionMs: reaction, moveMs: now - releaseAt, errPx: Math.round(d), dir: FLICK_DIRS[dirIdx], hit });
+      D.trial++;
+      cleanup();
+      if (D.trial >= D.total) { finishFlick(); return; }
+      flickNextTrial();
+    }
+    pad.addEventListener('pointerdown', onPadDown);
+    pad.addEventListener('pointerup', onPadUp);
+    pad.addEventListener('pointercancel', onPadUp);
+    fld.addEventListener('pointerdown', onFieldDown);
+    TR.cleanup = cleanup;
+  }
+  function finishFlick() {
+    const D = TR;
+    const summary = {
+      reactionMedian: trMedian(D.raw.map(r => r.reactionMs)),
+      moveMedian: trMedian(D.raw.map(r => r.moveMs)),
+      avgErr: trMean(D.raw.filter(r => r.hit).map(r => r.errPx)),
+      misses: D.raw.filter(r => !r.hit).length,
+    };
+    saveTrainingRun('flick', D.raw, summary);
+    showTrResult('flick', 'FLICK', [
+      ['tr_k_reaction', summary.reactionMedian != null ? Math.round(summary.reactionMedian) + 'ms' : '-'],
+      ['tr_k_move', summary.moveMedian != null ? Math.round(summary.moveMedian) + 'ms' : '-'],
+      ['tr_k_err', summary.avgErr != null ? Math.round(summary.avgErr) + 'px' : '-'],
+      ['tr_k_miss', summary.misses],
+    ]);
+  }
+
+  // ===== 3. PRECISION (精密: 固定間隔で出現、中心精度を計測) =====
+  function startPrecision() {
+    const total = 12;
+    trEnterPlay('precision', total);
+    TR.total = total; TR.trial = 0;
+    precisionSpawn();
+  }
+  function precisionSpawn() {
+    const D = TR;
+    if (!D || D.task !== 'precision') return;
+    trSetProgress(D.trial, D.total);
+    const fld = $('trField');
+    fld.innerHTML = '';
+    const rect = trPlayAreaRect();
+    const r = Math.max(18, Math.round(baseRadius() * 0.55));
+    const tx = rect.left + r + Math.random() * Math.max(1, rect.w - 2 * r);
+    const ty = rect.top + r + Math.random() * Math.max(1, rect.h - 2 * r);
+    const tg = document.createElement('div');
+    tg.className = 'target';
+    tg.style.width = tg.style.height = (r * 2) + 'px';
+    tg.style.left = tx + 'px'; tg.style.top = ty + 'px';
+    fld.appendChild(tg);
+    let tapped = false;
+
+    function onDown(e) {
+      if (tapped) return;
+      const d = Math.hypot(e.clientX - tx, e.clientY - ty);
+      if (d > r * 1.6) return; // 明らかに無関係な場所のタップは無視
+      tapped = true;
+      const hit = d <= r;
+      D.raw.push({ errRatio: hit ? +(d / r).toFixed(3) : null, dx: Math.round(e.clientX - tx), dy: Math.round(e.clientY - ty), hit });
+      tg.style.opacity = '.35';
+    }
+    fld.addEventListener('pointerdown', onDown);
+    const nextTimer = setTimeout(() => {
+      fld.removeEventListener('pointerdown', onDown);
+      if (!tapped) D.raw.push({ errRatio: null, dx: null, dy: null, hit: false });
+      D.trial++;
+      if (D.trial >= D.total) { finishPrecision(); return; }
+      precisionSpawn();
+    }, 1600);
+    TR.cleanup = () => { clearTimeout(nextTimer); fld.removeEventListener('pointerdown', onDown); };
+  }
+  function finishPrecision() {
+    const D = TR;
+    const hits = D.raw.filter(r => r.hit);
+    const summary = {
+      avgErrRatio: trMean(hits.map(r => r.errRatio)),
+      sd: trStdDev(hits.map(r => r.errRatio)),
+      avgDx: trMean(hits.map(r => r.dx)),
+      avgDy: trMean(hits.map(r => r.dy)),
+      missRate: D.raw.length ? (D.raw.length - hits.length) / D.raw.length : 0,
+    };
+    saveTrainingRun('precision', D.raw, summary);
+    showTrResult('precision', 'PRECISION', [
+      ['tr_k_errRatio', summary.avgErrRatio != null ? Math.round(summary.avgErrRatio * 100) + '%' : '-'],
+      ['tr_k_sdRatio', summary.sd != null ? Math.round(summary.sd * 100) + '%' : '-'],
+      ['tr_k_dxdy', (summary.avgDx != null && summary.avgDy != null) ? `${Math.round(summary.avgDx)}, ${Math.round(summary.avgDy)}px` : '-'],
+      ['tr_k_missRate', Math.round(summary.missRate * 100) + '%'],
+    ]);
+  }
+
+  // ===== 4. TRACKING (追従: 20秒間、動く的を指で追う) =====
+  function startTracking() {
+    trEnterPlay('tracking', null);
+    const D = TR;
+    D.duration = 20000;
+    D.samples = []; D.inZoneFrames = 0; D.totalFrames = 0; D.sumDist = 0;
+    D.lastInZone = true; D.awayStart = null; D.recoverTimes = [];
+    D.fingerX = innerWidth / 2; D.fingerY = innerHeight / 2; D.engaged = false;
+
+    const fld = $('trField');
+    fld.innerHTML = '';
+    const rect = trPlayAreaRect();
+    const r = Math.max(20, Math.round(baseRadius() * 0.6));
+    const tg = document.createElement('div');
+    tg.className = 'target';
+    tg.style.width = tg.style.height = (r * 2) + 'px';
+    fld.appendChild(tg);
+
+    let tx = rect.left + rect.w * 0.5, ty = rect.top + rect.h * 0.5;
+    let ang = Math.random() * 6.283;
+    const speed = 140 + Math.random() * 60; // px/s
+    let lastT = performance.now();
+    const start = lastT;
+    let lastSampleSec = -1, secBucket = [];
+
+    function onDown(e) { D.engaged = true; D.fingerX = e.clientX; D.fingerY = e.clientY; }
+    function onMove(e) { if (D.engaged) { D.fingerX = e.clientX; D.fingerY = e.clientY; } }
+    function onUp() { D.engaged = false; }
+    fld.addEventListener('pointerdown', onDown);
+    fld.addEventListener('pointermove', onMove);
+    fld.addEventListener('pointerup', onUp);
+    fld.addEventListener('pointercancel', onUp);
+    TR.cleanup = () => {
+      fld.removeEventListener('pointerdown', onDown);
+      fld.removeEventListener('pointermove', onMove);
+      fld.removeEventListener('pointerup', onUp);
+      fld.removeEventListener('pointercancel', onUp);
+      if (TR && TR.rafId) cancelAnimationFrame(TR.rafId);
+    };
+
+    function frame(now) {
+      if (!TR || TR.task !== 'tracking') return;
+      const dt = Math.min(50, now - lastT); lastT = now;
+      const elapsed = now - start;
+      ang += (Math.random() - 0.5) * 0.02; // 緩やかな方向変化
+      tx += Math.cos(ang) * speed * dt / 1000;
+      ty += Math.sin(ang) * speed * dt / 1000;
+      if (tx < rect.left + r) { tx = rect.left + r; ang = Math.PI - ang; }
+      if (tx > rect.right - r) { tx = rect.right - r; ang = Math.PI - ang; }
+      if (ty < rect.top + r) { ty = rect.top + r; ang = -ang; }
+      if (ty > rect.bottom - r) { ty = rect.bottom - r; ang = -ang; }
+      tg.style.left = tx + 'px'; tg.style.top = ty + 'px';
+
+      const dist = D.engaged ? Math.hypot(D.fingerX - tx, D.fingerY - ty) : r * 3;
+      const inZone = D.engaged && dist <= r;
+      D.totalFrames++; D.sumDist += dist;
+      if (inZone) D.inZoneFrames++;
+      if (D.lastInZone && !inZone) D.awayStart = now;
+      if (!D.lastInZone && inZone && D.awayStart !== null) { D.recoverTimes.push(now - D.awayStart); D.awayStart = null; }
+      D.lastInZone = inZone;
+
+      const sec = Math.floor(elapsed / 1000);
+      if (sec !== lastSampleSec) {
+        if (secBucket.length) D.samples.push(+(secBucket.reduce((a, b) => a + b, 0) / secBucket.length).toFixed(1));
+        secBucket = []; lastSampleSec = sec;
+      }
+      secBucket.push(dist);
+      $('trProgress').textContent = Math.max(0, Math.ceil((D.duration - elapsed) / 1000)) + 's';
+
+      if (elapsed >= D.duration) { finishTracking(); return; }
+      TR.rafId = requestAnimationFrame(frame);
+    }
+    TR.rafId = requestAnimationFrame(frame);
+  }
+  function finishTracking() {
+    const D = TR;
+    if (!D || D.task !== 'tracking') return;
+    if (D.cleanup) D.cleanup();
+    const summary = {
+      inZoneRatio: D.totalFrames ? D.inZoneFrames / D.totalFrames : 0,
+      avgDist: D.totalFrames ? D.sumDist / D.totalFrames : 0,
+      avgRecover: trMean(D.recoverTimes),
+    };
+    saveTrainingRun('tracking', { samples: D.samples, recoverTimes: D.recoverTimes }, summary);
+    showTrResult('tracking', 'TRACKING', [
+      ['tr_k_inZone', Math.round(summary.inZoneRatio * 100) + '%'],
+      ['tr_k_avgDist', Math.round(summary.avgDist) + 'px'],
+      ['tr_k_recover', summary.avgRecover != null ? Math.round(summary.avgRecover) + 'ms' : '-'],
+    ]);
+  }
+
+  // ===== 5. SWITCHING (切替: 3的を番号順にタップ) =====
+  function startSwitching() {
+    const total = 8;
+    trEnterPlay('switching', total);
+    TR.total = total; TR.set = 0; TR.wrongTaps = 0; TR.gapMs = []; TR.streak = 0; TR.bestStreak = 0;
+    switchingNextSet();
+  }
+  function switchingNextSet() {
+    const D = TR;
+    if (!D || D.task !== 'switching') return;
+    trSetProgress(D.set, D.total);
+    const fld = $('trField');
+    fld.innerHTML = '';
+    const rect = trPlayAreaRect();
+    const r = Math.max(26, Math.round(baseRadius() * 0.7));
+    const cols = [rect.left + rect.w * 0.2, rect.left + rect.w * 0.5, rect.left + rect.w * 0.8];
+    const order = shuffleArr([0, 1, 2]);
+    D.expected = 1;
+    D.targets = [];
+    [1, 2, 3].forEach((num, i) => {
+      const colIdx = order[i];
+      const x = Math.min(rect.right - r, Math.max(rect.left + r, cols[colIdx] + (Math.random() * 2 - 1) * rect.w * 0.06));
+      const y = Math.min(rect.bottom - r, Math.max(rect.top + r, rect.top + r + Math.random() * Math.max(1, rect.h - 2 * r)));
+      const tg = document.createElement('div');
+      tg.className = 'target';
+      tg.style.width = tg.style.height = (r * 2) + 'px';
+      tg.style.left = x + 'px'; tg.style.top = y + 'px';
+      const label = document.createElement('div');
+      label.className = 'trnum';
+      label.textContent = num;
+      tg.appendChild(label);
+      fld.appendChild(tg);
+      D.targets.push({ num, x, y, r, el: tg, done: false });
+    });
+    D.lastTapAt = performance.now();
+
+    function onDown(e) {
+      let best = null, bestRatio = Infinity;
+      for (const t of D.targets) {
+        if (t.done) continue;
+        const d = Math.hypot(e.clientX - t.x, e.clientY - t.y);
+        if (d <= t.r && d / t.r < bestRatio) { best = t; bestRatio = d / t.r; }
+      }
+      if (!best) return;
+      const now = performance.now();
+      if (best.num === D.expected) {
+        best.done = true;
+        best.el.style.opacity = '.25';
+        D.gapMs.push(now - D.lastTapAt);
+        D.lastTapAt = now;
+        D.streak++;
+        if (D.streak > D.bestStreak) D.bestStreak = D.streak;
+        D.expected++;
+        if (D.expected > 3) {
+          fld.removeEventListener('pointerdown', onDown);
+          D.set++;
+          if (D.set >= D.total) { finishSwitching(); return; }
+          switchingNextSet();
+        }
+      } else {
+        D.wrongTaps++;
+        D.streak = 0;
+        buzz(30);
+      }
+    }
+    fld.addEventListener('pointerdown', onDown);
+    TR.cleanup = () => fld.removeEventListener('pointerdown', onDown);
+  }
+  function finishSwitching() {
+    const D = TR;
+    const summary = { gapMedian: trMedian(D.gapMs), wrongTaps: D.wrongTaps, bestStreak: D.bestStreak };
+    saveTrainingRun('switching', { gapMs: D.gapMs, wrongTaps: D.wrongTaps }, summary);
+    showTrResult('switching', 'SWITCHING', [
+      ['tr_k_gap', summary.gapMedian != null ? Math.round(summary.gapMedian) + 'ms' : '-'],
+      ['tr_k_wrong', D.wrongTaps],
+      ['tr_k_streak', D.bestStreak],
+    ]);
+  }
+
+  // ===== 6. TIMING (偏差撃ち: 横切る的を一撃で迎撃) =====
+  const TIMING_SPEEDS = [220, 320, 440]; // px/s (3段階)
+  function startTiming() {
+    const total = 10;
+    trEnterPlay('timing', total);
+    TR.total = total; TR.trial = 0; TR.dirToggle = 1;
+    timingNextTrial();
+  }
+  function timingNextTrial() {
+    const D = TR;
+    if (!D || D.task !== 'timing') return;
+    trSetProgress(D.trial, D.total);
+    const fld = $('trField');
+    fld.innerHTML = '';
+    const rect = trPlayAreaRect();
+    const r = Math.max(20, Math.round(baseRadius() * 0.6));
+    const speedLevel = Math.floor(Math.random() * 3);
+    const speed = TIMING_SPEEDS[speedLevel];
+    const dir = TR.dirToggle; TR.dirToggle *= -1;
+    const y = rect.top + r + Math.random() * Math.max(1, rect.h - 2 * r);
+    const x0 = dir > 0 ? rect.left - r : rect.right + r;
+    const endX = dir > 0 ? rect.right + r : rect.left - r;
+    const tg = document.createElement('div');
+    tg.className = 'target';
+    tg.style.width = tg.style.height = (r * 2) + 'px';
+    tg.style.top = y + 'px';
+    tg.style.left = x0 + 'px';
+    fld.appendChild(tg);
+
+    const startT = performance.now();
+    let tapped = false, rafId = 0;
+
+    function curX(now) { return x0 + dir * speed * ((now - startT) / 1000); }
+    function onDown(e) {
+      if (tapped) return;
+      tapped = true;
+      const now = performance.now();
+      const cx = curX(now);
+      const signedErr = dir * (cx - e.clientX);
+      const hit = Math.abs(signedErr) <= r;
+      D.raw.push({ errPx: Math.round(Math.abs(signedErr)), signedErr: Math.round(signedErr), speedLevel, hit });
+      fld.removeEventListener('pointerdown', onDown);
+      cancelAnimationFrame(rafId);
+      advance();
+    }
+    fld.addEventListener('pointerdown', onDown);
+
+    function frame(now) {
+      const cx = curX(now);
+      tg.style.left = cx + 'px';
+      if ((dir > 0 && cx > endX) || (dir < 0 && cx < endX)) {
+        if (!tapped) {
+          tapped = true;
+          D.raw.push({ errPx: null, signedErr: null, speedLevel, hit: false });
+          fld.removeEventListener('pointerdown', onDown);
+          advance();
+        }
+        return;
+      }
+      rafId = requestAnimationFrame(frame);
+    }
+    rafId = requestAnimationFrame(frame);
+    TR.cleanup = () => { fld.removeEventListener('pointerdown', onDown); cancelAnimationFrame(rafId); };
+
+    function advance() {
+      D.trial++;
+      if (D.trial >= D.total) { finishTiming(); return; }
+      timingNextTrial();
+    }
+  }
+  function finishTiming() {
+    const D = TR;
+    const hits = D.raw.filter(r => r.hit);
+    const summary = { avgAbsErr: trMean(hits.map(r => r.errPx)), avgSigned: trMean(hits.map(r => r.signedErr)), hits: hits.length };
+    saveTrainingRun('timing', D.raw, summary);
+    showTrResult('timing', 'TIMING', [
+      ['tr_k_err', summary.avgAbsErr != null ? Math.round(summary.avgAbsErr) + 'px' : '-'],
+      ['tr_k_signed', summary.avgSigned != null ? (summary.avgSigned > 0 ? '+' : '') + Math.round(summary.avgSigned) + 'px' : '-'],
+      ['tr_k_hits', `${summary.hits}/${D.total}`],
+    ]);
+  }
+
+  const TR_START = { perception: startPerception, flick: startFlick, precision: startPrecision, tracking: startTracking, switching: startSwitching, timing: startTiming };
+
   // ===== ボタン =====
   $('startBtn').addEventListener('click', startCountdown);
   $('retryBtn').addEventListener('click', startCountdown);
@@ -1784,7 +2606,10 @@
   $('rulesBackBtn').addEventListener('click', () => { renderTitle(); show('title'); });
   // メニューの4分類
   $('catSa').addEventListener('click', () => { renderTitle(); show('title'); });
-  $('catTr').addEventListener('click', () => show('training'));
+  $('catTr').addEventListener('click', () => { renderTrHub(); show('training'); });
+  $('trAbortBtn').addEventListener('click', trAbort);
+  $('trRetryBtn').addEventListener('click', () => { if (TR_LAST_TASK) TR_START[TR_LAST_TASK](); });
+  $('trBackHubBtn').addEventListener('click', () => { renderTrHub(); show('training'); });
   $('catAs').addEventListener('click', () => show('assessment'));
   $('catPr').addEventListener('click', () => show('profile'));
   $('achBtn').addEventListener('click', () => { renderAchievements(); show('achievements'); });
