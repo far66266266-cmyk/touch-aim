@@ -7,10 +7,12 @@
 - スマホ中心のタッチエイムゲーム。
 - 実装は現状 `index.html` 1ファイル（HTML/CSS/JavaScript）。
 - 25秒以内に10個の円をタップし、反応時間・中心精度・円サイズ・コンボから得点を計算する。
-- 3モードは出現ルールではなく配点だけが違う。表示名は全言語共通の英語。
-  - `normal` = `BALANCED`: 速さと精度のバランス
-  - `acc` = `PRECISION`: 精度重視
-  - `speed` = `SPEED`: 速度重視
+- 3モードは配点に加えて**出現ルールも異なる**(2026-07-18にユーザー決定で方針変更)。表示名は全言語共通の英語。
+  - `normal` = `BALANCED`: 標準ルール (sizeMul 1.0 / 寿命2000ms / 間隔合計4.5s)
+  - `acc` = `PRECISION`: 的が小さめ・ゆったり出現 (0.78 / 2000ms / 6.0s)
+  - `speed` = `SPEED`: 的は大きめ・短寿命・速いテンポ (1.15 / 1400ms / 3.2s)
+- 実績は条件公開+進捗バー表示。**秘密(???)は sharp95 / flawless_all / trinity の3つのみ**(2026-07-18ユーザー決定)。メニューに「次の実績」ヒント表示。
+- 品質改修済み(2026-07-18): TIMING縦判定修正、PERCEPTION完了タップ検証、PROVISIONAL表記、TRAININGの自己ベスト/前回比演出、PRECISIONタップ後650ms前倒し(test_config_version=2)、PROFILEの「今日の処方」(WEAKEST 3セット→再測定導線)。
 - 記録はバージョン付きストレージ `touchaim_v2`（schema:2）に一元化済み。旧 `touchaim_*` キーからの移行実装済み（旧キーは安全のため残置）。累計 plays/hits も蓄積開始済み（実績の下地）。
 - 単体／通しリプレイ、散布図、10言語対応あり。
 - 2026-07-18時点: 4分類メニュー実装済み。SCORE ATTACK は移設完了、TRAINING / ASSESSMENT / PROFILE は「準備中」スタブ。
