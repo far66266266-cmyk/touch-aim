@@ -562,14 +562,14 @@
         <div class="cat-name">SCORE ATTACK</div>
         <div class="cat-desc" data-i18n="saDesc"></div>
       </button>
-      <button class="cat soon" id="catTr">
-        <div class="cat-name">TRAINING</div>
-        <div class="cat-desc" data-i18n="trDesc"></div>
-        <div class="cat-soon" data-i18n="soon"></div>
-      </button>
       <button class="cat soon" id="catAs">
         <div class="cat-name">ASSESSMENT</div>
         <div class="cat-desc" data-i18n="asDesc"></div>
+        <div class="cat-soon" data-i18n="soon"></div>
+      </button>
+      <button class="cat soon" id="catTr">
+        <div class="cat-name">TRAINING</div>
+        <div class="cat-desc" data-i18n="trDesc"></div>
         <div class="cat-soon" data-i18n="soon"></div>
       </button>
       <button class="cat soon" id="catPr">
@@ -1258,7 +1258,10 @@
         const d = new Date(unlockedAt);
         dateStr = `<div class="ach-date">${d.getMonth() + 1}/${d.getDate()}</div>`;
       }
-      div.innerHTML = `<div class="ach-name">${a.name}</div><div class="ach-desc">${T('ad_' + a.id)}</div>${dateStr}`;
+      // 未解除は名前・条件とも非開示 (???)
+      const nm = unlockedAt ? a.name : '???';
+      const ds = unlockedAt ? T('ad_' + a.id) : '???';
+      div.innerHTML = `<div class="ach-name">${nm}</div><div class="ach-desc">${ds}</div>${dateStr}`;
       wrap.appendChild(div);
     });
   }
