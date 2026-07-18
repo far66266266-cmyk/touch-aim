@@ -382,6 +382,41 @@
     padding: 6px 18px;
   }
 
+  /* ===== ASSESSMENT ===== */
+  #assessment { justify-content: flex-start; overflow-y: auto; touch-action: pan-y; padding-top: max(32px, env(safe-area-inset-top)); }
+  .as-remain { font-size: 14px; color: #8b949e; margin: 14px 0; letter-spacing: .06em; }
+  .as-resume {
+    width: 100%; max-width: 420px;
+    background: #161b22; border: 1px solid #30414f; border-radius: 12px;
+    padding: 16px; margin-bottom: 16px;
+  }
+  .as-resume p { font-size: 14px; color: #8b949e; margin-bottom: 10px; line-height: 1.6; }
+  .as-resume .btn { padding: 12px 24px; font-size: 15px; margin: 0 4px; }
+  .as-resume .btn.ghost { padding: 10px 20px; font-size: 14px; margin-top: 8px; }
+
+  #asPrep { justify-content: center; }
+  .as-prep-label { font-size: 13px; color: #5f7a94; letter-spacing: .2em; font-weight: 700; margin-bottom: 6px; }
+  .as-prep-hint { font-size: 14px; color: #2ea8ff; margin: 18px 0 26px; letter-spacing: .1em; }
+
+  #asResult { justify-content: flex-start; overflow-y: auto; touch-action: pan-y; padding-top: max(28px, env(safe-area-inset-top)); }
+  .as-total {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 56px; font-weight: 900;
+    color: #2ea8ff;
+    text-shadow: 0 0 24px rgba(46,168,255,.5);
+    margin-top: 4px;
+  }
+  .as-total-label { font-size: 13px; color: #8b949e; letter-spacing: .12em; margin-bottom: 20px; }
+  .as-rows { width: 100%; max-width: 420px; display: flex; flex-direction: column; gap: 8px; margin-bottom: 22px; }
+  .as-row {
+    display: flex; justify-content: space-between; align-items: center;
+    background: #161b22; border: 1px solid #30363d; border-radius: 10px;
+    padding: 12px 16px; text-align: left;
+  }
+  .as-row-name { font-family: 'Orbitron', sans-serif; font-size: 14px; font-weight: 700; color: #2ea8ff; letter-spacing: .08em; }
+  .as-row-metric { font-size: 12px; color: #5f7a94; margin-top: 2px; }
+  .as-row-score { font-family: 'Rajdhani', sans-serif; font-size: 22px; font-weight: 700; color: #e6edf3; }
+
   #langSel {
     position: absolute;
     top: calc(12px + env(safe-area-inset-top)); right: 16px;
@@ -672,10 +707,9 @@
         <div class="cat-name">SCORE ATTACK</div>
         <div class="cat-desc" data-i18n="saDesc"></div>
       </button>
-      <button class="cat soon" id="catAs">
+      <button class="cat" id="catAs">
         <div class="cat-name">ASSESSMENT</div>
         <div class="cat-desc" data-i18n="asDesc"></div>
-        <div class="cat-soon" data-i18n="soon"></div>
       </button>
       <button class="cat" id="catTr">
         <div class="cat-name">TRAINING</div>
@@ -731,13 +765,39 @@
     <button class="btn ghost" id="trBackHubBtn" data-i18n="trBackHub">課題一覧へ</button>
   </div>
 
-  <!-- ASSESSMENT / PROFILE (準備中スタブ) -->
+  <!-- ASSESSMENT: 開始画面 -->
   <div id="assessment" class="screen hidden">
     <h2 class="scr-head">ASSESSMENT</h2>
     <p class="stub-desc" data-i18n="asDesc"></p>
-    <div class="soon-badge" data-i18n="soon"></div>
+    <div id="asRemain" class="as-remain"></div>
+    <div id="asResumeWrap" class="as-resume hidden">
+      <p data-i18n="asResumeQ"></p>
+      <button class="btn" id="asResumeBtn" data-i18n="asResumeBtn">再開</button>
+      <button class="btn ghost" id="asDiscardBtn" data-i18n="asDiscardBtn">破棄</button>
+    </div>
+    <div id="asDoneMsg" class="as-remain hidden" data-i18n="asDoneToday"></div>
+    <button class="btn" id="asStartBtn">START</button>
     <button class="btn ghost" data-back data-i18n="backMenu">メニューへ</button>
   </div>
+
+  <!-- ASSESSMENT: 種目間の準備画面 (3秒) -->
+  <div id="asPrep" class="screen hidden">
+    <div class="as-prep-label" data-i18n="asNext">次の種目</div>
+    <h2 class="scr-head" id="asPrepName">PERCEPTION</h2>
+    <p class="stub-desc" id="asPrepDesc"></p>
+    <div class="as-prep-hint" data-i18n="asStarting">まもなく開始…</div>
+    <button class="btn ghost" id="asCancelBtn" data-i18n="asCancelBtn">中止</button>
+  </div>
+
+  <!-- ASSESSMENT: 6種目通しの結果画面 -->
+  <div id="asResult" class="screen hidden">
+    <h2 class="scr-head">ASSESSMENT RESULT</h2>
+    <div class="as-total" id="asTotalScore">0</div>
+    <div class="as-total-label" data-i18n="asTotalLabel">総合スコア</div>
+    <div class="as-rows" id="asRows"></div>
+    <button class="btn ghost" data-back data-i18n="backMenu">メニューへ</button>
+  </div>
+
   <div id="profile" class="screen hidden">
     <h2 class="scr-head">PROFILE</h2>
     <p class="stub-desc" data-i18n="prDesc"></p>
@@ -936,6 +996,17 @@
   STR.soon = ['準備中', 'Coming soon', '敬请期待', '준비 중', 'Próximamente', 'Em breve', 'Bientôt', 'Demnächst', 'Скоро', 'Segera hadir'];
   STR.backMenu = ['メニューへ', 'Back to menu', '返回菜单', '메뉴로', 'Al menú', 'Ao menu', 'Retour au menu', 'Zum Menü', 'В меню', 'Ke menu'];
 
+  // ===== ASSESSMENT: 新規UI文字列 (ja[0]/en[1] の2要素のみ。他言語はen→jaへ自動フォールバック) =====
+  STR.asRemainFmt = ['本日の残り回数 {n}/2', 'Remaining today: {n}/2'];
+  STR.asDoneToday = ['本日は終了。また明日', 'Done for today — come back tomorrow'];
+  STR.asResumeQ = ['中断したセッションがあります。続きから再開しますか?', 'You have a paused session. Resume where you left off?'];
+  STR.asResumeBtn = ['再開', 'Resume'];
+  STR.asDiscardBtn = ['破棄', 'Discard'];
+  STR.asNext = ['次の種目', 'Next up'];
+  STR.asStarting = ['まもなく開始…', 'Starting soon…'];
+  STR.asCancelBtn = ['中止', 'Cancel'];
+  STR.asTotalLabel = ['総合スコア', 'Overall score'];
+
   // ===== TRAINING: 新規UI文字列 (ja[0]/en[1] の2要素のみ。他言語はen→jaへ自動フォールバック) =====
   STR.trBackHub = ['課題一覧へ', 'Back to tasks'];
   STR.trD_perception = ['視認即応: 出現に反応してすぐ動作を開始する', 'Reaction: start moving the instant a target appears'];
@@ -1044,6 +1115,7 @@
   db.stats.sCount ??= { normal: 0, acc: 0, speed: 0 };  // モード別Sランク累計
   db.stats.flawless ??= { normal: false, acc: false, speed: false }; // 完全クリア達成フラグ
   db.training ??= {};                       // { taskId: { runs: [{ts, raw, summary}] } } (直近20runのみ保持)
+  db.assessment ??= { daily: null, pending: null, runs: [] }; // daily:{date,count} / pending:中断再開用 / runs:直近30件
   function saveDB() {
     try { localStorage.setItem(DB_KEY, JSON.stringify(db)); } catch (e) { /* 保存不能でも続行 */ }
   }
@@ -1198,7 +1270,7 @@
   const MODE_LABEL = { normal: 'BALANCED', acc: 'PRECISION', speed: 'SPEED' };
 
   function show(id) {
-    ['menu', 'title', 'training', 'assessment', 'profile', 'countdown', 'result', 'rules', 'achievements', 'trResult']
+    ['menu', 'title', 'training', 'assessment', 'profile', 'countdown', 'result', 'rules', 'achievements', 'trResult', 'asPrep', 'asResult']
       .forEach(s => $(s).classList.toggle('hidden', s !== id));
   }
 
@@ -1939,6 +2011,27 @@
   };
   let TR = null;            // 現在実行中の課題の状態 (nullなら非アクティブ)
   let TR_LAST_TASK = null;  // リトライ用に直近実行した課題id
+  let TR_MODE = 'solo';     // 'solo'(TRAINING単体練習) | 'assessment'(ASSESSMENT通し測定)
+
+  // ===== ASSESSMENT用: seed付きPRNG (mulberry32) =====
+  // TRAINING単体練習は従来どおり Math.random() を直接使う。ASSESSMENT実行中のみ
+  // RNG を種目ごとの決定的な関数に差し替え、6課題エンジン内の乱数呼び出しをそこから取る。
+  let RNG = Math.random;
+  function mulberry32(seed) {
+    let t = seed >>> 0;
+    return function () {
+      t += 0x6D2B79F5;
+      let r = Math.imul(t ^ (t >>> 15), 1 | t);
+      r = (r + Math.imul(r ^ (r >>> 7), 61 | r)) ^ r;
+      return ((r ^ (r >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+  function genSeed() { return ((Date.now() ^ (Math.random() * 0xFFFFFFFF)) >>> 0); }
+  // 種目ごとに独立したPRNGストリームを作る (中断・再開をまたいでも各種目の内容が一致するように)
+  function taskRng(seed, taskId) {
+    const salt = TR_ORDER.indexOf(taskId) + 1;
+    return mulberry32((seed ^ Math.imul(salt, 0x9E3779B1)) >>> 0);
+  }
 
   // ===== 集計ヘルパー =====
   function trMean(arr) {
@@ -1962,7 +2055,7 @@
   function shuffleArr(a) {
     a = a.slice();
     for (let i = a.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
+      const j = Math.floor(RNG() * (i + 1));
       [a[i], a[j]] = [a[j], a[i]];
     }
     return a;
@@ -2013,6 +2106,14 @@
     $('trField').classList.add('hidden');
     $('trField').innerHTML = '';
     trHideMsg();
+    if (TR_MODE === 'assessment') {
+      // ASSESSMENT中の中止: 現在の種目だけを破棄し、直前まで完了した種目のpendingは残す
+      // (開始画面で「再開」を選べば同じ種目からやり直せる)
+      AS = null; TR_MODE = 'solo'; RNG = Math.random;
+      asRenderStart();
+      show('assessment');
+      return;
+    }
     renderTrHub();
     show('training');
   }
@@ -2035,22 +2136,41 @@
     });
     show('trResult');
   }
+  // 課題完了時の共通処理。TRAINING単体練習では従来どおりrunを保存してリザルト画面へ、
+  // ASSESSMENT実行中はasOnTaskDoneへ委譲して次の種目へ進める (db.trainingへは保存しない)
+  function trFinishTask(taskId, raw, summary, rows) {
+    if (TR_MODE === 'assessment') {
+      if (TR && TR.cleanup) { try { TR.cleanup(); } catch (e) { /* 片付け失敗でも続行 */ } }
+      TR = null;
+      $('trHud').classList.add('hidden');
+      $('trField').classList.add('hidden');
+      $('trField').innerHTML = '';
+      trHideMsg();
+      asOnTaskDone(taskId, raw, summary);
+      return;
+    }
+    saveTrainingRun(taskId, raw, summary);
+    showTrResult(taskId, TR_META[taskId].name, rows);
+  }
 
   // ===== 課題ハブ =====
-  function trLastSummaryLine(taskId) {
-    const rec = db.training[taskId];
-    const run = rec && rec.runs.length ? rec.runs[rec.runs.length - 1] : null;
-    if (!run) return '';
-    const s = run.summary;
+  // 課題1件のsummaryから代表指標1行を作る (TRAINING課題カード・ASSESSMENT結果画面で共用)
+  function summaryKeyMetric(taskId, s) {
+    if (!s) return '';
     switch (taskId) {
       case 'perception': return s.median != null ? `${T('tr_k_median')}: ${Math.round(s.median)}ms` : '';
       case 'flick': return s.reactionMedian != null ? `${T('tr_k_reaction')}: ${Math.round(s.reactionMedian)}ms` : '';
       case 'precision': return s.avgErrRatio != null ? `${T('tr_k_errRatio')}: ${Math.round(s.avgErrRatio * 100)}%` : '';
       case 'tracking': return `${T('tr_k_inZone')}: ${Math.round(s.inZoneRatio * 100)}%`;
       case 'switching': return s.gapMedian != null ? `${T('tr_k_gap')}: ${Math.round(s.gapMedian)}ms` : '';
-      case 'timing': return `${T('tr_k_hits')}: ${s.hits}/10`;
+      case 'timing': return `${T('tr_k_hits')}: ${s.hits}/${s.total || 10}`;
       default: return '';
     }
+  }
+  function trLastSummaryLine(taskId) {
+    const rec = db.training[taskId];
+    const run = rec && rec.runs.length ? rec.runs[rec.runs.length - 1] : null;
+    return run ? summaryKeyMetric(taskId, run.summary) : '';
   }
   function renderTrHub() {
     const wrap = $('trList');
@@ -2068,8 +2188,9 @@
   }
 
   // ===== 1. PERCEPTION (反応: 待機パッド離脱までを計測) =====
-  function startPerception() {
-    const total = 10;
+  // totalOverride: ASSESSMENTから短縮試行数を指定する場合に使用 (未指定ならTRAINING従来どおり10)
+  function startPerception(totalOverride) {
+    const total = totalOverride || 10;
     trEnterPlay('perception', total);
     TR.total = total; TR.trial = 0; TR.falseStarts = 0;
     perceptionNextTrial();
@@ -2106,13 +2227,13 @@
       padPointerId = e.pointerId;
       pad.classList.add('active');
       trHideMsg();
-      const wait = 1200 + Math.random() * 2300;
+      const wait = 1200 + RNG() * 2300;
       delayTimer = setTimeout(() => {
         if (phase !== 'holding') return;
         phase = 'shown';
         const r = Math.round(baseRadius() * 1.3);
-        const tx = Math.max(rect.left + r, Math.min(rect.right - r, innerWidth / 2 + (Math.random() * 2 - 1) * innerWidth * 0.28));
-        const ty = rect.top + r + Math.random() * Math.max(1, rect.h * 0.4);
+        const tx = Math.max(rect.left + r, Math.min(rect.right - r, innerWidth / 2 + (RNG() * 2 - 1) * innerWidth * 0.28));
+        const ty = rect.top + r + RNG() * Math.max(1, rect.h * 0.4);
         const tg = document.createElement('div');
         tg.className = 'target';
         tg.style.width = tg.style.height = (r * 2) + 'px';
@@ -2158,8 +2279,7 @@
     const D = TR;
     const succ = D.raw.filter(r => !r.falseStart).map(r => r.reactionMs);
     const summary = { median: trMedian(succ), fastest: succ.length ? Math.min(...succ) : null, sd: trStdDev(succ), falseStarts: D.falseStarts, count: succ.length };
-    saveTrainingRun('perception', D.raw, summary);
-    showTrResult('perception', 'PERCEPTION', [
+    trFinishTask('perception', D.raw, summary, [
       ['tr_k_median', summary.median != null ? Math.round(summary.median) + 'ms' : '-'],
       ['tr_k_fastest', summary.fastest != null ? Math.round(summary.fastest) + 'ms' : '-'],
       ['tr_k_sd', summary.sd != null ? Math.round(summary.sd) + 'ms' : '-'],
@@ -2169,8 +2289,9 @@
 
   // ===== 2. FLICK (振り向き: 反応と移動時間を分離計測) =====
   const FLICK_DIRS = [0, 45, 90, 135, 180, 225, 270, 315];
-  function startFlick() {
-    const total = 8;
+  // totalOverride: ASSESSMENTでも全方向1回(8試行)を維持するため通常は既定値と同じ
+  function startFlick(totalOverride) {
+    const total = totalOverride || 8;
     trEnterPlay('flick', total);
     TR.total = total; TR.trial = 0;
     TR.order = shuffleArr(FLICK_DIRS.map((d, i) => i));
@@ -2215,7 +2336,7 @@
       padPointerId = e.pointerId;
       pad.classList.add('active');
       trHideMsg();
-      const wait = 500 + Math.random() * 900;
+      const wait = 500 + RNG() * 900;
       delayTimer = setTimeout(() => {
         if (phase !== 'holding') return;
         phase = 'shown';
@@ -2269,8 +2390,7 @@
       avgErr: trMean(D.raw.filter(r => r.hit).map(r => r.errPx)),
       misses: D.raw.filter(r => !r.hit).length,
     };
-    saveTrainingRun('flick', D.raw, summary);
-    showTrResult('flick', 'FLICK', [
+    trFinishTask('flick', D.raw, summary, [
       ['tr_k_reaction', summary.reactionMedian != null ? Math.round(summary.reactionMedian) + 'ms' : '-'],
       ['tr_k_move', summary.moveMedian != null ? Math.round(summary.moveMedian) + 'ms' : '-'],
       ['tr_k_err', summary.avgErr != null ? Math.round(summary.avgErr) + 'px' : '-'],
@@ -2279,8 +2399,8 @@
   }
 
   // ===== 3. PRECISION (精密: 固定間隔で出現、中心精度を計測) =====
-  function startPrecision() {
-    const total = 12;
+  function startPrecision(totalOverride) {
+    const total = totalOverride || 12;
     trEnterPlay('precision', total);
     TR.total = total; TR.trial = 0;
     precisionSpawn();
@@ -2293,8 +2413,8 @@
     fld.innerHTML = '';
     const rect = trPlayAreaRect();
     const r = Math.max(18, Math.round(baseRadius() * 0.55));
-    const tx = rect.left + r + Math.random() * Math.max(1, rect.w - 2 * r);
-    const ty = rect.top + r + Math.random() * Math.max(1, rect.h - 2 * r);
+    const tx = rect.left + r + RNG() * Math.max(1, rect.w - 2 * r);
+    const ty = rect.top + r + RNG() * Math.max(1, rect.h - 2 * r);
     const tg = document.createElement('div');
     tg.className = 'target';
     tg.style.width = tg.style.height = (r * 2) + 'px';
@@ -2331,8 +2451,7 @@
       avgDy: trMean(hits.map(r => r.dy)),
       missRate: D.raw.length ? (D.raw.length - hits.length) / D.raw.length : 0,
     };
-    saveTrainingRun('precision', D.raw, summary);
-    showTrResult('precision', 'PRECISION', [
+    trFinishTask('precision', D.raw, summary, [
       ['tr_k_errRatio', summary.avgErrRatio != null ? Math.round(summary.avgErrRatio * 100) + '%' : '-'],
       ['tr_k_sdRatio', summary.sd != null ? Math.round(summary.sd * 100) + '%' : '-'],
       ['tr_k_dxdy', (summary.avgDx != null && summary.avgDy != null) ? `${Math.round(summary.avgDx)}, ${Math.round(summary.avgDy)}px` : '-'],
@@ -2341,10 +2460,11 @@
   }
 
   // ===== 4. TRACKING (追従: 20秒間、動く的を指で追う) =====
-  function startTracking() {
+  // durationOverride: ASSESSMENTでは15秒に短縮
+  function startTracking(durationOverride) {
     trEnterPlay('tracking', null);
     const D = TR;
-    D.duration = 20000;
+    D.duration = durationOverride || 20000;
     D.samples = []; D.inZoneFrames = 0; D.totalFrames = 0; D.sumDist = 0;
     D.lastInZone = true; D.awayStart = null; D.recoverTimes = [];
     D.fingerX = innerWidth / 2; D.fingerY = innerHeight / 2; D.engaged = false;
@@ -2359,8 +2479,8 @@
     fld.appendChild(tg);
 
     let tx = rect.left + rect.w * 0.5, ty = rect.top + rect.h * 0.5;
-    let ang = Math.random() * 6.283;
-    const speed = 140 + Math.random() * 60; // px/s
+    let ang = RNG() * 6.283;
+    const speed = 140 + RNG() * 60; // px/s
     let lastT = performance.now();
     const start = lastT;
     let lastSampleSec = -1, secBucket = [];
@@ -2384,7 +2504,7 @@
       if (!TR || TR.task !== 'tracking') return;
       const dt = Math.min(50, now - lastT); lastT = now;
       const elapsed = now - start;
-      ang += (Math.random() - 0.5) * 0.02; // 緩やかな方向変化
+      ang += (RNG() - 0.5) * 0.02; // 緩やかな方向変化
       tx += Math.cos(ang) * speed * dt / 1000;
       ty += Math.sin(ang) * speed * dt / 1000;
       if (tx < rect.left + r) { tx = rect.left + r; ang = Math.PI - ang; }
@@ -2423,8 +2543,7 @@
       avgDist: D.totalFrames ? D.sumDist / D.totalFrames : 0,
       avgRecover: trMean(D.recoverTimes),
     };
-    saveTrainingRun('tracking', { samples: D.samples, recoverTimes: D.recoverTimes }, summary);
-    showTrResult('tracking', 'TRACKING', [
+    trFinishTask('tracking', { samples: D.samples, recoverTimes: D.recoverTimes }, summary, [
       ['tr_k_inZone', Math.round(summary.inZoneRatio * 100) + '%'],
       ['tr_k_avgDist', Math.round(summary.avgDist) + 'px'],
       ['tr_k_recover', summary.avgRecover != null ? Math.round(summary.avgRecover) + 'ms' : '-'],
@@ -2432,8 +2551,8 @@
   }
 
   // ===== 5. SWITCHING (切替: 3的を番号順にタップ) =====
-  function startSwitching() {
-    const total = 8;
+  function startSwitching(totalOverride) {
+    const total = totalOverride || 8;
     trEnterPlay('switching', total);
     TR.total = total; TR.set = 0; TR.wrongTaps = 0; TR.gapMs = []; TR.streak = 0; TR.bestStreak = 0;
     switchingNextSet();
@@ -2452,8 +2571,8 @@
     D.targets = [];
     [1, 2, 3].forEach((num, i) => {
       const colIdx = order[i];
-      const x = Math.min(rect.right - r, Math.max(rect.left + r, cols[colIdx] + (Math.random() * 2 - 1) * rect.w * 0.06));
-      const y = Math.min(rect.bottom - r, Math.max(rect.top + r, rect.top + r + Math.random() * Math.max(1, rect.h - 2 * r)));
+      const x = Math.min(rect.right - r, Math.max(rect.left + r, cols[colIdx] + (RNG() * 2 - 1) * rect.w * 0.06));
+      const y = Math.min(rect.bottom - r, Math.max(rect.top + r, rect.top + r + RNG() * Math.max(1, rect.h - 2 * r)));
       const tg = document.createElement('div');
       tg.className = 'target';
       tg.style.width = tg.style.height = (r * 2) + 'px';
@@ -2502,8 +2621,7 @@
   function finishSwitching() {
     const D = TR;
     const summary = { gapMedian: trMedian(D.gapMs), wrongTaps: D.wrongTaps, bestStreak: D.bestStreak };
-    saveTrainingRun('switching', { gapMs: D.gapMs, wrongTaps: D.wrongTaps }, summary);
-    showTrResult('switching', 'SWITCHING', [
+    trFinishTask('switching', { gapMs: D.gapMs, wrongTaps: D.wrongTaps }, summary, [
       ['tr_k_gap', summary.gapMedian != null ? Math.round(summary.gapMedian) + 'ms' : '-'],
       ['tr_k_wrong', D.wrongTaps],
       ['tr_k_streak', D.bestStreak],
@@ -2512,8 +2630,8 @@
 
   // ===== 6. TIMING (偏差撃ち: 横切る的を一撃で迎撃) =====
   const TIMING_SPEEDS = [220, 320, 440]; // px/s (3段階)
-  function startTiming() {
-    const total = 10;
+  function startTiming(totalOverride) {
+    const total = totalOverride || 10;
     trEnterPlay('timing', total);
     TR.total = total; TR.trial = 0; TR.dirToggle = 1;
     timingNextTrial();
@@ -2526,10 +2644,10 @@
     fld.innerHTML = '';
     const rect = trPlayAreaRect();
     const r = Math.max(20, Math.round(baseRadius() * 0.6));
-    const speedLevel = Math.floor(Math.random() * 3);
+    const speedLevel = Math.floor(RNG() * 3);
     const speed = TIMING_SPEEDS[speedLevel];
     const dir = TR.dirToggle; TR.dirToggle *= -1;
-    const y = rect.top + r + Math.random() * Math.max(1, rect.h - 2 * r);
+    const y = rect.top + r + RNG() * Math.max(1, rect.h - 2 * r);
     const x0 = dir > 0 ? rect.left - r : rect.right + r;
     const endX = dir > 0 ? rect.right + r : rect.left - r;
     const tg = document.createElement('div');
@@ -2583,9 +2701,8 @@
   function finishTiming() {
     const D = TR;
     const hits = D.raw.filter(r => r.hit);
-    const summary = { avgAbsErr: trMean(hits.map(r => r.errPx)), avgSigned: trMean(hits.map(r => r.signedErr)), hits: hits.length };
-    saveTrainingRun('timing', D.raw, summary);
-    showTrResult('timing', 'TIMING', [
+    const summary = { avgAbsErr: trMean(hits.map(r => r.errPx)), avgSigned: trMean(hits.map(r => r.signedErr)), hits: hits.length, total: D.total };
+    trFinishTask('timing', D.raw, summary, [
       ['tr_k_err', summary.avgAbsErr != null ? Math.round(summary.avgAbsErr) + 'px' : '-'],
       ['tr_k_signed', summary.avgSigned != null ? (summary.avgSigned > 0 ? '+' : '') + Math.round(summary.avgSigned) + 'px' : '-'],
       ['tr_k_hits', `${summary.hits}/${D.total}`],
@@ -2593,6 +2710,188 @@
   }
 
   const TR_START = { perception: startPerception, flick: startFlick, precision: startPrecision, tracking: startTracking, switching: startSwitching, timing: startTiming };
+
+  // ===================================================================
+  // ===== ASSESSMENT: 6種目通し測定 =====
+  // TRAININGの6課題エンジンをそのまま流用し、trFinishTask/RNGの差し替えで
+  // 「短縮試行数」「seed付き決定的な乱数」「db.assessmentへの保存」だけを分岐させる。
+  // ===================================================================
+  const ASSESSMENT_VERSION = 1;
+  const TEST_CONFIG_VERSION = 1;
+  const SCORE_FORMULA_VERSION = 1;
+  const AS_RESUME_MS = 30 * 60 * 1000; // 中断からの再開が有効な時間 (30分)
+  const AS_DAILY_LIMIT = 2;
+  // 試行数/所要時間はTRAINING既定値の約6割 (全体5〜7分目安)。flickは全方向1回を維持するため既定8のまま
+  const AS_TOTALS = { perception: 6, flick: 8, precision: 8, tracking: 15000, switching: 5, timing: 8 };
+
+  let AS = null; // 実行中のASSESSMENT状態 { seed, index, results:{taskId:{raw,summary,score}}, prepTimer }
+
+  function asToday() {
+    const d = new Date();
+    return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+  }
+  function asDailyRemaining() {
+    const d = db.assessment.daily;
+    const today = asToday();
+    if (!d || d.date !== today) return AS_DAILY_LIMIT;
+    return Math.max(0, AS_DAILY_LIMIT - d.count);
+  }
+  function asPendingValid() {
+    const p = db.assessment.pending;
+    return !!p && (Date.now() - p.startedTs) <= AS_RESUME_MS;
+  }
+
+  // ===== 暫定0〜100採点 (score_formula_version:1・rawとsummaryから再計算可能) =====
+  function asLinear(x, x1, y1, x2, y2) {
+    if (x == null) return y2;
+    const t = Math.min(1, Math.max(0, (x - x1) / (x2 - x1)));
+    return y1 + (y2 - y1) * t;
+  }
+  function asClamp100(v) { return Math.max(0, Math.min(100, v)); }
+  function asScoreV1(taskId, raw, summary) {
+    switch (taskId) {
+      case 'perception': {
+        const base = asLinear(summary.median, 180, 100, 450, 0);
+        return asClamp100(base - (summary.falseStarts || 0) * 8);
+      }
+      case 'flick': {
+        const hitRate = raw.length ? raw.filter(r => r.hit).length / raw.length : 0;
+        const reactPart = asLinear(summary.reactionMedian, 200, 50, 450, 0);
+        const movePart = asLinear(summary.moveMedian, 150, 30, 500, 0);
+        return asClamp100(reactPart + movePart + hitRate * 20);
+      }
+      case 'precision': {
+        const hitRate = raw.length ? raw.filter(r => r.hit).length / raw.length : 0;
+        const errPart = summary.avgErrRatio == null ? 0 : asLinear(summary.avgErrRatio, 0.10, 80, 0.60, 0);
+        return asClamp100(errPart + hitRate * 20);
+      }
+      case 'tracking':
+        return asClamp100((summary.inZoneRatio || 0) * 100);
+      case 'switching': {
+        const correctTaps = raw.gapMs ? raw.gapMs.length : 0;
+        const wrong = raw.wrongTaps || 0;
+        const tapsTotal = correctTaps + wrong;
+        const gapPart = asLinear(summary.gapMedian, 350, 70, 900, 0);
+        const wrongPart = tapsTotal ? (1 - wrong / tapsTotal) * 30 : 30;
+        return asClamp100(gapPart + wrongPart);
+      }
+      case 'timing': {
+        const hitRate = raw.length ? raw.filter(r => r.hit).length / raw.length : 0;
+        const errPart = summary.avgAbsErr == null ? 0 : asLinear(summary.avgAbsErr, 10, 40, 80, 0);
+        return asClamp100(hitRate * 60 + errPart);
+      }
+      default: return 0;
+    }
+  }
+  // 将来score_formula_versionが増えても過去の生データから再計算できるよう、バージョン分岐だけをここに足す
+  function asComputeScore(taskId, raw, summary, version) {
+    if (version === 1) return asScoreV1(taskId, raw, summary);
+    return asScoreV1(taskId, raw, summary);
+  }
+
+  // ===== 開始画面の表示更新 =====
+  function asRenderStart() {
+    // 期限切れのpendingは開始画面表示のたびに静かに破棄
+    if (db.assessment.pending && !asPendingValid()) {
+      db.assessment.pending = null;
+      saveDB();
+    }
+    const remaining = asDailyRemaining();
+    $('asRemain').textContent = T('asRemainFmt').replace('{n}', remaining);
+    const hasPending = !!db.assessment.pending;
+    $('asResumeWrap').classList.toggle('hidden', !hasPending);
+    $('asStartBtn').classList.toggle('hidden', hasPending || remaining <= 0);
+    $('asDoneMsg').classList.toggle('hidden', hasPending || remaining > 0);
+  }
+
+  function asStartNew() {
+    if (db.assessment.pending || asDailyRemaining() <= 0) return;
+    const seed = genSeed();
+    db.assessment.pending = { seed, startedTs: Date.now(), doneTasks: [], nextIndex: 0 };
+    saveDB();
+    AS = { seed, index: 0, results: {} };
+    asShowPrep();
+  }
+  function asResume() {
+    const p = db.assessment.pending;
+    if (!p) return;
+    AS = { seed: p.seed, index: p.nextIndex, results: {} };
+    p.doneTasks.forEach(t => { AS.results[t.taskId] = { raw: t.raw, summary: t.summary, score: t.score }; });
+    asShowPrep();
+  }
+  function asCancelPending() {
+    clearTimeout(AS && AS.prepTimer);
+    AS = null; TR_MODE = 'solo'; RNG = Math.random;
+    asRenderStart();
+    show('assessment');
+  }
+
+  function asShowPrep() {
+    if (!AS) return;
+    if (AS.index >= TR_ORDER.length) { asFinishRun(); return; }
+    const taskId = TR_ORDER[AS.index];
+    const meta = TR_META[taskId];
+    $('asPrepName').textContent = meta.name;
+    $('asPrepDesc').textContent = T(meta.descKey);
+    show('asPrep');
+    clearTimeout(AS.prepTimer);
+    AS.prepTimer = setTimeout(() => { if (AS) asStartTask(taskId); }, 3000);
+  }
+  function asStartTask(taskId) {
+    if (!AS) return;
+    RNG = taskRng(AS.seed, taskId);        // 種目ごとに決定的なPRNGへ差し替え
+    TR_MODE = 'assessment';
+    TR_START[taskId](AS_TOTALS[taskId]);
+  }
+  // 1種目完了時: trFinishTaskから呼ばれる (TR_MODE==='assessment'のときのみ)
+  function asOnTaskDone(taskId, raw, summary) {
+    if (!AS) return;
+    RNG = Math.random; // 種目外は通常の乱数に戻す
+    const score = asComputeScore(taskId, raw, summary, SCORE_FORMULA_VERSION);
+    AS.results[taskId] = { raw, summary, score };
+    AS.index++;
+    const p = db.assessment.pending;
+    if (p) {
+      p.doneTasks.push({ taskId, raw, summary, score });
+      p.nextIndex = AS.index;
+      saveDB();
+    }
+    asShowPrep();
+  }
+  function asFinishRun() {
+    const tasks = AS.results;
+    const scores = TR_ORDER.map(id => tasks[id].score);
+    const totalAvg = +(scores.reduce((a, b) => a + b, 0) / scores.length).toFixed(1);
+    const run = {
+      ts: Date.now(), seed: AS.seed,
+      assessment_version: ASSESSMENT_VERSION, test_config_version: TEST_CONFIG_VERSION, score_formula_version: SCORE_FORMULA_VERSION,
+      tasks, totalAvg,
+      env: { w: innerWidth, h: innerHeight, dpr: window.devicePixelRatio || 1, portrait: innerHeight > innerWidth, ua: (navigator.userAgent || '').slice(0, 80) },
+    };
+    db.assessment.runs.push(run);
+    db.assessment.runs = db.assessment.runs.slice(-30);
+    // 回数カウントは完走時のみ+1 (途中破棄はカウントしない)
+    const today = asToday();
+    if (!db.assessment.daily || db.assessment.daily.date !== today) db.assessment.daily = { date: today, count: 0 };
+    db.assessment.daily.count++;
+    db.assessment.pending = null;
+    saveDB();
+    AS = null; TR_MODE = 'solo'; RNG = Math.random;
+    asShowResult(run);
+  }
+  function asShowResult(run) {
+    $('asTotalScore').textContent = run.totalAvg;
+    const wrap = $('asRows');
+    wrap.innerHTML = '';
+    TR_ORDER.forEach(id => {
+      const t = run.tasks[id];
+      const row = document.createElement('div');
+      row.className = 'as-row';
+      row.innerHTML = `<div><div class="as-row-name">${TR_META[id].name}</div><div class="as-row-metric">${summaryKeyMetric(id, t.summary)}</div></div><div class="as-row-score">${Math.round(t.score)}</div>`;
+      wrap.appendChild(row);
+    });
+    show('asResult');
+  }
 
   // ===== ボタン =====
   $('startBtn').addEventListener('click', startCountdown);
@@ -2610,7 +2909,11 @@
   $('trAbortBtn').addEventListener('click', trAbort);
   $('trRetryBtn').addEventListener('click', () => { if (TR_LAST_TASK) TR_START[TR_LAST_TASK](); });
   $('trBackHubBtn').addEventListener('click', () => { renderTrHub(); show('training'); });
-  $('catAs').addEventListener('click', () => show('assessment'));
+  $('catAs').addEventListener('click', () => { asRenderStart(); show('assessment'); });
+  $('asStartBtn').addEventListener('click', asStartNew);
+  $('asResumeBtn').addEventListener('click', asResume);
+  $('asDiscardBtn').addEventListener('click', () => { db.assessment.pending = null; saveDB(); asRenderStart(); });
+  $('asCancelBtn').addEventListener('click', asCancelPending);
   $('catPr').addEventListener('click', () => show('profile'));
   $('achBtn').addEventListener('click', () => { renderAchievements(); show('achievements'); });
   document.querySelectorAll('[data-back]').forEach(b => b.addEventListener('click', () => show('menu')));
