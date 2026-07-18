@@ -454,6 +454,88 @@
   #top10 td { padding: 7px 4px; text-align: center; border-bottom: 1px solid #1c2128; }
   #top10 td.sc { font-family: 'Rajdhani', sans-serif; font-weight: 700; font-size: 18px; }
   #resultMode { font-size: 12px; color: #8b949e; letter-spacing: .1em; font-weight: 700; }
+
+  /* ===== 実績ボタン・一覧画面 ===== */
+  .achBtn {
+    width: 100%; max-width: 420px;
+    margin-top: 12px;
+    background: #161b22; color: #8b949e;
+    border: 1px solid #30414f; border-radius: 12px;
+    padding: 13px 16px;
+    font-size: 14px; font-weight: 700;
+    letter-spacing: .06em;
+    cursor: pointer;
+  }
+  .achBtn:active { transform: scale(.98); }
+  #achievements {
+    justify-content: flex-start;
+    overflow-y: auto; touch-action: pan-y;
+    padding-top: max(32px, env(safe-area-inset-top));
+  }
+  .ach-list {
+    width: 100%; max-width: 420px;
+    display: flex; flex-direction: column; gap: 10px;
+    margin-bottom: 18px;
+  }
+  .ach-item {
+    text-align: left;
+    background: #161b22; border: 1px solid #30363d;
+    border-radius: 12px; padding: 12px 14px;
+  }
+  .ach-item.locked { opacity: .45; }
+  .ach-name {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 14px; font-weight: 700;
+    letter-spacing: .06em;
+    color: #8b949e;
+  }
+  .ach-item.unlocked .ach-name {
+    color: #ffdf5d;
+    text-shadow: 0 0 10px rgba(255,223,93,.3);
+  }
+  .ach-desc { font-size: 13px; color: #8b949e; margin-top: 3px; line-height: 1.5; }
+  .ach-date { font-size: 11px; color: #5f7a94; margin-top: 4px; }
+
+  /* ===== 実績解除トースト ===== */
+  #achToast {
+    position: fixed;
+    top: max(10px, env(safe-area-inset-top));
+    left: 50%;
+    z-index: 40;
+    background: #161b22;
+    border: 1.5px solid #ffdf5d;
+    border-radius: 12px;
+    padding: 10px 22px;
+    text-align: center;
+    box-shadow: 0 4px 24px rgba(255,223,93,.35), inset 0 0 14px rgba(255,223,93,.1);
+    transform: translate(-50%, -140%);
+    opacity: 0;
+    pointer-events: none;
+  }
+  #achToast.in { animation: achIn .3s ease-out forwards; }
+  #achToast.out { animation: achOut .3s ease-in forwards; }
+  @keyframes achIn {
+    from { transform: translate(-50%, -140%); opacity: 0; }
+    to   { transform: translate(-50%, 0); opacity: 1; }
+  }
+  @keyframes achOut {
+    from { transform: translate(-50%, 0); opacity: 1; }
+    to   { transform: translate(-50%, -140%); opacity: 0; }
+  }
+  .achToast-t1 {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 11px; font-weight: 700;
+    letter-spacing: .2em;
+    color: #ffdf5d;
+  }
+  .achToast-t2 {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 18px; font-weight: 900;
+    letter-spacing: .08em;
+    color: #ffdf5d;
+    text-shadow: 0 0 14px rgba(255,223,93,.5);
+    margin-top: 2px;
+  }
 </style>
 </head>
 <body>
@@ -496,6 +578,7 @@
         <div class="cat-soon" data-i18n="soon"></div>
       </button>
     </div>
+    <button class="achBtn" id="achBtn">🏆 ACHIEVEMENTS <span id="achBtnCount">0/25</span></button>
   </div>
 
   <!-- SCORE ATTACK -->
@@ -541,6 +624,19 @@
     <p class="stub-desc" data-i18n="prDesc"></p>
     <div class="soon-badge" data-i18n="soon"></div>
     <button class="btn ghost" data-back data-i18n="backMenu">メニューへ</button>
+  </div>
+
+  <!-- ローカル実績一覧 -->
+  <div id="achievements" class="screen hidden">
+    <h2 class="scr-head">ACHIEVEMENTS <span id="achCount">0/25</span></h2>
+    <div id="achList" class="ach-list"></div>
+    <button class="btn ghost" data-back data-i18n="backMenu">メニューへ</button>
+  </div>
+
+  <!-- 実績解除トースト -->
+  <div id="achToast" class="hidden">
+    <div class="achToast-t1">ACHIEVEMENT UNLOCKED</div>
+    <div class="achToast-t2" id="achToastName"></div>
   </div>
 
   <!-- ルール -->
@@ -721,6 +817,33 @@
   STR.soon = ['準備中', 'Coming soon', '敬请期待', '준비 중', 'Próximamente', 'Em breve', 'Bientôt', 'Demnächst', 'Скоро', 'Segera hadir'];
   STR.backMenu = ['メニューへ', 'Back to menu', '返回菜单', '메뉴로', 'Al menú', 'Ao menu', 'Retour au menu', 'Zum Menü', 'В меню', 'Ke menu'];
 
+  // ===== 実績の説明文 (25個・実績名は英語固定、説明のみi18n) =====
+  STR.ad_first_play = ['初めて1プレイを完了', 'Complete your first round', '完成首次游玩', '첫 플레이 완료', 'Completa tu primera partida', 'Complete sua primeira partida', 'Terminez votre première partie', 'Schließe deine erste Runde ab', 'Завершите первую игру', 'Selesaikan permainan pertama'];
+  STR.ad_clean_runs = ['空振りなしのラウンドを累計5回完了', 'Complete 5 whiff-free rounds (cumulative)', '累计完成5次无落空的回合', '헛스윙 없는 라운드 누적 5회 완료', 'Completa 5 rondas sin fallos (acumulado)', 'Complete 5 rodadas sem erros (acumulado)', 'Terminez 5 manches sans raté (cumulé)', 'Schließe 5 Runden ohne Fehlschlag ab (kumulativ)', 'Завершите 5 раундов без промахов (всего)', 'Selesaikan 5 ronde tanpa meleset (akumulasi)'];
+  STR.ad_perfect_x3 = ['10/10ヒットを3ラウンド連続で達成', 'Achieve 10/10 hits in 3 consecutive rounds', '连续3回合达成10/10命中', '3라운드 연속 10/10 명중 달성', 'Logra 10/10 aciertos en 3 rondas seguidas', 'Alcance 10/10 acertos em 3 rodadas seguidas', "Réalisez 10/10 touches sur 3 manches d'affilée", 'Erziele 10/10 Treffer in 3 Runden in Folge', 'Наберите 10/10 попаданий 3 раунда подряд', 'Raih 10/10 kena dalam 3 ronde beruntun'];
+  STR.ad_flawless_all = ['空振り・タイムアウトなしの完全クリアを3モードすべてで達成', 'Achieve a flawless clear (no whiffs or timeouts) in all 3 modes', '在全部3种模式中达成无落空、无超时的完美通关', '3개 모드 모두에서 헛스윙·타임아웃 없는 완벽 클리어 달성', 'Logra una ronda perfecta (sin fallos ni tiempos agotados) en los 3 modos', 'Alcance uma rodada perfeita (sem erros nem tempo esgotado) nos 3 modos', 'Réalisez un sans-faute (aucun raté ni délai dépassé) dans les 3 modes', 'Erziele einen makellosen Durchgang (keine Fehlschläge, keine Timeouts) in allen 3 Modi', 'Пройдите без промахов и таймаутов во всех 3 режимах', 'Raih clear sempurna (tanpa meleset atau timeout) di ketiga mode'];
+  STR.ad_sharp80 = ['1ラウンドの全10発をそれぞれ精度80%以上で命中', 'Hit all 10 targets in one round with 80%+ accuracy each', '单回合全部10发命中精度均达80%以上', '한 라운드에서 10발 모두 정확도 80% 이상으로 명중', 'Acierta los 10 objetivos de una ronda con 80%+ de precisión cada uno', 'Acerte os 10 alvos de uma rodada com 80%+ de precisão cada', "Touchez les 10 cibles d'une manche avec 80 %+ de précision chacune", 'Triff alle 10 Ziele einer Runde mit je 80 %+ Präzision', 'Поразите все 10 целей за раунд с точностью 80%+ каждая', 'Kenai 10 target dalam satu ronde dengan akurasi 80%+ masing-masing'];
+  STR.ad_sharp90 = ['1ラウンドの全10発をそれぞれ精度90%以上で命中', 'Hit all 10 targets in one round with 90%+ accuracy each', '单回合全部10发命中精度均达90%以上', '한 라운드에서 10발 모두 정확도 90% 이상으로 명중', 'Acierta los 10 objetivos de una ronda con 90%+ de precisión cada uno', 'Acerte os 10 alvos de uma rodada com 90%+ de precisão cada', "Touchez les 10 cibles d'une manche avec 90 %+ de précision chacune", 'Triff alle 10 Ziele einer Runde mit je 90 %+ Präzision', 'Поразите все 10 целей за раунд с точностью 90%+ каждая', 'Kenai 10 target dalam satu ronde dengan akurasi 90%+ masing-masing'];
+  STR.ad_sharp95 = ['平均精度95%以上、かつ全10発が精度90%以上', 'Average accuracy 95%+ with every hit at least 90% in one round', '平均精度达95%以上且全部10发精度均达90%以上', '평균 정확도 95% 이상이면서 10발 모두 정확도 90% 이상', 'Precisión media de 95%+ con cada acierto al menos al 90% en una ronda', 'Precisão média de 95%+ com cada acerto de pelo menos 90% em uma rodada', 'Précision moyenne de 95 %+ avec chaque tir à au moins 90 % dans une manche', 'Durchschnittliche Präzision 95 %+ bei mindestens 90 % pro Treffer in einer Runde', 'Средняя точность 95%+ при точности каждого попадания не ниже 90% за раунд', 'Akurasi rata-rata 95%+ dengan tiap kena minimal 90% dalam satu ronde'];
+  STR.ad_quick400 = ['10/10ヒットかつ平均反応時間400ms以下', '10/10 hits with average reaction time under 400ms', '10/10命中且平均反应时间在400毫秒以内', '10/10 명중, 평균 반응 시간 400ms 이하', '10/10 aciertos con tiempo de reacción medio menor a 400 ms', '10/10 acertos com tempo de reação médio abaixo de 400 ms', '10/10 touches avec un temps de réaction moyen inférieur à 400 ms', '10/10 Treffer bei durchschnittlicher Reaktionszeit unter 400 ms', '10/10 попаданий при средней реакции менее 400 мс', '10/10 kena dengan waktu reaksi rata-rata di bawah 400 md'];
+  STR.ad_quick300 = ['10/10ヒットかつ平均反応時間300ms以下', '10/10 hits with average reaction time under 300ms', '10/10命中且平均反应时间在300毫秒以内', '10/10 명중, 평균 반응 시간 300ms 이하', '10/10 aciertos con tiempo de reacción medio menor a 300 ms', '10/10 acertos com tempo de reação médio abaixo de 300 ms', '10/10 touches avec un temps de réaction moyen inférieur à 300 ms', '10/10 Treffer bei durchschnittlicher Reaktionszeit unter 300 ms', '10/10 попаданий при средней реакции менее 300 мс', '10/10 kena dengan waktu reaksi rata-rata di bawah 300 md'];
+  STR.ad_core50 = ['中心コアへのヒットを累計50回', 'Hit the core 50 times (cumulative)', '累计命中中心核心50次', '중심 코어 명중 누적 50회', 'Golpea el núcleo central 50 veces (acumulado)', 'Acerte o núcleo central 50 vezes (acumulado)', 'Touchez le noyau central 50 fois (cumulé)', 'Triff den Kern 50-mal (kumulativ)', 'Попадите в ядро 50 раз (всего)', 'Kenai inti tengah 50 kali (akumulasi)'];
+  STR.ad_combo_x3 = ['10コンボを3ラウンド連続で達成', 'Reach a 10-combo in 3 consecutive rounds', '连续3回合达成10连击', '3라운드 연속 10콤보 달성', 'Alcanza un combo de 10 en 3 rondas seguidas', 'Alcance um combo de 10 em 3 rodadas seguidas', "Atteignez un combo de 10 sur 3 manches d'affilée", 'Erreiche eine 10er-Combo in 3 Runden in Folge', 'Наберите комбо ×10 три раунда подряд', 'Capai combo 10 dalam 3 ronde beruntun'];
+  STR.ad_score8k_all = ['3モードすべてで8,000点以上', 'Score 8,000+ in all 3 modes', '在全部3种模式中得分均达8,000以上', '3개 모드 모두 8,000점 이상', 'Consigue 8.000+ puntos en los 3 modos', 'Consiga 8.000+ pontos nos 3 modos', 'Obtenez 8 000+ points dans les 3 modes', 'Erziele 8.000+ Punkte in allen 3 Modi', 'Наберите 8000+ очков во всех 3 режимах', 'Raih skor 8.000+ di ketiga mode'];
+  STR.ad_score9k = ['いずれかのモードで9,000点以上', 'Score 9,000+ in any mode', '在任意模式中得分达9,000以上', '어느 모드에서든 9,000점 이상', 'Consigue 9.000+ puntos en cualquier modo', 'Consiga 9.000+ pontos em qualquer modo', "Obtenez 9 000+ points dans n'importe quel mode", 'Erziele 9.000+ Punkte in einem beliebigen Modus', 'Наберите 9000+ очков в любом режиме', 'Raih skor 9.000+ di mode mana pun'];
+  STR.ad_score9k_all = ['3モードすべてで9,000点以上', 'Score 9,000+ in all 3 modes', '在全部3种模式中得分均达9,000以上', '3개 모드 모두 9,000점 이상', 'Consigue 9.000+ puntos en los 3 modos', 'Consiga 9.000+ pontos nos 3 modos', 'Obtenez 9 000+ points dans les 3 modes', 'Erziele 9.000+ Punkte in allen 3 Modi', 'Наберите 9000+ очков во всех 3 режимах', 'Raih skor 9.000+ di ketiga mode'];
+  STR.ad_score10k = ['いずれかのモードで10,000点以上', 'Score 10,000+ in any mode', '在任意模式中得分达10,000以上', '어느 모드에서든 10,000점 이상', 'Consigue 10.000+ puntos en cualquier modo', 'Consiga 10.000+ pontos em qualquer modo', "Obtenez 10 000+ points dans n'importe quel mode", 'Erziele 10.000+ Punkte in einem beliebigen Modus', 'Наберите 10000+ очков в любом режиме', 'Raih skor 10.000+ di mode mana pun'];
+  STR.ad_srank_x3 = ['Sランクを3ラウンド連続で獲得', 'Earn an S rank in 3 consecutive rounds', '连续3回合获得S评级', '3라운드 연속 S랭크 획득', 'Consigue rango S en 3 rondas seguidas', 'Consiga classificação S em 3 rodadas seguidas', "Obtenez le rang S sur 3 manches d'affilée", 'Erziele Rang S in 3 Runden in Folge', 'Получите ранг S три раунда подряд', 'Raih rank S dalam 3 ronde beruntun'];
+  STR.ad_master_bal = ['BALANCEDでSランクを累計3回獲得', 'Earn 3 S ranks in BALANCED mode (cumulative)', '在BALANCED模式累计获得3次S评级', 'BALANCED 모드에서 S랭크 누적 3회 획득', 'Consigue rango S 3 veces en el modo BALANCED (acumulado)', 'Consiga classificação S 3 vezes no modo BALANCED (acumulado)', 'Obtenez le rang S 3 fois en mode BALANCED (cumulé)', 'Erziele Rang S 3-mal im BALANCED-Modus (kumulativ)', 'Получите ранг S 3 раза в режиме BALANCED (всего)', 'Raih rank S 3 kali di mode BALANCED (akumulasi)'];
+  STR.ad_master_pre = ['PRECISIONでSランクを累計3回獲得', 'Earn 3 S ranks in PRECISION mode (cumulative)', '在PRECISION模式累计获得3次S评级', 'PRECISION 모드에서 S랭크 누적 3회 획득', 'Consigue rango S 3 veces en el modo PRECISION (acumulado)', 'Consiga classificação S 3 vezes no modo PRECISION (acumulado)', 'Obtenez le rang S 3 fois en mode PRECISION (cumulé)', 'Erziele Rang S 3-mal im PRECISION-Modus (kumulativ)', 'Получите ранг S 3 раза в режиме PRECISION (всего)', 'Raih rank S 3 kali di mode PRECISION (akumulasi)'];
+  STR.ad_master_spd = ['SPEEDでSランクを累計3回獲得', 'Earn 3 S ranks in SPEED mode (cumulative)', '在SPEED模式累计获得3次S评级', 'SPEED 모드에서 S랭크 누적 3회 획득', 'Consigue rango S 3 veces en el modo SPEED (acumulado)', 'Consiga classificação S 3 vezes no modo SPEED (acumulado)', 'Obtenez le rang S 3 fois en mode SPEED (cumulé)', 'Erziele Rang S 3-mal im SPEED-Modus (kumulativ)', 'Получите ранг S 3 раза в режиме SPEED (всего)', 'Raih rank S 3 kali di mode SPEED (akumulasi)'];
+  STR.ad_trinity = ['3モードのマスター実績をすべて解除', 'Unlock all 3 mode master achievements', '解锁全部3个模式大师成就', '3개 모드의 마스터 업적을 모두 해제', 'Desbloquea los 3 logros de maestría de modo', 'Desbloqueie as 3 conquistas de mestre de modo', 'Débloquez les 3 succès de maître de mode', 'Schalte alle 3 Modus-Meister-Erfolge frei', 'Откройте все 3 достижения мастера режима', 'Buka ketiga pencapaian master mode'];
+  STR.ad_hits100 = ['累計100ヒット', 'Hit 100 targets (cumulative)', '累计命中100次', '누적 명중 100회', 'Acierta 100 objetivos (acumulado)', 'Acerte 100 alvos (acumulado)', 'Touchez 100 cibles (cumulé)', 'Triff 100 Ziele (kumulativ)', 'Поразите 100 целей (всего)', 'Kenai 100 target (akumulasi)'];
+  STR.ad_hits300 = ['累計300ヒット', 'Hit 300 targets (cumulative)', '累计命中300次', '누적 명중 300회', 'Acierta 300 objetivos (acumulado)', 'Acerte 300 alvos (acumulado)', 'Touchez 300 cibles (cumulé)', 'Triff 300 Ziele (kumulativ)', 'Поразите 300 целей (всего)', 'Kenai 300 target (akumulasi)'];
+  STR.ad_hits500 = ['累計500ヒット', 'Hit 500 targets (cumulative)', '累计命中500次', '누적 명중 500회', 'Acierta 500 objetivos (acumulado)', 'Acerte 500 alvos (acumulado)', 'Touchez 500 cibles (cumulé)', 'Triff 500 Ziele (kumulativ)', 'Поразите 500 целей (всего)', 'Kenai 500 target (akumulasi)'];
+  STR.ad_hits1000 = ['累計1,000ヒット', 'Hit 1,000 targets (cumulative)', '累计命中1,000次', '누적 명중 1,000회', 'Acierta 1.000 objetivos (acumulado)', 'Acerte 1.000 alvos (acumulado)', 'Touchez 1 000 cibles (cumulé)', 'Triff 1.000 Ziele (kumulativ)', 'Поразите 1000 целей (всего)', 'Kenai 1.000 target (akumulasi)'];
+  STR.ad_plays50 = ['SCORE ATTACKを累計50プレイ完了', 'Complete 50 SCORE ATTACK rounds (cumulative)', '累计完成50次SCORE ATTACK游玩', 'SCORE ATTACK 누적 50회 완료', 'Completa 50 partidas de SCORE ATTACK (acumulado)', 'Complete 50 partidas de SCORE ATTACK (acumulado)', 'Terminez 50 parties de SCORE ATTACK (cumulé)', 'Schließe 50 SCORE-ATTACK-Runden ab (kumulativ)', 'Завершите 50 игр SCORE ATTACK (всего)', 'Selesaikan 50 permainan SCORE ATTACK (akumulasi)'];
+
   // ===== ストレージ v2 (バージョン付き・一元化) =====
   const DB_KEY = 'touchaim_v2';
   function freshModeData() { return { best: 0, top: [], hist: [] }; }
@@ -759,6 +882,16 @@
     return d;
   }
   const db = loadDB();
+  // ===== 実績・統計フィールドの補完 (schema:2のまま、欠損時にデフォルト値で補完) =====
+  db.ach = db.ach || {};                    // { 実績id: 解除時刻(ms) }
+  db.stats.plays ??= 0; db.stats.hits ??= 0;
+  db.stats.cleanRuns ??= 0;                 // 空振り0のラウンド累計
+  db.stats.coreHits ??= 0;                  // 芯ヒット累計
+  db.stats.perfectStreak ??= 0;             // 10/10連続回数
+  db.stats.comboStreak ??= 0;               // 10コンボ連続回数
+  db.stats.sStreak ??= 0;                   // Sランク連続回数
+  db.stats.sCount ??= { normal: 0, acc: 0, speed: 0 };  // モード別Sランク累計
+  db.stats.flawless ??= { normal: false, acc: false, speed: false }; // 完全クリア達成フラグ
   function saveDB() {
     try { localStorage.setItem(DB_KEY, JSON.stringify(db)); } catch (e) { /* 保存不能でも続行 */ }
   }
@@ -793,6 +926,7 @@
   let gapQueue = [];            // 事前生成した出現間隔 (合計固定)
   let replay = null;            // 直前プレイのリプレイデータ (メモリのみ)
   let combo = 0, maxCombo = 0;  // 青い芯への連続ヒット数
+  let roundWhiffs = 0, zoneHits = 0; // 実績用: 今ラウンドの空振り数・芯ヒット数
 
   // ===== サウンド (WebAudio・タップで初期化) =====
   let ac = null;
@@ -908,7 +1042,7 @@
   const MODE_LABEL = { normal: 'BALANCED', acc: 'PRECISION', speed: 'SPEED' };
 
   function show(id) {
-    ['menu', 'title', 'training', 'assessment', 'profile', 'countdown', 'result', 'rules']
+    ['menu', 'title', 'training', 'assessment', 'profile', 'countdown', 'result', 'rules', 'achievements']
       .forEach(s => $(s).classList.toggle('hidden', s !== id));
   }
 
@@ -1016,6 +1150,115 @@
   bindChartTap('chart', 'chartInfo');
   bindChartTap('chartT', 'chartInfoT');
 
+  // ===== ローカル実績 (25個・端末内保存) =====
+  // 実績名は全言語共通の英語固定。説明文のみ STR の ad_<id> でi18n
+  // cond(db, roundData): roundData = { hits, records, avgT, avgA, maxCombo, rank, totalScore, roundWhiffs }
+  const ACHIEVEMENTS = [
+    { id: 'first_play',   name: 'SYSTEM ONLINE',      series: null,    cond: (db) => db.stats.plays >= 1 },
+    { id: 'clean_runs',   name: 'CLEAN RUN',          series: null,    cond: (db) => db.stats.cleanRuns >= 5 },
+    { id: 'perfect_x3',   name: 'PERFECT CLEAR',      series: null,    cond: (db) => db.stats.perfectStreak >= 3 },
+    { id: 'flawless_all', name: 'FLAWLESS EXECUTION', series: null,    cond: (db) => db.stats.flawless.normal && db.stats.flawless.acc && db.stats.flawless.speed },
+    { id: 'sharp80',      name: 'SHARPSHOOTER',       series: 'sharp', cond: (db, r) => r.hits.length === 10 && r.hits.every(h => h.acc >= 0.80) },
+    { id: 'sharp90',      name: 'DEAD CENTER',        series: 'sharp', cond: (db, r) => r.hits.length === 10 && r.hits.every(h => h.acc >= 0.90) },
+    { id: 'sharp95',      name: 'ZERO DEVIATION',     series: 'sharp', cond: (db, r) => r.avgA >= 0.95 && r.hits.length === 10 && r.hits.every(h => h.acc >= 0.90) },
+    { id: 'quick400',     name: 'QUICK HAND',         series: 'quick', cond: (db, r) => r.hits.length === 10 && r.avgT <= 400 },
+    { id: 'quick300',     name: 'LIGHTNING',          series: 'quick', cond: (db, r) => r.hits.length === 10 && r.avgT <= 300 },
+    { id: 'core50',       name: 'COMBO STARTER',      series: null,    cond: (db) => db.stats.coreHits >= 50 },
+    { id: 'combo_x3',     name: 'CORE MASTER',        series: null,    cond: (db) => db.stats.comboStreak >= 3 },
+    { id: 'score8k_all',  name: 'HIGH SCORER',        series: 'score', cond: (db) => db.sa.normal.best >= 8000 && db.sa.acc.best >= 8000 && db.sa.speed.best >= 8000 },
+    { id: 'score9k',      name: 'BREAKPOINT',         series: 'score', cond: (db) => db.sa.normal.best >= 9000 || db.sa.acc.best >= 9000 || db.sa.speed.best >= 9000 },
+    { id: 'score9k_all',  name: 'OVERDRIVE',          series: 'score', cond: (db) => db.sa.normal.best >= 9000 && db.sa.acc.best >= 9000 && db.sa.speed.best >= 9000 },
+    { id: 'score10k',     name: 'TRANSCENDENCE',      series: 'score', cond: (db) => db.sa.normal.best >= 10000 || db.sa.acc.best >= 10000 || db.sa.speed.best >= 10000 },
+    { id: 'srank_x3',     name: 'S RANK',             series: null,    cond: (db) => db.stats.sStreak >= 3 },
+    { id: 'master_bal',   name: 'BALANCED MASTER',    series: null,    cond: (db) => db.stats.sCount.normal >= 3 },
+    { id: 'master_pre',   name: 'PRECISION MASTER',   series: null,    cond: (db) => db.stats.sCount.acc >= 3 },
+    { id: 'master_spd',   name: 'SPEED MASTER',       series: null,    cond: (db) => db.stats.sCount.speed >= 3 },
+    { id: 'trinity',      name: 'TRINITY MASTER',     series: null,    cond: (db) => !!db.ach.master_bal && !!db.ach.master_pre && !!db.ach.master_spd },
+    { id: 'hits100',      name: 'TARGET HUNTER',      series: 'hits',  cond: (db) => db.stats.hits >= 100 },
+    { id: 'hits300',      name: 'TARGET BREAKER',     series: 'hits',  cond: (db) => db.stats.hits >= 300 },
+    { id: 'hits500',      name: 'TARGET REAPER',      series: 'hits',  cond: (db) => db.stats.hits >= 500 },
+    { id: 'hits1000',     name: 'TARGET SOVEREIGN',   series: 'hits',  cond: (db) => db.stats.hits >= 1000 },
+    { id: 'plays50',      name: 'VETERAN',            series: null,    cond: (db) => db.stats.plays >= 50 },
+  ];
+
+  // 未解除の実績を表の順に判定し、条件を満たしたものをすべて解除する。
+  // 通知は同一series内では今回解除分のうち表の下側(上位)1個だけに絞る。
+  function checkAchievements(roundData) {
+    const newly = [];
+    for (const a of ACHIEVEMENTS) {
+      if (db.ach[a.id]) continue;
+      if (a.cond(db, roundData)) {
+        db.ach[a.id] = Date.now();
+        newly.push(a);
+      }
+    }
+    if (!newly.length) return;
+    saveDB();
+    updateAchBtn();
+    const bySeries = {};
+    const toNotify = [];
+    newly.forEach(a => {
+      if (a.series) bySeries[a.series] = a; // 同じseriesは上書き → 最後(表の下側)が残る
+      else toNotify.push(a);
+    });
+    toNotify.push(...Object.values(bySeries));
+    toNotify.sort((x, y) => ACHIEVEMENTS.indexOf(x) - ACHIEVEMENTS.indexOf(y));
+    toNotify.forEach(a => queueToast(a.name));
+  }
+
+  // ===== 実績解除トースト (画面上部スライドイン・キューで順次表示) =====
+  let toastQueue = [];
+  let toastBusy = false;
+  function queueToast(name) {
+    toastQueue.push(name);
+    processToastQueue();
+  }
+  function processToastQueue() {
+    if (toastBusy || !toastQueue.length) return;
+    toastBusy = true;
+    const name = toastQueue.shift();
+    const el = $('achToast');
+    $('achToastName').textContent = name;
+    el.classList.remove('hidden', 'out');
+    void el.offsetWidth; // アニメ再トリガー
+    el.classList.add('in');
+    beep(988, .1, .18);
+    setTimeout(() => beep(1319, .14, .18), 90);
+    buzz([15, 30, 15]);
+    setTimeout(() => {
+      el.classList.remove('in');
+      el.classList.add('out');
+      setTimeout(() => {
+        el.classList.add('hidden');
+        el.classList.remove('out');
+        toastBusy = false;
+        processToastQueue();
+      }, 300);
+    }, 1900); // in(.3s) + 静止(1.6s) + out(.3s) ≈ 2.2s/件
+  }
+
+  // ===== 実績一覧画面 =====
+  function updateAchBtn() {
+    $('achBtnCount').textContent = `${Object.keys(db.ach).length}/${ACHIEVEMENTS.length}`;
+  }
+  function renderAchievements() {
+    $('achCount').textContent = `${Object.keys(db.ach).length}/${ACHIEVEMENTS.length}`;
+    const wrap = $('achList');
+    wrap.innerHTML = '';
+    ACHIEVEMENTS.forEach(a => {
+      const unlockedAt = db.ach[a.id];
+      const div = document.createElement('div');
+      div.className = 'ach-item ' + (unlockedAt ? 'unlocked' : 'locked');
+      let dateStr = '';
+      if (unlockedAt) {
+        const d = new Date(unlockedAt);
+        dateStr = `<div class="ach-date">${d.getMonth() + 1}/${d.getDate()}</div>`;
+      }
+      div.innerHTML = `<div class="ach-name">${a.name}</div><div class="ach-desc">${T('ad_' + a.id)}</div>${dateStr}`;
+      wrap.appendChild(div);
+    });
+  }
+
   function renderTitle() {
     document.querySelectorAll('.modebtn').forEach(b => b.classList.toggle('sel', b.dataset.mode === mode));
     $('modeDesc').textContent = T('d_' + mode);
@@ -1072,6 +1315,8 @@
     replay = { targets: new Array(TARGETS).fill(null), taps: [], duration: 0 };
     field.innerHTML = '';
     maxCombo = 0;
+    roundWhiffs = 0;
+    zoneHits = 0;
     setCombo(0);
     $('score').textContent = '0';
     $('progress').textContent = `0/${TARGETS}`;
@@ -1159,6 +1404,7 @@
     if (!hit) {
       // 空振り: 減点 + コンボ切れ
       totalScore = Math.max(0, totalScore - WHIFF_PENALTY);
+      roundWhiffs++;
       $('score').textContent = totalScore.toLocaleString();
       setCombo(0);
       replay.taps.push({ x: e.clientX, y: e.clientY, t: tNow, hit: false });
@@ -1174,6 +1420,7 @@
     const acc = Math.max(0, 1 - hitDist / hit.r);
     // コンボ: 青い芯(中心からCOMBO_ZONE半径比以内)に当てたときだけ継続、外れたら切れる
     const zoneHit = hitDist <= hit.r * COMBO_ZONE;
+    if (zoneHit) zoneHits++; // コンボ継続とは無関係に、芯ヒットは毎回カウント
     setCombo(zoneHit ? combo + 1 : 0);
     const base = calcPoints(timeMs, acc, hit.sizeF); // 評価はコンボ倍率前の素点で判定
     const pts = Math.round(base * comboMult(combo));
@@ -1267,9 +1514,20 @@
       $('newBest').textContent = best > 0 ? `BEST: ${best.toLocaleString()}` : '';
     }
 
-    // 累計統計 (将来の実績判定用の下地)
+    // 累計統計・実績判定用データの更新
     db.stats.plays++;
     db.stats.hits += hits.length;
+    db.stats.coreHits += zoneHits;
+    if (roundWhiffs === 0) db.stats.cleanRuns++;
+    db.stats.perfectStreak = hits.length === 10 ? db.stats.perfectStreak + 1 : 0;
+    db.stats.comboStreak = maxCombo >= 10 ? db.stats.comboStreak + 1 : 0;
+    if (rank === 'S') {
+      db.stats.sStreak++;
+      db.stats.sCount[mode]++;
+    } else {
+      db.stats.sStreak = 0;
+    }
+    if (hits.length === 10 && roundWhiffs === 0) db.stats.flawless[mode] = true; // タイムアウト0はhits10で保証される
     saveDB();
 
     // 履歴・TOP10に保存して散布図を描画 (全ミスの回は保存しない)
@@ -1304,6 +1562,9 @@
     show('result');
     beep(880, .12, .15);
     setTimeout(() => beep(1175, .18, .15), 130);
+
+    // 実績判定 (リザルト画面表示後にトースト通知)
+    checkAchievements({ hits, records, avgT, avgA, maxCombo, rank, totalScore, roundWhiffs });
   }
 
   // ===== リプレイ再生 (行タップ=ターゲット単体 / ボタン=通し・メモリ保持) =====
@@ -1519,6 +1780,7 @@
   $('catTr').addEventListener('click', () => show('training'));
   $('catAs').addEventListener('click', () => show('assessment'));
   $('catPr').addEventListener('click', () => show('profile'));
+  $('achBtn').addEventListener('click', () => { renderAchievements(); show('achievements'); });
   document.querySelectorAll('[data-back]').forEach(b => b.addEventListener('click', () => show('menu')));
   // 言語セレクタ
   const sel = $('langSel');
@@ -1535,6 +1797,7 @@
     saveDB();
     applyLang();
     renderTitle();
+    if (!$('achievements').classList.contains('hidden')) renderAchievements();
   });
   document.querySelectorAll('.modebtn').forEach(b => {
     b.addEventListener('click', () => {
@@ -1551,6 +1814,7 @@
 
   applyLang();
   renderTitle();
+  updateAchBtn();
 })();
 </script>
 </body>
