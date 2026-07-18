@@ -2245,6 +2245,7 @@
     state = 'training';
     TR = { task: taskId, raw: [] };
     $('training').classList.add('hidden');
+    $('trResult').classList.add('hidden'); // リザルトからのRETRY時に画面が残らないように
     $('trHud').classList.remove('hidden');
     const fld = $('trField');
     fld.classList.remove('hidden');
