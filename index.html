@@ -1875,7 +1875,10 @@
   function spawnTarget(idx, sizeF) {
     if (state !== 'play') return;
     nextIdx = idx + 1;
+    // 見た目の半径はraw倍率で決めるが、スコアに使う倍率は1からの乖離を半分に抑える
+    // (例: raw×1.20 → スコア×1.10)。平均は引き続き×1.00
     const r = Math.max(24, Math.round(baseRadius() / sizeF * MODES[mode].sizeMul));
+    const scoreSizeF = 1 + (sizeF - 1) * 0.5;
     const hudH = 76 + r;
     const x = r + 8 + Math.random() * (innerWidth - 2 * (r + 8));
     const y = hudH + Math.random() * (innerHeight - hudH - r - 8);
@@ -1887,7 +1890,7 @@
     el.style.top = y + 'px';
     field.appendChild(el);
 
-    const tg = { el, x, y, r, sizeF, idx, spawnAt: performance.now() };
+    const tg = { el, x, y, r, sizeF: scoreSizeF, idx, spawnAt: performance.now() };
     tg.lifeTimer = setTimeout(() => timeoutTarget(tg), replay.life);
     active.push(tg);
     replay.targets[idx] = { x, y, r, spawnT: tg.spawnAt - roundStart, endT: null, tap: null };
@@ -1952,8 +1955,11 @@
     const zoneHit = hitDist <= hit.r * COMBO_ZONE;
     if (zoneHit) zoneHits++; // コンボ継続とは無関係に、芯ヒットは毎回カウント
     setCombo(zoneHit ? combo + 1 : 0);
-    const base = calcPoints(timeMs, acc, hit.sizeF); // 評価はコンボ倍率前の素点で判定
-    const pts = Math.round(base * comboMult(combo));
+    // コンボボーナスはサイズと無関係の加算にする (サイズ×コンボの相互増幅による
+    // 「高コンボ時に小さい円を引くかどうか」の運ゲーを排除)。コンボ0なら pts == base
+    const baseTA = calcPoints(timeMs, acc, 1);        // サイズ抜き素点
+    const base = Math.round(baseTA * hit.sizeF);      // 評価(グレード)用の素点 (サイズ込み・コンボ前)
+    const pts = Math.round(baseTA * (hit.sizeF + comboMult(combo) - 1));
     totalScore += pts;
     records[hit.idx] = { time: timeMs, acc, pts, base, sizeF: hit.sizeF, miss: false };
     spawnParticles(e.clientX, e.clientY, zoneHit ? '#ffdf5d' : '#2ea8ff');
