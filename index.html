@@ -394,9 +394,30 @@
   .as-resume .btn { padding: 12px 24px; font-size: 15px; margin: 0 4px; }
   .as-resume .btn.ghost { padding: 10px 20px; font-size: 14px; margin-top: 8px; }
 
-  #asPrep { justify-content: center; }
-  .as-prep-label { font-size: 13px; color: #5f7a94; letter-spacing: .2em; font-weight: 700; margin-bottom: 6px; }
-  .as-prep-hint { font-size: 14px; color: #2ea8ff; margin: 18px 0 26px; letter-spacing: .1em; }
+  /* ===== TRAINING / ASSESSMENT: 課題開始前の共通イントロ ===== */
+  #trIntro {
+    justify-content: flex-start; overflow-y: auto; touch-action: pan-y;
+    padding-top: max(24px, env(safe-area-inset-top));
+  }
+  .tr-intro-card {
+    width: 100%; max-width: 420px;
+    background: #161b22; border: 1px solid #30414f; border-radius: 14px;
+    padding: 22px 18px; text-align: left;
+  }
+  .tr-intro-label {
+    font-size: 12px; color: #5f7a94; letter-spacing: .18em;
+    font-weight: 700; margin-bottom: 8px;
+  }
+  .tr-intro-card .scr-head { text-align: center; margin-bottom: 18px; }
+  .tr-intro-steps { display: flex; flex-direction: column; gap: 13px; margin-bottom: 18px; }
+  .tr-intro-step { font-size: 15px; line-height: 1.6; color: #e6edf3; }
+  .tr-intro-step::first-letter { color: #2ea8ff; font-weight: 700; }
+  .tr-intro-measured {
+    font-size: 12px; line-height: 1.6; color: #8b949e;
+    border-top: 1px solid #30363d; padding-top: 13px; margin-bottom: 20px;
+  }
+  .tr-intro-actions { text-align: center; }
+  .tr-intro-actions .btn { width: 100%; max-width: 320px; }
 
   #asResult { justify-content: flex-start; overflow-y: auto; touch-action: pan-y; padding-top: max(28px, env(safe-area-inset-top)); }
   .as-total {
@@ -947,13 +968,18 @@
     <button class="btn ghost" data-back data-i18n="backMenu">メニューへ</button>
   </div>
 
-  <!-- ASSESSMENT: 種目間の準備画面 (3秒) -->
-  <div id="asPrep" class="screen hidden">
-    <div class="as-prep-label" data-i18n="asNext">次の種目</div>
-    <h2 class="scr-head" id="asPrepName">PERCEPTION</h2>
-    <p class="stub-desc" id="asPrepDesc"></p>
-    <div class="as-prep-hint" data-i18n="asStarting">まもなく開始…</div>
-    <button class="btn ghost" id="asCancelBtn" data-i18n="asCancelBtn">中止</button>
+  <!-- TRAINING / ASSESSMENT: 課題開始前の遊び方 (全課題共通パネル) -->
+  <div id="trIntro" class="screen hidden">
+    <div class="tr-intro-card">
+      <div class="tr-intro-label" data-i18n="trIntroHow">遊び方</div>
+      <h2 class="scr-head" id="trIntroName">PERCEPTION</h2>
+      <div class="tr-intro-steps" id="trIntroSteps"></div>
+      <div class="tr-intro-measured" id="trIntroMeasured"></div>
+      <div class="tr-intro-actions">
+        <button class="btn" id="trIntroStartBtn" data-i18n="trIntroStart">START</button>
+        <button class="btn ghost" id="trIntroBackBtn" data-i18n="trIntroBack">戻る</button>
+      </div>
+    </div>
   </div>
 
   <!-- ASSESSMENT: 6種目通しの結果画面 -->
@@ -1226,13 +1252,39 @@
   STR.asResumeBtn = ['再開', 'Resume'];
   STR.asDiscardBtn = ['破棄', 'Discard'];
   STR.asNext = ['次の種目', 'Next up'];
-  STR.asStarting = ['まもなく開始…', 'Starting soon…'];
   STR.asCancelBtn = ['中止', 'Cancel'];
   STR.asTotalLabel = ['総合スコア', 'Overall score'];
   STR.provisionalNote = ['スコアは暫定換算です。換算式は今後調整されます', 'Scores use a provisional formula that may be adjusted later'];
 
   // ===== TRAINING: 新規UI文字列 (ja[0]/en[1] の2要素のみ。他言語はen→jaへ自動フォールバック) =====
   STR.trBackHub = ['課題一覧へ', 'Back to tasks'];
+  STR.trIntroHow = ['遊び方', 'HOW TO PLAY'];
+  STR.trIntroStart = ['START', 'START'];
+  STR.trIntroBack = ['戻る', 'Back'];
+  STR.trIntro_perception_1 = ['1. 画面下の丸いパッドに指を置いたまま待つ', '1. Hold your finger on the round pad at the bottom'];
+  STR.trIntro_perception_2 = ['2. 円が出た瞬間、指をパッと離す', '2. The moment a circle appears, lift your finger'];
+  STR.trIntro_perception_3 = ['3. その円をタップして1回終了。全{n}回', '3. Tap that circle to finish the rep. {n} reps total'];
+  STR.trIntro_perception_m = ['計測: 円が出てから指が離れるまでの反応速度。出る前に離すとフライング', 'Measured: how fast you react from circle appearing to finger lift. Lifting early = false start'];
+  STR.trIntro_flick_1 = ['1. 画面下のパッドに指を置いたまま待つ', '1. Hold your finger on the pad at the bottom'];
+  STR.trIntro_flick_2 = ['2. 円が出たら、指を離してその円をすばやくタップ', '2. When a circle appears, lift and tap it as fast as you can'];
+  STR.trIntro_flick_3 = ['3. 8方向に1回ずつ、全{n}回', '3. One rep per direction, {n} reps total'];
+  STR.trIntro_flick_m = ['計測: 反応の速さ・指を運ぶ速さ・着弾のズレ(別々に記録)', 'Measured: reaction time, travel time, and landing error (recorded separately)'];
+  STR.trIntro_precision_1 = ['1. 小さな円が次々に出る', '1. Small circles appear one after another'];
+  STR.trIntro_precision_2 = ['2. あわてなくていい。円の中心を"ていねいに"タップ', '2. No rush - tap the exact center, carefully'];
+  STR.trIntro_precision_3 = ['3. 全{n}回', '3. {n} reps total'];
+  STR.trIntro_precision_m = ['計測: 中心からのズレ。速さは採点されない', 'Measured: distance from center. Speed is not scored'];
+  STR.trIntro_tracking_1 = ['1. 動く円に指を乗せる', '1. Put your finger on the moving circle'];
+  STR.trIntro_tracking_2 = ['2. 指を画面につけたまま、円を追いかけ続ける', '2. Keep your finger on the screen and follow it'];
+  STR.trIntro_tracking_3 = ['3. {n}秒間ずっと', '3. For {n} seconds straight'];
+  STR.trIntro_tracking_m = ['計測: 円の中に指をとどめていられた時間の割合', 'Measured: how long you keep your finger inside the circle'];
+  STR.trIntro_switching_1 = ['1. 番号つきの円が3つ同時に出る', '1. Three numbered circles appear at once'];
+  STR.trIntro_switching_2 = ['2. 1→2→3の順にタップ', '2. Tap them in order: 1 -> 2 -> 3'];
+  STR.trIntro_switching_3 = ['3. 3つ消したら次のセット。全{n}セット', '3. Clear all three for the next set. {n} sets total'];
+  STR.trIntro_switching_m = ['計測: 切り替えの速さと、順番ミスの数', 'Measured: switching speed and wrong-order taps'];
+  STR.trIntro_timing_1 = ['1. 円が画面を横切っていく', '1. A circle moves across the screen'];
+  STR.trIntro_timing_2 = ['2. 追いかけずに、通り道を狙って一発だけタップ', "2. Don't chase it - tap once where it will be"];
+  STR.trIntro_timing_3 = ['3. 全{n}回', '3. {n} reps total'];
+  STR.trIntro_timing_m = ['計測: 円の未来位置をどれだけ正確に撃ち抜けたか(早すぎ/遅すぎ)', 'Measured: how precisely you hit its future position (too early / too late)'];
   STR.trD_perception = ['視認即応: 出現に反応してすぐ動作を開始する', 'Reaction: start moving the instant a target appears'];
   STR.trD_flick = ['遠距離への一気の照準移動', 'Snap your aim across distance in one motion'];
   STR.trD_precision = ['小さな的の中心に正確に止める', 'Stop precisely on small targets'];
@@ -1515,7 +1567,7 @@
   const MODE_LABEL = { normal: 'BALANCED', acc: 'PRECISION', speed: 'SPEED' };
 
   function show(id) {
-    ['menu', 'title', 'training', 'assessment', 'profile', 'countdown', 'result', 'rules', 'achievements', 'trResult', 'asPrep', 'asResult']
+    ['menu', 'title', 'training', 'assessment', 'profile', 'countdown', 'result', 'rules', 'achievements', 'trResult', 'trIntro', 'asResult']
       .forEach(s => $(s).classList.toggle('hidden', s !== id));
   }
 
@@ -2317,6 +2369,7 @@
   let TR = null;            // 現在実行中の課題の状態 (nullなら非アクティブ)
   let TR_LAST_TASK = null;  // リトライ用に直近実行した課題id
   let TR_MODE = 'solo';     // 'solo'(TRAINING単体練習) | 'assessment'(ASSESSMENT通し測定)
+  let TR_INTRO = null;      // 共通イントロの遷移元と開始対象 { taskId, mode, returnScreen }
 
   // ===== ASSESSMENT用: seed付きPRNG (mulberry32) =====
   // TRAINING単体練習は従来どおり Math.random() を直接使う。ASSESSMENT実行中のみ
@@ -2396,6 +2449,7 @@
     TR = { task: taskId, raw: [] };
     $('training').classList.add('hidden');
     $('trResult').classList.add('hidden'); // リザルトからのRETRY時に画面が残らないように
+    $('trIntro').classList.add('hidden');
     $('trHud').classList.remove('hidden');
     const fld = $('trField');
     fld.classList.remove('hidden');
@@ -2558,7 +2612,7 @@
       const best = trBestLine(id);
       card.innerHTML = `<div class="tr-card-name">${meta.name}</div><div class="tr-card-desc">${T(meta.descKey)}</div>` +
         (best ? `<div class="tr-card-last">${best}</div>` : '');
-      card.addEventListener('click', () => TR_START[id]());
+      card.addEventListener('click', () => trShowIntro(id, 'solo', 'training'));
       wrap.appendChild(card);
     });
   }
@@ -3102,6 +3156,50 @@
 
   const TR_START = { perception: startPerception, flick: startFlick, precision: startPrecision, tracking: startTracking, switching: startSwitching, timing: startTiming };
 
+  // ===== 課題開始前の共通イントロ =====
+  // TRAININGは通常試行数、ASSESSMENTは短縮試行数を同じ文面の{n}へ差し込む。
+  const TR_INTRO_TOTALS = { perception: 10, flick: 8, precision: 12, tracking: 20, switching: 8, timing: 10 };
+  function trShowIntro(taskId, mode, returnScreen) {
+    const assessment = mode === 'assessment';
+    const rawTotal = assessment ? AS_TOTALS[taskId] : TR_INTRO_TOTALS[taskId];
+    const total = taskId === 'tracking' && assessment ? rawTotal / 1000 : rawTotal;
+    TR_INTRO = { taskId, mode, returnScreen };
+    state = 'title';
+    $('trIntroName').textContent = TR_META[taskId].name;
+    const steps = $('trIntroSteps');
+    steps.innerHTML = '';
+    for (let i = 1; i <= 3; i++) {
+      const line = document.createElement('div');
+      line.className = 'tr-intro-step';
+      line.textContent = T(`trIntro_${taskId}_${i}`).replace('{n}', total);
+      steps.appendChild(line);
+    }
+    $('trIntroMeasured').textContent = T(`trIntro_${taskId}_m`);
+    show('trIntro');
+  }
+  function trStartFromIntro() {
+    if (!TR_INTRO) return;
+    const { taskId, mode } = TR_INTRO;
+    TR_INTRO = null;
+    if (mode === 'assessment') {
+      asStartTask(taskId);
+      return;
+    }
+    TR_MODE = 'solo'; RNG = Math.random;
+    TR_START[taskId]();
+  }
+  function trBackFromIntro() {
+    if (!TR_INTRO) return;
+    const { mode, returnScreen } = TR_INTRO;
+    TR_INTRO = null;
+    if (mode === 'assessment') {
+      asCancelPending();
+      return;
+    }
+    if (returnScreen === 'training') renderTrHub();
+    show(returnScreen);
+  }
+
   // ===================================================================
   // ===== ASSESSMENT: 6種目通し測定 =====
   // TRAININGの6課題エンジンをそのまま流用し、trFinishTask/RNGの差し替えで
@@ -3115,7 +3213,7 @@
   // 試行数/所要時間はTRAINING既定値の約6割 (全体5〜7分目安)。flickは全方向1回を維持するため既定8のまま
   const AS_TOTALS = { perception: 6, flick: 8, precision: 8, tracking: 15000, switching: 5, timing: 8 };
 
-  let AS = null; // 実行中のASSESSMENT状態 { seed, index, results:{taskId:{raw,summary,score}}, prepTimer }
+  let AS = null; // 実行中のASSESSMENT状態 { seed, index, results:{taskId:{raw,summary,score}} }
 
   function asToday() {
     const d = new Date();
@@ -3211,7 +3309,6 @@
     asShowPrep();
   }
   function asCancelPending() {
-    clearTimeout(AS && AS.prepTimer);
     AS = null; TR_MODE = 'solo'; RNG = Math.random;
     asRenderStart();
     show('assessment');
@@ -3221,12 +3318,7 @@
     if (!AS) return;
     if (AS.index >= TR_ORDER.length) { asFinishRun(); return; }
     const taskId = TR_ORDER[AS.index];
-    const meta = TR_META[taskId];
-    $('asPrepName').textContent = meta.name;
-    $('asPrepDesc').textContent = T(meta.descKey);
-    show('asPrep');
-    clearTimeout(AS.prepTimer);
-    AS.prepTimer = setTimeout(() => { if (AS) asStartTask(taskId); }, 3000);
+    trShowIntro(taskId, 'assessment', 'assessment');
   }
   function asStartTask(taskId) {
     if (!AS) return;
@@ -3389,8 +3481,8 @@
         `</div>` +
         `<div class="prof-row-desc">${T(TR_META[id].descKey)}</div>` +
         (isWeak ? `<div class="prof-row-weak-hint">${T('prWeakHint')}</div>` : '');
-      // 行タップで該当TRAINING課題を直接起動 (profile画面を隠してからTR_START。TR側の画面制御はTRAININGと同じ)
-      row.addEventListener('click', () => { $('profile').classList.add('hidden'); TR_START[id](); });
+      // 行タップで該当TRAINING課題のイントロを表示 (戻る場合はPROFILEへ戻す)
+      row.addEventListener('click', () => trShowIntro(id, 'solo', 'profile'));
       wrap.appendChild(row);
     });
   }
@@ -3450,7 +3542,7 @@
     $('prRxDoneMsg').classList.toggle('hidden', !achieved);
     $('prRxGoTrainBtn').classList.toggle('hidden', achieved);
     $('prRxGoAssessBtn').classList.toggle('hidden', !achieved);
-    $('prRxGoTrainBtn').onclick = () => { $('profile').classList.add('hidden'); TR_START[weakId](); };
+    $('prRxGoTrainBtn').onclick = () => trShowIntro(weakId, 'solo', 'profile');
     $('prRxGoAssessBtn').onclick = () => { $('profile').classList.add('hidden'); asRenderStart(); show('assessment'); };
   }
 
@@ -3538,11 +3630,12 @@
   $('trAbortBtn').addEventListener('click', trAbort);
   $('trRetryBtn').addEventListener('click', () => { if (TR_LAST_TASK) TR_START[TR_LAST_TASK](); });
   $('trBackHubBtn').addEventListener('click', () => { renderTrHub(); show('training'); });
+  $('trIntroStartBtn').addEventListener('click', trStartFromIntro);
+  $('trIntroBackBtn').addEventListener('click', trBackFromIntro);
   $('catAs').addEventListener('click', () => { asRenderStart(); show('assessment'); });
   $('asStartBtn').addEventListener('click', asStartNew);
   $('asResumeBtn').addEventListener('click', asResume);
   $('asDiscardBtn').addEventListener('click', () => { db.assessment.pending = null; saveDB(); asRenderStart(); });
-  $('asCancelBtn').addEventListener('click', asCancelPending);
   $('catPr').addEventListener('click', () => { PR_SELECTED = 0; renderProfile(); show('profile'); });
   $('prGoAssessmentBtn').addEventListener('click', () => { asRenderStart(); show('assessment'); });
   $('prExportJsonBtn').addEventListener('click', prExportJson);
