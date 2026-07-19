@@ -255,6 +255,17 @@
     margin: 2px 0 4px;
     text-shadow: 0 0 18px rgba(46,168,255,.35);
   }
+  /* スコア内訳 (素点/コンボ/空振り) */
+  #scoreBreak {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 15px; font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    color: #8b949e;
+    line-height: 1.5;
+    margin: 2px 0 4px;
+  }
+  #scoreBreak .cb { color: #ffdf5d; }
+  #scoreBreak .pn { color: #f85149; }
   #newBest { color: #ffdf5d; font-size: 16px; font-weight: 700; height: 22px; }
 
   .stats {
@@ -1291,6 +1302,7 @@
     <div id="resultMode"></div>
     <div id="rank">S</div>
     <div id="totalScore">0</div>
+    <div id="scoreBreak"></div>
     <div id="newBest"></div>
     <div class="stats">
       <div class="stat"><div class="v" id="avgTime">-</div><div class="k" data-i18n="kAvgTime">平均反応 (ms)</div></div>
@@ -2393,6 +2405,14 @@
     const avgA = hits.length ? hits.reduce((s, r) => s + r.acc, 0) / hits.length : 0;
 
     $('totalScore').textContent = totalScore.toLocaleString();
+    // スコア内訳: 素点(コンボなし) + コンボボーナス − 空振り減点
+    const baseSum = hits.reduce((s, r) => s + (r.base ?? r.pts), 0);
+    const comboSum = hits.reduce((s, r) => s + (r.pts - (r.base ?? r.pts)), 0);
+    const penalty = roundWhiffs * WHIFF_PENALTY;
+    $('scoreBreak').innerHTML =
+      `BASE ${baseSum.toLocaleString()}<br>` +
+      `<span class="cb">COMBO +${comboSum.toLocaleString()}</span>` +
+      (penalty > 0 ? ` <span class="pn">MISS −${penalty.toLocaleString()}</span>` : '');
     $('avgTime').textContent = hits.length ? Math.round(avgT) : '-';
     $('avgAcc').textContent = hits.length ? Math.round(avgA * 100) + '%' : '-';
     $('hitCount').textContent = `${hits.length}/${TARGETS}`;
