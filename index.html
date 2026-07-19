@@ -4226,13 +4226,14 @@
   // 「短縮試行数」「seed付き決定的な乱数」「db.assessmentへの保存」だけを分岐させる。
   // ===================================================================
   const ASSESSMENT_VERSION = 1;
-  const TEST_CONFIG_VERSION = 5; // TIMINGを迎撃射撃方式へ変更
-  const SCORE_FORMULA_VERSION = 4;
+  const TEST_CONFIG_VERSION = 6; // PRECISION/SWITCHINGの試行数をTRAININGと同数に揃えた
+  const SCORE_FORMULA_VERSION = 5;
   const AS_RESUME_MS = 30 * 60 * 1000; // 中断からの再開が有効な時間 (30分)
   const AS_DAILY_LIMIT = 2;
   const AS_RUN_LIMIT = 300;             // β分析用の生run保持上限 (PROFILE表示上限とは分離)
   // 試行数/所要時間はTRAINING既定値の約6割 (全体5〜7分目安)。FLICKはseed付きランダム方向で8試行
-  const AS_TOTALS = { perception: 7, flick: 8, precision: 8, switching: 3, timing: 8 };
+  // 各種目の試行回数。PRECISION/SWITCHINGは統計安定性のためTRAININGと同じ量に揃える(config v6)
+  const AS_TOTALS = { perception: 7, flick: 8, precision: 12, switching: 10, timing: 8 };
 
   let AS = null; // 実行中のASSESSMENT状態 { seed, index, results:{taskId:{raw,summary,score}} }
 
@@ -4358,12 +4359,22 @@
       default: return 0;
     }
   }
+  // v5: FLICKだけさらに辛くする校正 (v4は sps 3.5→80 でまだ届きやすかった)。他はv4と同一。
+  function asScoreV5(taskId, raw, summary) {
+    if (taskId === 'flick') {
+      const hitRate = raw.length ? raw.filter(r => r.hit).length / raw.length : 0;
+      // sps 4.5画面/秒 → 80点 (上位数%のフリック速度)、命中率20点
+      return asClamp100(asLinear(summary.spsMedian, .6, 0, 4.5, 80) + hitRate * 20);
+    }
+    return asScoreV4(taskId, raw, summary);
+  }
   // 将来score_formula_versionが増えても過去の生データから再計算できるよう、バージョン分岐だけをここに足す
   function asComputeScore(taskId, raw, summary, version) {
     if (version === 1) return asScoreV1(taskId, raw, summary);
     if (version === 2) return asScoreV2(taskId, raw, summary);
     if (version === 3) return asScoreV3(taskId, raw, summary);
-    return asScoreV4(taskId, raw, summary);
+    if (version === 4) return asScoreV4(taskId, raw, summary);
+    return asScoreV5(taskId, raw, summary);
   }
 
   // ===== 開始画面の表示更新 =====
