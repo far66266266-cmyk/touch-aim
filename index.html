@@ -391,7 +391,8 @@
   #menu { overflow-y: auto; touch-action: pan-y; justify-content: flex-start; }
   #quickPlayBtn {
     /* buttonのブラウザ差(iOS Safariのappearance・Braveのflex-shrink)を消し、
-       他のカードと同じ幅・位置で収まるようにする */
+       他のカードと同じ幅・位置で収まるようにする。line-heightを明示して
+       Orbitronの背高文字がSafariで下半分クリップされないようにする */
     display: block;
     -webkit-appearance: none;
     appearance: none;
@@ -401,6 +402,7 @@
     margin: 0 auto 18px;
     padding: 18px 24px;
     font-size: 24px;
+    line-height: 1.4;
   }
   #playHint {
     position: absolute; left: 50%; top: max(92px, calc(76px + var(--safe-t)));
