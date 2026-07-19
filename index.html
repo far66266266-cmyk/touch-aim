@@ -8,7 +8,20 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
 <style>
-  * { margin: 0; padding: 0; box-sizing: border-box; }
+  :root {
+    --safe-t: env(safe-area-inset-top);
+    --safe-r: env(safe-area-inset-right);
+    --safe-b: env(safe-area-inset-bottom);
+    --safe-l: env(safe-area-inset-left);
+    --font-ui: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", "Hiragino Sans", "Noto Sans JP", Arial, sans-serif;
+    --font-display: 'Orbitron', system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --font-digits: 'Rajdhani', system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  }
+  * {
+    margin: 0; padding: 0; box-sizing: border-box;
+    -webkit-touch-callout: none;
+    -webkit-user-drag: none; user-drag: none;
+  }
   html, body {
     width: 100%; height: 100%;
     overflow: hidden;
@@ -18,29 +31,32 @@
       repeating-linear-gradient(90deg, rgba(120,180,255,.035) 0 1px, transparent 1px 44px),
       #0a0e14;
     color: #e6edf3;
-    font-family: -apple-system, "Segoe UI", "Hiragino Sans", "Noto Sans JP", sans-serif;
+    font-family: var(--font-ui);
     touch-action: none;
     -webkit-user-select: none; user-select: none;
     -webkit-tap-highlight-color: transparent;
     overscroll-behavior: none;
   }
-  .digits { font-family: 'Rajdhani', -apple-system, sans-serif; }
+  button, select { min-width: 44px; min-height: 44px; touch-action: manipulation; }
+  #bgmBtn, #trAbortBtn, .rbtn, .achBtn {
+    display: inline-flex; align-items: center; justify-content: center;
+  }
+  .digits { font-family: var(--font-digits); font-variant-numeric: tabular-nums; }
   #app { position: fixed; inset: 0; }
 
   /* ===== HUD ===== */
   #hud {
     position: absolute; top: 0; left: 0; right: 0;
-    height: 64px;
+    height: calc(64px + var(--safe-t));
     display: flex; align-items: center; justify-content: space-between;
-    padding: 0 16px;
-    padding-top: env(safe-area-inset-top);
+    padding: var(--safe-t) max(16px, var(--safe-r)) 0 max(16px, var(--safe-l));
     font-variant-numeric: tabular-nums;
     z-index: 5;
     pointer-events: none;
   }
   #hud .label { font-size: 11px; color: #5f7a94; letter-spacing: .22em; font-weight: 600; }
   #hud .val {
-    font-family: 'Rajdhani', -apple-system, sans-serif;
+    font-family: var(--font-digits);
     font-size: 29px; font-weight: 700; line-height: 1.1;
     text-shadow: 0 0 12px rgba(46,168,255,.35);
   }
@@ -52,7 +68,7 @@
     display: flex; flex-direction: column;
     align-items: center; justify-content: center;
     text-align: center;
-    padding: 24px;
+    padding: 24px max(24px, var(--safe-r)) max(24px, var(--safe-b)) max(24px, var(--safe-l));
     z-index: 10;
     background:
       radial-gradient(1200px 800px at 50% 28%, rgba(46,168,255,.08), transparent 62%),
@@ -64,7 +80,7 @@
 
   h1 {
     margin-top: 0; /* 上部コントロールは通常フローの .menu-top が受け持つ */
-    font-family: 'Orbitron', sans-serif;
+    font-family: var(--font-display);
     font-size: 37px; font-weight: 900;
     letter-spacing: .16em;
     margin-bottom: 10px;
@@ -79,7 +95,7 @@
     background: linear-gradient(135deg, #2ea8ff, #1f6feb);
     color: #fff; border: 1px solid rgba(160,215,255,.5);
     border-radius: 12px;
-    font-family: 'Orbitron', sans-serif;
+    font-family: var(--font-display);
     font-size: 21px; font-weight: 700;
     padding: 18px 56px;
     letter-spacing: .22em; text-indent: .22em;
@@ -120,7 +136,8 @@
   }
 
   /* ===== ゲーム ===== */
-  #field { position: absolute; inset: 0; z-index: 1; }
+  #field { position: absolute; inset: 0; z-index: 1; touch-action: none; }
+  .target, .trpad { touch-action: manipulation; }
 
   .target {
     position: absolute;
@@ -195,7 +212,7 @@
   /* コンボ表示 */
   #combo {
     position: absolute;
-    top: calc(70px + env(safe-area-inset-top));
+    top: calc(70px + var(--safe-t));
     left: 50%; transform: translateX(-50%);
     z-index: 6; pointer-events: none;
     font-family: 'Rajdhani', sans-serif;
@@ -248,7 +265,7 @@
   }
 
   /* ===== リザルト ===== */
-  #result { justify-content: flex-start; overflow-y: auto; touch-action: pan-y; padding-top: max(28px, env(safe-area-inset-top)); }
+  #result { justify-content: flex-start; overflow-y: auto; touch-action: pan-y; padding-top: max(28px, calc(var(--safe-t) + 12px)); }
   #rank { font-family: 'Orbitron', sans-serif; font-size: 68px; font-weight: 900; line-height: 1.15; }
   #rank.S  { color: #ffdf5d; text-shadow: 0 0 30px rgba(255,223,93,.6); }
   #rank.A  { color: #2ea8ff; }
@@ -314,8 +331,8 @@
   #replayOverlay { position: fixed; inset: 0; z-index: 50; background: #0a0e14; }
   #replayCanvas { position: absolute; inset: 0; }
   #replayHud {
-    position: absolute; top: 0; left: 0; right: 0; height: 52px;
-    padding: 0 16px; padding-top: env(safe-area-inset-top);
+    position: absolute; top: 0; left: 0; right: 0; height: calc(52px + var(--safe-t));
+    padding: var(--safe-t) max(16px, var(--safe-r)) 0 max(16px, var(--safe-l));
     display: flex; align-items: center; justify-content: space-between;
     font-variant-numeric: tabular-nums;
   }
@@ -330,10 +347,11 @@
   .rbtn {
     background: #21262d; color: #e6edf3; border: 1px solid #30363d;
     border-radius: 8px; font-size: 16px; padding: 10px 16px; margin-left: 8px;
+    min-width: 44px; min-height: 44px;
   }
   .rbtn:active { background: #30363d; }
   #replayNote {
-    position: absolute; bottom: calc(10px + env(safe-area-inset-bottom));
+    position: absolute; bottom: calc(10px + var(--safe-b));
     left: 0; right: 0; text-align: center;
     font-size: 14px; color: #8b949e; pointer-events: none;
   }
@@ -364,10 +382,26 @@
   #title {
     justify-content: flex-start;
     overflow-y: auto; touch-action: pan-y;
-    padding-top: max(32px, env(safe-area-inset-top));
+    padding-top: max(32px, calc(var(--safe-t) + 12px));
   }
   /* ===== メインメニュー ===== */
   #menu { overflow-y: auto; touch-action: pan-y; justify-content: flex-start; }
+  #quickPlayBtn {
+    width: 100%; max-width: 420px;
+    margin: 0 0 18px;
+    padding: 18px 24px;
+    font-size: 24px;
+  }
+  #playHint {
+    position: absolute; left: 50%; top: max(92px, calc(76px + var(--safe-t)));
+    transform: translateX(-50%); z-index: 8;
+    width: min(88%, 420px); padding: 10px 16px; border-radius: 999px;
+    background: rgba(10,14,20,.88); border: 1px solid rgba(46,168,255,.5);
+    color: #eaf6ff; font-size: 15px; font-weight: 700;
+    text-align: center; pointer-events: none;
+    animation: playHintFade 3.4s ease-out forwards;
+  }
+  @keyframes playHintFade { 0%, 68% { opacity: 1; } 100% { opacity: 0; } }
   .cats {
     display: flex; flex-direction: column; gap: 12px;
     width: 100%; max-width: 420px;
@@ -423,7 +457,7 @@
   }
 
   /* ===== ASSESSMENT ===== */
-  #assessment { justify-content: flex-start; overflow-y: auto; touch-action: pan-y; padding-top: max(32px, env(safe-area-inset-top)); }
+  #assessment { justify-content: flex-start; overflow-y: auto; touch-action: pan-y; padding-top: max(32px, var(--safe-t)); }
   .as-remain { font-size: 14px; color: #8b949e; margin: 14px 0; letter-spacing: .06em; }
   .as-resume {
     width: 100%; max-width: 420px;
@@ -437,7 +471,7 @@
   /* ===== TRAINING / ASSESSMENT: 課題開始前の共通イントロ ===== */
   #trIntro {
     justify-content: flex-start; overflow-y: auto; touch-action: pan-y;
-    padding-top: max(24px, env(safe-area-inset-top));
+    padding-top: max(24px, var(--safe-t));
   }
   .tr-intro-card {
     width: 100%; max-width: 420px;
@@ -463,7 +497,7 @@
     box-shadow: 0 0 22px rgba(46,168,255,.26);
   }
 
-  #asResult { justify-content: flex-start; overflow-y: auto; touch-action: pan-y; padding-top: max(28px, env(safe-area-inset-top)); }
+  #asResult { justify-content: flex-start; overflow-y: auto; touch-action: pan-y; padding-top: max(28px, var(--safe-t)); }
   .as-total {
     font-family: 'Orbitron', sans-serif;
     font-size: 56px; font-weight: 900;
@@ -498,18 +532,19 @@
   #langSel {
     background: #161b22; color: #8b949e;
     border: 1px solid #30363d; border-radius: 8px;
-    font-size: 13px; padding: 6px 8px;
+    font-size: 13px; padding: 6px 8px; min-height: 44px;
     font-family: inherit;
   }
   /* メニュー上部のコントロール行 (通常フロー: ブラウザ差で重ならない) */
   .menu-top {
     width: 100%; max-width: 420px;
     display: flex; justify-content: space-between; align-items: center;
-    padding-top: env(safe-area-inset-top);
+    padding-top: var(--safe-t);
+    padding-left: var(--safe-l); padding-right: var(--safe-r);
     margin-bottom: 40px;
   }
   #bgmBtn {
-    min-width: 76px;
+    min-width: 76px; min-height: 44px;
     background: #161b22; color: #8b949e;
     border: 1px solid #30363d; border-radius: 8px;
     font-family: 'Rajdhani', sans-serif;
@@ -544,7 +579,7 @@
   #rules {
     justify-content: flex-start;
     overflow-y: auto; touch-action: pan-y;
-    padding-top: max(32px, env(safe-area-inset-top));
+    padding-top: max(32px, var(--safe-t));
   }
   #rules h2 {
     font-family: 'Orbitron', sans-serif;
@@ -633,7 +668,7 @@
   #achievements {
     justify-content: flex-start;
     overflow-y: auto; touch-action: pan-y;
-    padding-top: max(32px, env(safe-area-inset-top));
+    padding-top: max(32px, var(--safe-t));
   }
   .ach-list {
     width: 100%; max-width: 420px;
@@ -666,7 +701,7 @@
   /* ===== 実績解除トースト ===== */
   #achToast {
     position: fixed;
-    top: max(10px, env(safe-area-inset-top));
+    top: max(10px, var(--safe-t));
     left: 50%;
     z-index: 40;
     background: #161b22;
@@ -706,7 +741,7 @@
 
   /* 保存失敗や容量警告はプレイを止めず、控えめな一度きり通知にする */
   #sysToast {
-    position: fixed; left: 50%; bottom: max(18px, env(safe-area-inset-bottom));
+    position: fixed; left: 50%; bottom: max(18px, var(--safe-b));
     transform: translateX(-50%); z-index: 1000;
     width: min(88vw, 420px); padding: 9px 13px;
     border: 1px solid #6e5b22; border-radius: 8px;
@@ -720,7 +755,7 @@
   #training {
     justify-content: flex-start;
     overflow-y: auto; touch-action: pan-y;
-    padding-top: max(32px, env(safe-area-inset-top));
+    padding-top: max(32px, var(--safe-t));
   }
   .tr-list {
     width: 100%; max-width: 420px;
@@ -752,10 +787,9 @@
   /* ===== TRAINING: プレイ中オーバーレイ (SCORE ATTACKのhud/fieldとは別要素) ===== */
   #trHud {
     position: absolute; top: 0; left: 0; right: 0;
-    height: 64px;
+    height: calc(64px + var(--safe-t));
     display: flex; align-items: center; justify-content: space-between;
-    padding: 0 16px;
-    padding-top: env(safe-area-inset-top);
+    padding: var(--safe-t) max(16px, var(--safe-r)) 0 max(16px, var(--safe-l));
     font-variant-numeric: tabular-nums;
     z-index: 15;
   }
@@ -767,21 +801,22 @@
   #trAbortBtn {
     background: #21262d; color: #e6edf3; border: 1px solid #30363d;
     border-radius: 8px; font-size: 15px; padding: 8px 15px;
+    min-width: 44px; min-height: 44px;
   }
   #trAbortBtn:active { background: #30363d; }
 
-  #trField { position: absolute; inset: 0; z-index: 12; }
+  #trField { position: absolute; inset: 0; z-index: 12; touch-action: none; }
 
   /* ===== TRAINING: 実演プレイヤー (本番の見た目だけを使う独立レイヤー) ===== */
   .tr-demo-badge {
-    position: absolute; top: max(76px, calc(66px + env(safe-area-inset-top))); right: 14px;
+    position: absolute; top: max(76px, calc(66px + var(--safe-t))); right: max(14px, var(--safe-r));
     z-index: 24; padding: 5px 11px; border-radius: 999px;
     font-family: 'Orbitron', sans-serif; font-size: 11px; font-weight: 800;
     letter-spacing: .16em; color: #0a0e14; background: #ffdf5d;
     box-shadow: 0 0 18px rgba(255,223,93,.38); pointer-events: none;
   }
   .tr-demo-skip {
-    position: absolute; left: 50%; bottom: max(20px, env(safe-area-inset-bottom));
+    position: absolute; left: 50%; bottom: max(20px, var(--safe-b));
     transform: translateX(-50%); z-index: 24; width: calc(100% - 36px);
     text-align: center; color: #9dc4e8; font-size: 13px; letter-spacing: .05em;
     text-shadow: 0 2px 10px #000; pointer-events: none;
@@ -923,7 +958,7 @@
   #trResult {
     justify-content: flex-start;
     overflow-y: auto; touch-action: pan-y;
-    padding-top: max(28px, env(safe-area-inset-top));
+    padding-top: max(28px, var(--safe-t));
   }
   .tr-metrics {
     display: flex; flex-wrap: wrap; gap: 8px;
@@ -973,7 +1008,7 @@
   }
 
   /* ===== PROFILE: 五角形レーダーチャート・能力別リスト・日別履歴・エクスポート ===== */
-  #profile { justify-content: flex-start; overflow-y: auto; touch-action: pan-y; padding-top: max(32px, env(safe-area-inset-top)); }
+  #profile { justify-content: flex-start; overflow-y: auto; touch-action: pan-y; padding-top: max(32px, var(--safe-t)); }
   #prChartWrap svg { overflow: visible; }
   .prof-legend {
     display: flex; gap: 18px; justify-content: center;
@@ -1059,6 +1094,26 @@
   }
   .prof-rx-done { font-size: 14px; color: #ffdf5d; font-weight: 700; margin-bottom: 10px; }
   .prof-rx-btn { width: 100%; margin-top: 8px; font-size: 14px; padding: 12px 8px; }
+
+  /* 外部フォント遮断時も字幅と折返しを安定させる。数字は等幅数字を優先する */
+  h1, .btn, #countdown, #trCount, #rank, .scr-head, .cat-name, .as-row-name,
+  .tr-card-name, .tr-card-grade, .tr-demo-badge, .tr-demo-ready, .tr-feedback .tr-grade,
+  .tr-timing-mark, .tr-ok-mark, #trMsg, .tr-overall-grade, .tr-best-badge,
+  .tr-history-title, .tr-history-grade, .tr-history-new, .prof-rx-main {
+    font-family: var(--font-display);
+  }
+  #hud .val, #trHud .val, #totalScore, #scoreBreak, .stat .v, .float .pts,
+  #replayHud .val, .as-row-score, #top10 td.sc, .tr-feedback .tr-main,
+  .tr-penalty, .trnum, .prof-score, .prof-hist-score {
+    font-family: var(--font-digits);
+    font-variant-numeric: tabular-nums;
+  }
+  #result, #trResult, #asResult, #profile, #training, #assessment, #title,
+  #rules, #achievements, #trIntro {
+    padding-bottom: max(24px, calc(var(--safe-b) + 16px));
+  }
+  .result-links { display: flex; gap: 8px; width: 100%; max-width: 420px; }
+  .result-links .btn { flex: 1; padding-left: 8px; padding-right: 8px; font-size: 13px; }
 </style>
 </head>
 <body>
@@ -1074,6 +1129,7 @@
   <!-- ゲームフィールド -->
   <div id="field"></div>
   <div id="combo" class="hidden"></div>
+  <div id="playHint" class="hidden"></div>
 
   <!-- TRAINING プレイ中オーバーレイ (SCORE ATTACKのhud/fieldとは独立) -->
   <div id="trHud" class="hidden">
@@ -1092,6 +1148,7 @@
     </div>
     <h1>TOUCH AIM</h1>
     <div class="sub" data-i18n="sub">出現する円をすばやく・中心を狙ってタップ</div>
+    <button class="btn" id="quickPlayBtn" type="button" data-i18n="quickPlay">PLAY</button>
     <div class="cats">
       <button class="cat" id="catSa">
         <div class="cat-name">SCORE ATTACK</div>
@@ -1340,6 +1397,10 @@
       <tbody></tbody>
     </table>
     <button class="btn" id="retryBtn">RETRY</button>
+    <div class="result-links">
+      <button class="btn ghost" id="resultTrainingBtn" data-i18n="resultTraining">TRAINING</button>
+      <button class="btn ghost" id="resultAssessmentBtn" data-i18n="resultAssessment">ASSESSMENT</button>
+    </div>
     <button class="btn ghost" id="fullReplayBtn" data-i18n="fullReplay">通しリプレイ</button>
     <button class="btn ghost" id="homeBtn" data-i18n="backTitle">タイトルへ</button>
   </div>
@@ -1472,6 +1533,10 @@
   STR.provisionalNote = ['スコアは暫定換算です。換算式は今後調整されます', 'Scores use a provisional formula that may be adjusted later'];
   STR.storageSaveFailed = ['記録を保存できませんでした。空き容量を確認し、データを書き出してください', 'Could not save your records. Check storage space and export your data'];
   STR.storageExportPrompt = ['保存容量が少なくなっています。PROFILEからデータを書き出してください', 'Storage is running low. Export your data from PROFILE'];
+  STR.quickPlay = ['PLAY', 'PLAY'];
+  STR.resultTraining = ['TRAINING', 'TRAINING'];
+  STR.resultAssessment = ['ASSESSMENT', 'ASSESSMENT'];
+  STR.playHint = ['円をタップして中心を狙え', 'Tap the circles and aim for the center'];
 
   // ===== TRAINING: 新規UI文字列 (ja[0]/en[1] の2要素のみ。他言語はen→jaへ自動フォールバック) =====
   STR.trBackHub = ['課題一覧へ', 'Back to tasks'];
@@ -1749,6 +1814,25 @@
   const field = $('field');
   const hud = $('hud');
 
+  // CSSのsafe-area値をJS側のターゲット出現範囲にも同じ基準で反映する。
+  let safeAreaProbe = null;
+  function readSafeAreaInsets() {
+    if (!safeAreaProbe) {
+      safeAreaProbe = document.createElement('div');
+      safeAreaProbe.setAttribute('aria-hidden', 'true');
+      safeAreaProbe.style.cssText = 'position:fixed;inset:0;visibility:hidden;pointer-events:none;' +
+        'padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)';
+      $('app').appendChild(safeAreaProbe);
+    }
+    const cs = getComputedStyle(safeAreaProbe);
+    return {
+      top: parseFloat(cs.paddingTop) || 0,
+      right: parseFloat(cs.paddingRight) || 0,
+      bottom: parseFloat(cs.paddingBottom) || 0,
+      left: parseFloat(cs.paddingLeft) || 0,
+    };
+  }
+
   // ===== 状態 =====
   let state = 'title';          // title | countdown | play | result
   let roundStart = 0;           // ラウンド開始時刻 (performance.now)
@@ -1765,6 +1849,7 @@
   let replay = null;            // 直前プレイのリプレイデータ (メモリのみ)
   let combo = 0, maxCombo = 0;  // 青い芯への連続ヒット数
   let roundWhiffs = 0, zoneHits = 0; // 実績用: 今ラウンドの空振り数・芯ヒット数
+  let playHintTimer = 0, firstPlayHintPending = false;
 
   // ゲーム判定へ入れるのはprimary pointerだけ。副タッチや合成イベントは採用しない。
   function isPrimaryPointer(e) { return !!e && e.isPrimary === true; }
@@ -1774,7 +1859,7 @@
   function beep(freq, dur, gain) {
     try {
       if (!ac) ac = new (window.AudioContext || window.webkitAudioContext)();
-      if (ac.state === 'suspended') ac.resume();
+      if (ac.state === 'suspended' || ac.state === 'interrupted') ac.resume();
       const o = ac.createOscillator(), g = ac.createGain();
       o.frequency.value = freq;
       g.gain.setValueAtTime(gain, ac.currentTime);
@@ -1788,7 +1873,7 @@
   function boo() {
     try {
       if (!ac) ac = new (window.AudioContext || window.webkitAudioContext)();
-      if (ac.state === 'suspended') ac.resume();
+      if (ac.state === 'suspended' || ac.state === 'interrupted') ac.resume();
       const o = ac.createOscillator(), g = ac.createGain();
       o.type = 'sawtooth';
       o.frequency.setValueAtTime(140, ac.currentTime);
@@ -1863,7 +1948,7 @@
     if (!db.settings.bgm) return;
     try {
       ensureBgmContext();
-      if (bgmAc.state === 'suspended') await bgmAc.resume();
+      if (bgmAc.state === 'suspended' || bgmAc.state === 'interrupted') await bgmAc.resume();
       if (!db.settings.bgm) { await bgmAc.suspend(); return; }
       startBgmScheduler();
     } catch (e) { /* BGM非対応でもゲームは続行 */ }
@@ -1874,18 +1959,28 @@
     bgmNodes.clear();
     try { if (bgmAc && bgmAc.state !== 'closed') await bgmAc.suspend(); } catch (e) { /* 停止不能でも続行 */ }
   }
+  let audioResumePromise = null;
   function unlockAudio() {
     try {
       if (!ac) ac = new (window.AudioContext || window.webkitAudioContext)();
-      ensureBgmContext();
+      // BGM OFFならBGM用Contextは生成せず、設定を暗黙にONへ戻さない。
+      if (db.settings.bgm) ensureBgmContext();
+      if (audioResumePromise) return;
       const resumes = [];
-      if (ac.state === 'suspended') resumes.push(ac.resume());
-      if (bgmAc.state === 'suspended') resumes.push(bgmAc.resume());
-      Promise.all(resumes).then(() => {
+      if (ac.state === 'suspended' || ac.state === 'interrupted') resumes.push(ac.resume());
+      if (db.settings.bgm && bgmAc && (bgmAc.state === 'suspended' || bgmAc.state === 'interrupted')) resumes.push(bgmAc.resume());
+      audioResumePromise = Promise.all(resumes).then(() => {
         if (db.settings.bgm) startBgmScheduler();
-      }).catch(() => { /* アンロック不能でもゲームは続行 */ });
+      }).catch(() => { /* アンロック不能でもゲームは続行 */ }).finally(() => { audioResumePromise = null; });
       if (!resumes.length && db.settings.bgm) startBgmScheduler();
     } catch (e) { /* WebAudio非対応でもゲームは続行 */ }
+  }
+  function suspendAudioForBackground() {
+    // 設定値は変えず、バックグラウンド中の発音だけを確実に止める。
+    if (bgmAc) bgmStop();
+    try {
+      if (ac && ac.state === 'running') ac.suspend();
+    } catch (e) { /* suspend不能でもライフサイクル処理を続行 */ }
   }
   function updateBgmButton() {
     const el = $('bgmBtn');
@@ -2282,6 +2377,7 @@
 
   // ===== カウントダウン → 開始 =====
   function startCountdown() {
+    firstPlayHintPending = db.stats.plays === 0;
     captureViewportBaseline();
     clearInterval(countdownTimer);
     state = 'countdown';
@@ -2325,6 +2421,14 @@
     gapQueue = makeSpawnGaps();
     nextIdx = 0;
     roundStart = performance.now();
+    if (firstPlayHintPending) {
+      const hint = $('playHint');
+      hint.textContent = T('playHint');
+      hint.classList.remove('hidden');
+      clearTimeout(playHintTimer);
+      playHintTimer = setTimeout(() => hint.classList.add('hidden'), 3400);
+      firstPlayHintPending = false;
+    }
     gapTimer = setTimeout(() => spawnTarget(0, spawnSizes[0]), gapQueue[0]);
     tick();
   }
@@ -2350,9 +2454,13 @@
     // (例: raw×1.20 → スコア×1.10)。平均は引き続き×1.00
     const r = Math.max(24, Math.round(baseRadius() / sizeF * MODES[mode].sizeMul));
     const scoreSizeF = 1 + (sizeF - 1) * 0.5;
-    const hudH = 76 + r;
-    const x = r + 8 + Math.random() * (innerWidth - 2 * (r + 8));
-    const y = hudH + Math.random() * (innerHeight - hudH - r - 8);
+    const safe = readSafeAreaInsets();
+    const minX = safe.left + r + 8;
+    const maxX = innerWidth - safe.right - r - 8;
+    const minY = safe.top + 64 + r + 8;
+    const maxY = innerHeight - safe.bottom - r - 8;
+    const x = maxX > minX ? minX + Math.random() * (maxX - minX) : innerWidth / 2;
+    const y = maxY > minY ? minY + Math.random() * (maxY - minY) : innerHeight / 2;
 
     const el = document.createElement('div');
     el.className = 'target';
@@ -2489,6 +2597,8 @@
   function endRound() {
     if (state !== 'play') return;
     state = 'result';
+    clearTimeout(playHintTimer); playHintTimer = 0;
+    $('playHint').classList.add('hidden');
     cancelAnimationFrame(rafId);
     clearTimeout(gapTimer);
     active.forEach(tg => { clearTimeout(tg.lifeTimer); tg.el.remove(); });
@@ -2858,8 +2968,11 @@
 
   // ===== 共通: プレイエリア・進捗表示・メッセージ =====
   function trPlayAreaRect() {
-    const top = 82; // trHudの高さ分を確保
-    return { left: 10, top, right: innerWidth - 10, bottom: innerHeight - 10, w: innerWidth - 20, h: (innerHeight - 10) - top };
+    const safe = readSafeAreaInsets();
+    const left = safe.left + 10, right = innerWidth - safe.right - 10;
+    const top = safe.top + 82; // trHudの高さとノッチ領域を確保
+    const bottom = innerHeight - safe.bottom - 10;
+    return { left, top, right, bottom, w: Math.max(1, right - left), h: Math.max(1, bottom - top) };
   }
   function trSetProgress(cur, total) {
     $('trProgress').textContent = (total === null || total === undefined) ? '' : `${cur}/${total}`;
@@ -4287,6 +4400,8 @@
         countdownTimer = 0;
         state = 'title';
         hud.classList.add('hidden');
+        clearTimeout(playHintTimer); playHintTimer = 0;
+        $('playHint').classList.add('hidden');
         field.innerHTML = '';
         renderTitle();
         show('title');
@@ -4302,6 +4417,8 @@
         field.innerHTML = '';
         $('combo').classList.add('hidden');
         hud.classList.add('hidden');
+        clearTimeout(playHintTimer); playHintTimer = 0;
+        $('playHint').classList.add('hidden');
         renderTitle();
         show('title');
         interrupted = true;
@@ -4314,9 +4431,13 @@
     }
   }
   function onVisibilityChange() {
-    if (document.hidden) interruptActiveActivity('visibilitychange');
+    if (document.hidden) {
+      suspendAudioForBackground();
+      interruptActiveActivity('visibilitychange');
+    }
   }
   function onPageHide() {
+    suspendAudioForBackground();
     interruptActiveActivity('pagehide');
   }
   function onViewportChange(reason) {
@@ -4590,8 +4711,16 @@
   }
 
   // ===== ボタン =====
+  $('quickPlayBtn').addEventListener('click', () => {
+    mode = 'normal';
+    db.settings.mode = mode;
+    saveDB();
+    startCountdown();
+  });
   $('startBtn').addEventListener('click', startCountdown);
   $('retryBtn').addEventListener('click', startCountdown);
+  $('resultTrainingBtn').addEventListener('click', () => { renderTrHub(); show('training'); });
+  $('resultAssessmentBtn').addEventListener('click', () => { asRenderStart(); show('assessment'); });
   $('homeBtn').addEventListener('click', () => {
     state = 'title';
     renderTitle();
@@ -4627,8 +4756,10 @@
     saveDB(); updateBgmButton();
     if (db.settings.bgm) bgmStart(); else bgmStop();
   });
-  // captureで各ボタン処理より先に両Contextを生成・再開し、iOS Safariの制限を越える
+  // iOS/Androidの復帰後は、次のユーザー操作ごとに既存Contextの状態を確認して再開する。
   document.addEventListener('pointerdown', unlockAudio, true);
+  document.addEventListener('touchend', unlockAudio, { capture: true, passive: true });
+  document.addEventListener('click', unlockAudio, true);
   ['catSa', 'catTr', 'catAs', 'catPr'].forEach(id => {
     $(id).addEventListener('pointerdown', e => {
       const card = e.currentTarget;
@@ -4667,6 +4798,7 @@
   // ダブルタップズーム等の抑止
   document.addEventListener('dblclick', e => e.preventDefault());
   document.addEventListener('contextmenu', e => e.preventDefault());
+  document.addEventListener('dragstart', e => e.preventDefault());
   document.addEventListener('visibilitychange', onVisibilityChange);
   window.addEventListener('pagehide', onPageHide);
   window.addEventListener('pageshow', onPageShow);
