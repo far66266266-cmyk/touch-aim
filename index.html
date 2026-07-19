@@ -1875,10 +1875,9 @@
   if (MODES[db.settings.mode]) mode = db.settings.mode;
 
   let lang = db.settings.lang;
-  if (!LANGS.includes(lang)) {
-    const nav = (navigator.language || 'en').slice(0, 2);
-    lang = LANGS.includes(nav) ? nav : 'en';
-  }
+  // 初回訪問は常に英語スタート (CrazyGamesは国際プレイヤーが大半・レビュアーも英語想定)。
+  // ブラウザ言語での自動検出はしない。ユーザーは言語セレクタでいつでも変更可、選択はlocalStorageに保存される。
+  if (!LANGS.includes(lang)) lang = 'en';
   // 未翻訳の言語は英語→日本語の順でフォールバック (翻訳はユーザー指示のタイミングでまとめて行う運用)
   function T(k) {
     const a = STR[k] || [];
