@@ -704,6 +704,18 @@
     margin-top: 2px;
   }
 
+  /* 保存失敗や容量警告はプレイを止めず、控えめな一度きり通知にする */
+  #sysToast {
+    position: fixed; left: 50%; bottom: max(18px, env(safe-area-inset-bottom));
+    transform: translateX(-50%); z-index: 1000;
+    width: min(88vw, 420px); padding: 9px 13px;
+    border: 1px solid #6e5b22; border-radius: 8px;
+    background: rgba(33, 38, 45, .96); color: #ffdf5d;
+    font-size: 12px; line-height: 1.45; text-align: center;
+    box-shadow: 0 5px 22px rgba(0, 0, 0, .45);
+    pointer-events: none;
+  }
+
   /* ===== TRAINING: 課題ハブ ===== */
   #training {
     justify-content: flex-start;
@@ -716,6 +728,7 @@
     margin: 6px 0 18px;
   }
   .tr-card {
+    display: block; width: 100%; font: inherit;
     text-align: left;
     background: #161b22; color: #e6edf3;
     border: 1px solid #30414f; border-radius: 12px;
@@ -846,14 +859,6 @@
   @keyframes trTargetPop {
     from { transform: translate(-50%,-50%) scale(1.15); }
     to { transform: translate(-50%,-50%) scale(1); }
-  }
-  /* TRACKINGは指が円内にある間だけ緑色にして状態を明示 */
-  .target.tracking-target.on {
-    background:
-      radial-gradient(circle, #fff 0 6%, transparent 6.5%),
-      radial-gradient(circle, rgba(63,185,80,.95) 0 22%, rgba(63,185,80,.55) 22% 50%, rgba(63,185,80,.14) 50.5% 75%, rgba(63,185,80,.06) 75% 100%);
-    border-color: rgba(126,231,135,.95);
-    box-shadow: 0 0 28px rgba(63,185,80,.5), inset 0 0 20px rgba(63,185,80,.34);
   }
   .tr-fail-flash {
     position: absolute; inset: 0; z-index: 17; pointer-events: none;
@@ -1266,6 +1271,9 @@
     <div class="achToast-t2" id="achToastName"></div>
   </div>
 
+  <!-- 保存失敗・容量警告 (ゲーム進行は止めない) -->
+  <div id="sysToast" class="hidden" role="status" aria-live="polite"></div>
+
   <!-- ルール -->
   <div id="rules" class="screen hidden">
     <h2>RULES</h2>
@@ -1462,6 +1470,8 @@
   STR.asCancelBtn = ['中止', 'Cancel'];
   STR.asTotalLabel = ['総合スコア', 'Overall score'];
   STR.provisionalNote = ['スコアは暫定換算です。換算式は今後調整されます', 'Scores use a provisional formula that may be adjusted later'];
+  STR.storageSaveFailed = ['記録を保存できませんでした。空き容量を確認し、データを書き出してください', 'Could not save your records. Check storage space and export your data'];
+  STR.storageExportPrompt = ['保存容量が少なくなっています。PROFILEからデータを書き出してください', 'Storage is running low. Export your data from PROFILE'];
 
   // ===== TRAINING: 新規UI文字列 (ja[0]/en[1] の2要素のみ。他言語はen→jaへ自動フォールバック) =====
   STR.trBackHub = ['課題一覧へ', 'Back to tasks'];
@@ -1487,10 +1497,6 @@
   STR.trIntro_precision_2 = ['2. 円の中心を"ていねいに"タップ', '2. Tap the center of each circle carefully'];
   STR.trIntro_precision_3 = ['3. 全12回', '3. 12 reps total'];
   STR.trIntro_precision_m = ['計測: 中心からのズレ。900ms以内ならスピードは採点されない', 'Measured: distance from center. Speed is not scored as long as you tap within 900ms'];
-  STR.trIntro_tracking_1 = ['1. 動く円に指を乗せる', '1. Put your finger on the moving circle'];
-  STR.trIntro_tracking_2 = ['2. 指を画面につけたまま、円を追いかけ続ける', '2. Keep your finger on the screen and follow it'];
-  STR.trIntro_tracking_3 = ['3. {n}秒間ずっと', '3. For {n} seconds straight'];
-  STR.trIntro_tracking_m = ['計測: 円の中に指をとどめていられた時間の割合', 'Measured: how long you keep your finger inside the circle'];
   STR.trIntro_switching_1 = ['1. 番号つきの円が同時に出る', '1. Numbered circles appear at the same time'];
   STR.trIntro_switching_2 = ['2. 1→2→3…の順に全部タップ', '2. Tap every circle in order: 1→2→3…'];
   STR.trIntro_switching_3 = ['3. セットごとに数が増える(3個→7個)', '3. The number increases each set (3→7 circles)'];
@@ -1502,7 +1508,6 @@
   STR.trD_perception = ['白で離し、赤では止まる反応判断', 'React to white and hold on red'];
   STR.trD_flick = ['離してから着弾までの移動スピード', 'Movement speed from lift to landing'];
   STR.trD_precision = ['小さな的の中心に正確に止める', 'Stop precisely on small targets'];
-  STR.trD_tracking = ['動く的を指で追い続ける', 'Follow a moving target with your finger'];
   STR.trD_switching = ['増えていく的を順番どおり素早く切替', 'Switch quickly through growing numbered sets'];
   STR.trD_timing = ['流れる円と判定リングの重なりを狙う', 'Time a flowing circle with the judge ring'];
   STR.trHoldPad = ['パッドを押さえたまま待つ', 'Hold the pad and wait'];
@@ -1522,9 +1527,6 @@
   STR.tr_k_sdRatio = ['誤差ばらつき', 'Error variance'];
   STR.tr_k_dxdy = ['縦横バイアス(x,y)', 'Bias (x, y)'];
   STR.tr_k_missRate = ['ミス率', 'Miss rate'];
-  STR.tr_k_inZone = ['滞在率', 'Time in zone'];
-  STR.tr_k_avgDist = ['平均中心距離', 'Avg. center distance'];
-  STR.tr_k_recover = ['平均復帰時間', 'Avg. recovery time'];
   STR.tr_k_gap = ['切替時間 中央値', 'Switch time median'];
   STR.tr_k_wrong = ['誤タップ', 'Wrong taps'];
   STR.tr_k_streak = ['最長ストリーク', 'Longest streak'];
@@ -1540,7 +1542,6 @@
   STR.trMoveOffset = ['移動 {ms}ms / ズレ {px}px', 'MOVE {ms}ms / OFFSET {px}px'];
   STR.trEarly = ['EARLY', 'EARLY'];
   STR.trLate = ['LATE', 'LATE'];
-  STR.trStay = ['滞在率 {pct}%', 'IN ZONE {pct}%'];
   STR.trSwitch = ['切替 {ms}ms', 'SWITCH {ms}ms'];
   STR.trPenalty300 = ['+300ms', '+300ms'];
   STR.trFake = ['FAKE!', 'FAKE!'];
@@ -1594,7 +1595,76 @@
 
   // ===== ストレージ v2 (バージョン付き・一元化) =====
   const DB_KEY = 'touchaim_v2';
+  const STORAGE_WARN_BYTES = 4 * 1024 * 1024; // 一般的な5MB枠へ近づく前に書き出しを促す目安
   function freshModeData() { return { best: 0, top: [], hist: [] }; }
+  function isPlainObject(v) { return !!v && typeof v === 'object' && !Array.isArray(v); }
+  function finiteOr(v, fallback) { return typeof v === 'number' && Number.isFinite(v) ? v : fallback; }
+  function normalizeModeData(v) {
+    const d = isPlainObject(v) ? v : {};
+    d.best = finiteOr(d.best, 0);
+    if (!Array.isArray(d.top)) d.top = [];
+    else d.top = d.top.filter(isPlainObject);
+    if (!Array.isArray(d.hist)) d.hist = [];
+    else d.hist = d.hist.filter(isPlainObject);
+    return d;
+  }
+  // schema:2は一部だけ壊れていても正常な枝を残し、必要な階層だけを補完する
+  function normalizeDB(value) {
+    const d = isPlainObject(value) ? value : {};
+    d.schema = 2;
+    if (!isPlainObject(d.settings)) d.settings = {};
+    if (!isPlainObject(d.sa)) d.sa = {};
+    ['normal', 'acc', 'speed'].forEach(id => { d.sa[id] = normalizeModeData(d.sa[id]); });
+
+    if (!isPlainObject(d.stats)) d.stats = {};
+    ['plays', 'hits', 'cleanRuns', 'coreHits', 'perfectStreak', 'comboStreak', 'sStreak']
+      .forEach(k => { d.stats[k] = finiteOr(d.stats[k], 0); });
+    if (!isPlainObject(d.stats.sCount)) d.stats.sCount = {};
+    ['normal', 'acc', 'speed'].forEach(id => { d.stats.sCount[id] = finiteOr(d.stats.sCount[id], 0); });
+    if (!isPlainObject(d.stats.flawless)) d.stats.flawless = {};
+    ['normal', 'acc', 'speed'].forEach(id => {
+      if (typeof d.stats.flawless[id] !== 'boolean') d.stats.flawless[id] = false;
+    });
+
+    if (!isPlainObject(d.ach)) d.ach = {};
+    if (!isPlainObject(d.training)) d.training = {};
+    Object.keys(d.training).forEach(id => {
+      const task = isPlainObject(d.training[id]) ? d.training[id] : {};
+      if (!Array.isArray(task.runs)) task.runs = [];
+      else task.runs = task.runs.filter(isPlainObject);
+      d.training[id] = task;
+    });
+    ['perception', 'flick', 'precision', 'switching', 'timing'].forEach(id => {
+      if (!isPlainObject(d.training[id])) d.training[id] = { runs: [] };
+      else if (!Array.isArray(d.training[id].runs)) d.training[id].runs = [];
+    });
+
+    if (!isPlainObject(d.assessment)) d.assessment = {};
+    if (d.assessment.daily !== null) {
+      if (!isPlainObject(d.assessment.daily)) d.assessment.daily = null;
+      else {
+        if (typeof d.assessment.daily.date !== 'string') d.assessment.daily.date = '';
+        d.assessment.daily.count = Math.max(0, Math.floor(finiteOr(d.assessment.daily.count, 0)));
+      }
+    }
+    if (d.assessment.daily === undefined) d.assessment.daily = null;
+    if (d.assessment.pending !== null) {
+      if (!isPlainObject(d.assessment.pending)) d.assessment.pending = null;
+      else {
+        const p = d.assessment.pending;
+        if (!Array.isArray(p.doneTasks)) p.doneTasks = [];
+        else p.doneTasks = p.doneTasks.filter(isPlainObject);
+        p.nextIndex = Math.max(0, Math.floor(finiteOr(p.nextIndex, p.doneTasks.length)));
+      }
+    }
+    if (d.assessment.pending === undefined) d.assessment.pending = null;
+    if (!Array.isArray(d.assessment.runs)) d.assessment.runs = [];
+    else {
+      d.assessment.runs = d.assessment.runs.filter(isPlainObject);
+      d.assessment.runs.forEach(run => { if (!isPlainObject(run.tasks)) run.tasks = {}; });
+    }
+    return d;
+  }
   function loadJsonKey(key) {
     try { return JSON.parse(localStorage.getItem(key) || '[]'); } catch (e) { return []; }
   }
@@ -1619,34 +1689,42 @@
       const raw = localStorage.getItem(DB_KEY);
       if (raw) {
         const d = JSON.parse(raw);
-        if (d && d.schema === 2 && d.sa) return d;
+        if (d && d.schema === 2) return d;
       }
     } catch (e) {
       // 破損時: 中身を退避してから作り直す
       try { localStorage.setItem(DB_KEY + '_corrupt', localStorage.getItem(DB_KEY)); } catch (e2) { /* 退避不能でも続行 */ }
     }
     const d = migrateV1();
-    try { localStorage.setItem(DB_KEY, JSON.stringify(d)); } catch (e) { /* 保存不能でも続行 */ }
     return d;
   }
-  const db = loadDB();
-  // ===== 実績・統計フィールドの補完 (schema:2のまま、欠損時にデフォルト値で補完) =====
-  db.ach = db.ach || {};                    // { 実績id: 解除時刻(ms) }
-  db.stats.plays ??= 0; db.stats.hits ??= 0;
-  db.stats.cleanRuns ??= 0;                 // 空振り0のラウンド累計
-  db.stats.coreHits ??= 0;                  // 芯ヒット累計
-  db.stats.perfectStreak ??= 0;             // 10/10連続回数
-  db.stats.comboStreak ??= 0;               // 10コンボ連続回数
-  db.stats.sStreak ??= 0;                   // Sランク連続回数
-  db.stats.sCount ??= { normal: 0, acc: 0, speed: 0 };  // モード別Sランク累計
-  db.stats.flawless ??= { normal: false, acc: false, speed: false }; // 完全クリア達成フラグ
-  db.training ??= {};                       // { taskId: { runs: [{ts, raw, summary}] } } (直近20runのみ保持)
-  db.assessment ??= { daily: null, pending: null, runs: [] }; // daily:{date,count} / pending:中断再開用 / runs:直近30件
-  db.settings ??= {};
+  const db = normalizeDB(loadDB());
   const bgmWasUnset = db.settings.bgm === undefined;
   db.settings.bgm ??= true;                  // プロシージャルBGMは既定ON
+  const storageNoticeShown = { save: false, capacity: false };
+  let sysToastTimer = 0;
+  function storageNotice(kind) {
+    if (storageNoticeShown[kind]) return;
+    storageNoticeShown[kind] = true;
+    const el = document.getElementById('sysToast');
+    if (!el) return;
+    const key = kind === 'capacity' ? 'storageExportPrompt' : 'storageSaveFailed';
+    const code = db.settings && db.settings.lang;
+    el.textContent = STR[key][code === 'ja' ? 0 : 1];
+    el.classList.remove('hidden');
+    clearTimeout(sysToastTimer);
+    sysToastTimer = setTimeout(() => el.classList.add('hidden'), 7000);
+  }
   function saveDB() {
-    try { localStorage.setItem(DB_KEY, JSON.stringify(db)); } catch (e) { /* 保存不能でも続行 */ }
+    try {
+      const json = JSON.stringify(db);
+      if (new Blob([json]).size >= STORAGE_WARN_BYTES) storageNotice('capacity');
+      localStorage.setItem(DB_KEY, json);
+      return true;
+    } catch (e) {
+      storageNotice('save');
+      return false;
+    }
   }
   if (bgmWasUnset) saveDB();                 // 初回既定値もsettingsへ永続化
   if (MODES[db.settings.mode]) mode = db.settings.mode;
@@ -2851,21 +2929,23 @@
   // ===== 課題開始/中断の共通処理 =====
   let TR_COUNT = null;
   function trCancelLaunch() {
-    if (!TR_COUNT) return;
+    if (!TR_COUNT) {
+      $('trCount').classList.add('hidden');
+      return null;
+    }
+    const ctx = TR_COUNT.context || null;
     clearTimeout(TR_COUNT.timer);
     TR_COUNT = null;
-    window.removeEventListener('pagehide', trCountPageHide);
     $('trCount').classList.add('hidden');
+    return ctx;
   }
-  function trCountPageHide() { trCancelLaunch(); }
-  function trLaunchWithCount(fn) {
+  function trLaunchWithCount(fn, context) {
     trCancelLaunch();
     if (typeof fn !== 'function') return;
-    const owner = { timer: 0 };
+    const owner = { timer: 0, context: context || null };
     TR_COUNT = owner;
     state = 'countdown';
     show('trCount');
-    window.addEventListener('pagehide', trCountPageHide);
     let n = 3;
     $('trCount').textContent = n;
     beep(440, .1, .15);
@@ -2879,7 +2959,6 @@
         return;
       }
       TR_COUNT = null;
-      window.removeEventListener('pagehide', trCountPageHide);
       $('trCount').classList.add('hidden');
       beep(880, .15, .2);
       fn();
@@ -3120,7 +3199,8 @@
     wrap.innerHTML = '';
     TR_ORDER.forEach(id => {
       const meta = TR_META[id];
-      const card = document.createElement('div');
+      const card = document.createElement('button');
+      card.type = 'button';
       card.className = 'tr-card';
       const best = trBestLine(id);
       card.innerHTML = `<div class="tr-card-name">${meta.name}</div><div class="tr-card-desc">${T(meta.descKey)}</div>` +
@@ -3212,7 +3292,7 @@
         cleanup();
         trFailFlash(); boo(); buzz(35);
         trShowMsg(T('trFalseStart'));
-        setTimeout(perceptionNextTrial, 700);
+        finishTimer = setTimeout(perceptionNextTrial, 700);
         return;
       }
       if (phase === 'shown') {
@@ -3321,7 +3401,7 @@
         clearTimeout(delayTimer);
         cleanup();
         trShowMsg(T('trFalseStart'));
-        setTimeout(flickNextTrial, 500);
+        finishTimer = setTimeout(flickNextTrial, 500);
         return;
       }
       if (phase === 'shown') {
@@ -3460,111 +3540,6 @@
       ['tr_k_dxdy', (summary.avgDx != null && summary.avgDy != null) ? `${Math.round(summary.avgDx)}, ${Math.round(summary.avgDy)}px` : '-'],
       ['tr_k_missRate', Math.round(summary.missRate * 100) + '%'],
     ]);
-  }
-
-  // ===== 4. TRACKING (追従: 20秒間、動く的を指で追う) =====
-  // durationOverride: ASSESSMENTでは15秒に短縮
-  function startTracking(durationOverride) {
-    trEnterPlay('tracking', null);
-    const D = TR;
-    D.duration = durationOverride || 20000;
-    D.samples = []; D.inZoneFrames = 0; D.totalFrames = 0; D.sumDist = 0;
-    D.lastInZone = true; D.awayStart = null; D.recoverTimes = []; D.feedbackInZone = null;
-    D.fingerX = innerWidth / 2; D.fingerY = innerHeight / 2; D.engaged = false;
-
-    const fld = $('trField');
-    fld.innerHTML = '';
-    const rect = trPlayAreaRect();
-    const r = Math.max(20, Math.round(baseRadius() * 0.6));
-    const tg = document.createElement('div');
-    tg.className = 'target tracking-target';
-    tg.style.width = tg.style.height = (r * 2) + 'px';
-    fld.appendChild(tg);
-
-    let tx = rect.left + rect.w * 0.5, ty = rect.top + rect.h * 0.5;
-    let ang = RNG() * 6.283;
-    const speed = 140 + RNG() * 60; // px/s
-    let lastT = performance.now();
-    const start = lastT;
-    let lastSampleSec = -1, secBucket = [];
-
-    function onDown(e) { D.engaged = true; D.fingerX = e.clientX; D.fingerY = e.clientY; }
-    function onMove(e) { if (D.engaged) { D.fingerX = e.clientX; D.fingerY = e.clientY; } }
-    function onUp() { D.engaged = false; }
-    fld.addEventListener('pointerdown', onDown);
-    fld.addEventListener('pointermove', onMove);
-    fld.addEventListener('pointerup', onUp);
-    fld.addEventListener('pointercancel', onUp);
-    TR.cleanup = () => {
-      fld.removeEventListener('pointerdown', onDown);
-      fld.removeEventListener('pointermove', onMove);
-      fld.removeEventListener('pointerup', onUp);
-      fld.removeEventListener('pointercancel', onUp);
-      if (TR && TR.rafId) cancelAnimationFrame(TR.rafId);
-    };
-
-    function frame(now) {
-      if (!TR || TR.task !== 'tracking') return;
-      const dt = Math.min(50, now - lastT); lastT = now;
-      const elapsed = now - start;
-      ang += (RNG() - 0.5) * 0.02; // 緩やかな方向変化
-      tx += Math.cos(ang) * speed * dt / 1000;
-      ty += Math.sin(ang) * speed * dt / 1000;
-      if (tx < rect.left + r) { tx = rect.left + r; ang = Math.PI - ang; }
-      if (tx > rect.right - r) { tx = rect.right - r; ang = Math.PI - ang; }
-      if (ty < rect.top + r) { ty = rect.top + r; ang = -ang; }
-      if (ty > rect.bottom - r) { ty = rect.bottom - r; ang = -ang; }
-      tg.style.left = tx + 'px'; tg.style.top = ty + 'px';
-
-      const dist = D.engaged ? Math.hypot(D.fingerX - tx, D.fingerY - ty) : r * 3;
-      const inZone = D.engaged && dist <= r;
-      tg.classList.toggle('on', inZone);
-      if (D.feedbackInZone !== null && D.feedbackInZone !== inZone) {
-        if (inZone) beep(660, .05, .08);
-        else { trShake(tg); beep(220, .06, .1); }
-      }
-      D.feedbackInZone = inZone;
-      D.totalFrames++; D.sumDist += dist;
-      if (inZone) D.inZoneFrames++;
-      if (D.lastInZone && !inZone) D.awayStart = now;
-      if (!D.lastInZone && inZone && D.awayStart !== null) { D.recoverTimes.push(now - D.awayStart); D.awayStart = null; }
-      D.lastInZone = inZone;
-
-      const sec = Math.floor(elapsed / 1000);
-      if (sec !== lastSampleSec) {
-        if (secBucket.length) D.samples.push(+(secBucket.reduce((a, b) => a + b, 0) / secBucket.length).toFixed(1));
-        secBucket = []; lastSampleSec = sec;
-      }
-      secBucket.push(dist);
-      $('trProgress').textContent = Math.max(0, Math.ceil((D.duration - elapsed) / 1000)) + 's';
-
-      if (elapsed >= D.duration) { finishTracking(); return; }
-      TR.rafId = requestAnimationFrame(frame);
-    }
-    TR.rafId = requestAnimationFrame(frame);
-  }
-  function finishTracking() {
-    const D = TR;
-    if (!D || D.task !== 'tracking' || D.finishing) return;
-    D.finishing = true;
-    if (D.cleanup) D.cleanup();
-    const summary = {
-      inZoneRatio: D.totalFrames ? D.inZoneFrames / D.totalFrames : 0,
-      avgDist: D.totalFrames ? D.sumDist / D.totalFrames : 0,
-      avgRecover: trMean(D.recoverTimes),
-    };
-    const pct = Math.round(summary.inZoneRatio * 100);
-    const grade = trGrade('tracking', pct);
-    trFeedback(innerWidth / 2, innerHeight / 2, grade, trFmt('trStay', { pct }), '');
-    trGradeSound(grade);
-    D.finishTimer = setTimeout(() => {
-      if (!TR || TR !== D) return;
-      trFinishTask('tracking', { samples: D.samples, recoverTimes: D.recoverTimes }, summary, [
-        ['tr_k_inZone', pct + '%'],
-        ['tr_k_avgDist', Math.round(summary.avgDist) + 'px'],
-        ['tr_k_recover', summary.avgRecover != null ? Math.round(summary.avgRecover) + 'ms' : '-'],
-      ]);
-    }, 900);
   }
 
   // ===== 4. SWITCHING (切替: セットごとに3個から7個へ増加) =====
@@ -3841,7 +3816,6 @@
     const ctx = TR_DEMO.ctx;
     TR_DEMO.timers.forEach(clearTimeout);
     window.removeEventListener('resize', trSkipDemo);
-    window.removeEventListener('pagehide', trDemoPageHide);
     const fld = $('trField');
     fld.removeEventListener('pointerdown', trSkipDemo);
     fld.innerHTML = '';
@@ -3853,10 +3827,9 @@
     if (!ctx) return;
     if (ctx.mode === 'assessment') { asStartTask(ctx.taskId); return; }
     TR_MODE = 'solo'; RNG = Math.random;
-    trLaunchWithCount(() => TR_START[ctx.taskId]());
+    trLaunchWithCount(() => TR_START[ctx.taskId](), ctx);
   }
   function trDemoStartReal() { trStartIntroContext(trDemoCleanup()); }
-  function trDemoPageHide() { trDemoCleanup(); }
   function trSkipDemo() {
     if (!TR_DEMO || TR_DEMO.finishing) return;
     trDemoStartReal();
@@ -3874,7 +3847,6 @@
     trDemoDecorate();
     fld.addEventListener('pointerdown', trSkipDemo);
     window.addEventListener('resize', trSkipDemo);
-    window.addEventListener('pagehide', trDemoPageHide);
     TR_DEMO_SEQUENCES[ctx.taskId]();
   }
 
@@ -3924,30 +3896,6 @@
     trDemoAt(2700, () => trDemoMove(finger, p2.x + 24, p2.y, 'slow'));
     trDemoAt(3850, () => trDemoFeedback(p2.x + 24, p2.y, 'C', trFmt('trDeviation', { px: 24, pct: 48 }), '', tg));
     trDemoAt(4800, trDemoFinish);
-  }
-  function trDemoTracking() {
-    const rect = trPlayAreaRect(), r = Math.max(22, Math.round(baseRadius() * .6));
-    const pts = [
-      [rect.left + rect.w * .25, rect.top + rect.h * .35],
-      [rect.left + rect.w * .48, rect.top + rect.h * .28],
-      [rect.left + rect.w * .70, rect.top + rect.h * .46],
-      [rect.left + rect.w * .54, rect.top + rect.h * .64],
-      [rect.left + rect.w * .34, rect.top + rect.h * .54],
-    ];
-    const tg = trDemoTarget(pts[0][0], pts[0][1], r, 'tracking-target');
-    const finger = trDemoFinger(pts[0][0], rect.bottom + 70); TR_DEMO.finger = finger;
-    trDemoAt(350, () => trDemoMove(finger, pts[0][0], pts[0][1], 'slow'));
-    trDemoAt(1050, () => { trDemoPress(finger, tg); tg.classList.add('on'); beep(660, .05, .08); });
-    [pts[1], pts[2], pts[3]].forEach((p, i) => trDemoAt(1350 + i * 550, () => {
-      tg.style.left = p[0] + 'px'; tg.style.top = p[1] + 'px'; trDemoMove(finger, p[0], p[1]);
-    }));
-    trDemoAt(3000, () => {
-      tg.style.left = pts[4][0] + 'px'; tg.style.top = pts[4][1] + 'px';
-      trDemoMove(finger, pts[4][0] + r * 2.2, pts[4][1], 'fast'); tg.classList.remove('on');
-      trShake(tg); beep(220, .08, .1);
-    });
-    trDemoAt(3550, () => { trDemoMove(finger, pts[4][0], pts[4][1], 'fast'); tg.classList.add('on'); beep(880, .08, .1); });
-    trDemoAt(4400, trDemoFinish);
   }
   function trDemoSwitching() {
     const rect = trPlayAreaRect(), r = Math.max(27, Math.round(baseRadius() * .7));
@@ -4041,6 +3989,7 @@
   const SCORE_FORMULA_VERSION = 3;
   const AS_RESUME_MS = 30 * 60 * 1000; // 中断からの再開が有効な時間 (30分)
   const AS_DAILY_LIMIT = 2;
+  const AS_RUN_LIMIT = 300;             // β分析用の生run保持上限 (PROFILE表示上限とは分離)
   // 試行数/所要時間はTRAINING既定値の約6割 (全体5〜7分目安)。FLICKはseed付きランダム方向で8試行
   const AS_TOTALS = { perception: 7, flick: 8, precision: 8, switching: 3, timing: 8 };
 
@@ -4161,15 +4110,14 @@
   function asStartNew() {
     if (db.assessment.pending || asDailyRemaining() <= 0) return;
     const seed = genSeed();
-    db.assessment.pending = { seed, startedTs: Date.now(), test_config_version: TEST_CONFIG_VERSION, doneTasks: [], nextIndex: 0 };
-    saveDB();
-    AS = { seed, index: 0, results: {} };
+    // ここではイントロを開くだけ。初回種目のSTARTでカウントダウンを確定した時に消費する。
+    AS = { seed, index: 0, results: {}, isNew: true };
     asShowPrep();
   }
   function asResume() {
     const p = db.assessment.pending;
     if (!p) return;
-    AS = { seed: p.seed, index: p.nextIndex, results: {} };
+    AS = { seed: p.seed, index: p.nextIndex, results: {}, isNew: false };
     p.doneTasks.forEach(t => { AS.results[t.taskId] = { raw: t.raw, summary: t.summary, score: t.score }; });
     asShowPrep();
   }
@@ -4187,12 +4135,31 @@
   }
   function asStartTask(taskId) {
     if (!AS) return;
+    if (AS.isNew) {
+      // 新規pendingの作成と当日回数の消費を同じ確定操作で行う。再開時はこの分岐へ入らない。
+      if (db.assessment.pending || asDailyRemaining() <= 0) {
+        AS = null;
+        asRenderStart();
+        show('assessment');
+        return;
+      }
+      const today = asToday();
+      if (!db.assessment.daily || db.assessment.daily.date !== today) db.assessment.daily = { date: today, count: 0 };
+      db.assessment.daily.count++;
+      db.assessment.pending = {
+        seed: AS.seed, startedTs: Date.now(), test_config_version: TEST_CONFIG_VERSION,
+        doneTasks: [], nextIndex: 0, countedAtStart: true,
+      };
+      AS.isNew = false;
+      saveDB();
+    }
+    const launchContext = { taskId, mode: 'assessment', returnScreen: 'assessment' };
     trLaunchWithCount(() => {
       if (!AS) return;
       RNG = taskRng(AS.seed, taskId);        // 種目ごとに決定的なPRNGへ差し替え
       TR_MODE = 'assessment';
       TR_START[taskId](AS_TOTALS[taskId]);
-    });
+    }, launchContext);
   }
   // 1種目完了時: trFinishTaskから呼ばれる (TR_MODE==='assessment'のときのみ)
   function asOnTaskDone(taskId, raw, summary) {
@@ -4220,11 +4187,11 @@
       env: { w: innerWidth, h: innerHeight, dpr: window.devicePixelRatio || 1, portrait: innerHeight > innerWidth, ua: (navigator.userAgent || '').slice(0, 80) },
     };
     db.assessment.runs.push(run);
-    db.assessment.runs = db.assessment.runs.slice(-30);
-    // 回数カウントは完走時のみ+1 (途中破棄はカウントしない)
-    const today = asToday();
-    if (!db.assessment.daily || db.assessment.daily.date !== today) db.assessment.daily = { date: today, count: 0 };
-    db.assessment.daily.count++;
+    if (db.assessment.runs.length > AS_RUN_LIMIT) {
+      // 300件を超えて初めて古いrunを落とす前に、画面上で書き出しを促す。
+      storageNotice('capacity');
+      db.assessment.runs = db.assessment.runs.slice(-AS_RUN_LIMIT);
+    }
     db.assessment.pending = null;
     saveDB();
     AS = null; TR_MODE = 'solo'; RNG = Math.random;
@@ -4244,10 +4211,55 @@
     show('asResult');
   }
 
+  // ===== TRAINING / ASSESSMENT: バックグラウンド中断の共通復帰 =====
+  function trRestoreIntro(ctx) {
+    if (!ctx || !TR_START[ctx.taskId]) return false;
+    state = 'title';
+    $('trHud').classList.add('hidden');
+    $('trField').classList.add('hidden');
+    $('trField').innerHTML = '';
+    trHideMsg();
+    trShowIntro(ctx.taskId, ctx.mode, ctx.returnScreen || (ctx.mode === 'assessment' ? 'assessment' : 'training'));
+    return true;
+  }
+  function handleAppInterruption() {
+    let ctx = null;
+    if (TR_DEMO) {
+      ctx = trDemoCleanup();
+    } else if (TR_COUNT) {
+      ctx = trCancelLaunch();
+    } else if (TR) {
+      const taskId = TR.task;
+      const modeAtInterrupt = TR_MODE;
+      ctx = { taskId, mode: modeAtInterrupt, returnScreen: modeAtInterrupt === 'assessment' ? 'assessment' : 'training' };
+      const interrupted = TR;
+      if (interrupted.cleanup) {
+        try { interrupted.cleanup(); } catch (e) { /* 復帰画面を優先して続行 */ }
+      }
+      TR = null; // 未完了runは保存しない。pending.nextIndexも進めない。
+      TR_MODE = 'solo';
+      RNG = Math.random;
+    }
+    if (ctx) trRestoreIntro(ctx);
+  }
+  function onVisibilityChange() {
+    if (document.hidden) handleAppInterruption();
+  }
+  function onPageShow(e) {
+    if (!e.persisted) return;
+    // pagehideを経ず凍結された環境でも、残った所有者を一度だけ片付ける。
+    handleAppInterruption();
+    const hasScreen = Array.from(document.querySelectorAll('.screen')).some(el => !el.classList.contains('hidden'));
+    if (!hasScreen && state !== 'play') {
+      if (db.assessment.pending) { asRenderStart(); show('assessment'); }
+      else show('menu');
+    }
+  }
+
   // ===================================================================
   // ===== PROFILE: 五角形レーダーチャート・能力別リスト・日別履歴・エクスポート =====
-  // db.assessment.runs (直近30run) を端末ローカル日付でグループ化し、
-  // その日の代表値(全run平均・小数1桁)を軸に表示する。既存のASSESSMENT/TRAINING
+  // 保持中のdb.assessment.runs (最大300run) を端末ローカル日付でグループ化し、
+  // 表示は直近14日、その日の代表値(全run平均・小数1桁)を軸にする。既存のASSESSMENT/TRAINING
   // ロジックは変更せず、db.assessment.runs / db.training / TR_ORDER / TR_META / TR_START を読むだけ。
   // ===================================================================
   let PR_SELECTED = 0; // prDailyList()の何番目(0=最新)を「最新」側として表示するか
@@ -4497,7 +4509,12 @@
   $('catSa').addEventListener('click', () => { renderTitle(); show('title'); });
   $('catTr').addEventListener('click', () => { renderTrHub(); show('training'); });
   $('trAbortBtn').addEventListener('click', () => { if (TR_DEMO) trSkipDemo(); else trAbort(); });
-  $('trRetryBtn').addEventListener('click', () => { if (TR_LAST_TASK) trLaunchWithCount(() => TR_START[TR_LAST_TASK]()); });
+  $('trRetryBtn').addEventListener('click', () => {
+    if (TR_LAST_TASK) {
+      const taskId = TR_LAST_TASK;
+      trLaunchWithCount(() => TR_START[taskId](), { taskId, mode: 'solo', returnScreen: 'training' });
+    }
+  });
   $('trBackHubBtn').addEventListener('click', () => { renderTrHub(); show('training'); });
   $('trIntroStartBtn').addEventListener('click', trStartFromIntro);
   $('trIntroDemoBtn').addEventListener('click', trStartDemoFromIntro);
@@ -4556,6 +4573,9 @@
   // ダブルタップズーム等の抑止
   document.addEventListener('dblclick', e => e.preventDefault());
   document.addEventListener('contextmenu', e => e.preventDefault());
+  document.addEventListener('visibilitychange', onVisibilityChange);
+  window.addEventListener('pagehide', handleAppInterruption);
+  window.addEventListener('pageshow', onPageShow);
 
   applyLang();
   renderTitle();
