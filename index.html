@@ -3895,8 +3895,12 @@
       if (!isPrimaryPointer(e)) return;
       if (tapped) return;
       tapped = true;
-      const now = performance.now();
-      const errMs = Math.round(now - arrivalAt);
+      // タッチ入力遅延の補正: e.timeStamp(OSがイベントを受けた時刻に近い)を優先し、
+      // さらにハードウェア→OS→JS配送分の残差として控えめに40ms差し引く。
+      // これがないと「見た目ぴったり」で押しても常に+50〜100msのLATE判定になる
+      const raw = (typeof e.timeStamp === 'number' && e.timeStamp > 0) ? e.timeStamp : performance.now();
+      const INPUT_LAG_MS = 40;
+      const errMs = Math.round(raw - arrivalAt - INPUT_LAG_MS);
       const hit = Math.abs(errMs) <= 150;
       D.raw.push({ errMs, speedLevel, hit });
       fld.removeEventListener('pointerdown', onDown);
