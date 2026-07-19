@@ -523,6 +523,16 @@
     margin-top: 4px;
   }
   .as-total-label { font-size: 13px; color: #8b949e; letter-spacing: .12em; margin-bottom: 20px; }
+  .as-new-best {
+    color: #ffdf5d; font-family: 'Orbitron', sans-serif;
+    font-size: 22px; font-weight: 900; letter-spacing: .1em;
+    margin: -10px 0 12px; text-shadow: 0 0 20px rgba(255,223,93,.65);
+    animation: asBestPop .45s ease-out;
+  }
+  @keyframes asBestPop {
+    from { opacity: 0; transform: scale(.72); }
+    to { opacity: 1; transform: scale(1); }
+  }
   /* PROVISIONAL表記 (暫定採点であることを示すグレー系の控えめなバッジ) */
   .prov-badge {
     display: inline-block;
@@ -545,6 +555,24 @@
   .as-row-name { font-family: 'Orbitron', sans-serif; font-size: 14px; font-weight: 700; color: #2ea8ff; letter-spacing: .08em; }
   .as-row-metric { font-size: 12px; color: #5f7a94; margin-top: 2px; }
   .as-row-score { font-family: 'Rajdhani', sans-serif; font-size: 22px; font-weight: 700; color: #e6edf3; }
+  .as-top10 { width: 100%; max-width: 420px; margin: 14px 0 22px; }
+  .as-top10-title {
+    font-family: 'Orbitron', sans-serif; color: #8b949e; font-size: 12px;
+    font-weight: 700; letter-spacing: .14em; margin-bottom: 8px; text-align: left;
+  }
+  .as-top10-row {
+    display: grid; grid-template-columns: 34px 1fr auto 42px; align-items: center; gap: 8px;
+    min-height: 34px; padding: 5px 10px; border-bottom: 1px solid #21262d;
+    color: #8b949e; font-size: 13px; font-variant-numeric: tabular-nums;
+  }
+  .as-top10-row.is-current { background: rgba(255,223,93,.06); }
+  .as-top10-rank { color: #5f7a94; font-family: 'Orbitron', sans-serif; font-size: 11px; }
+  .as-top10-score { color: #e6edf3; font-size: 17px; font-weight: 700; text-align: right; }
+  .prof-best-total {
+    color: #ffdf5d; font-family: 'Orbitron', sans-serif; font-size: 12px;
+    font-weight: 700; letter-spacing: .1em; margin: 2px 0 -4px;
+    text-shadow: 0 0 10px rgba(255,223,93,.35);
+  }
 
   #langSel {
     background: #161b22; color: #8b949e;
@@ -1269,8 +1297,10 @@
     <h2 class="scr-head">ASSESSMENT RESULT</h2>
     <div class="as-total" id="asTotalScore">0</div>
     <div class="as-total-label" data-i18n="asTotalLabel">総合スコア</div>
+    <div class="as-new-best hidden" id="asNewBest"></div>
     <div class="prov-row"><span class="prov-badge">PROVISIONAL</span></div>
     <div class="prov-note" data-i18n="provisionalNote"></div>
+    <div class="as-top10" id="asTop10"></div>
     <div class="as-rows" id="asRows"></div>
     <button class="btn ghost" data-back data-i18n="backMenu">メニューへ</button>
   </div>
@@ -1288,6 +1318,7 @@
     <!-- 五角形レーダーチャート (最新=シアン実線 / 前回=グレー点線) -->
     <div id="prChartWrap" class="chartWrap hidden">
       <div class="prov-row"><span class="prov-badge">PROVISIONAL</span></div>
+      <div class="prof-best-total hidden" id="prBestTotal"></div>
       <svg id="prChart" viewBox="0 0 340 320" xmlns="http://www.w3.org/2000/svg"></svg>
       <div class="prof-legend">
         <span><span class="prof-legend-dot" style="background:#2ea8ff"></span><span id="prLegendLatestText"></span></span>
@@ -1547,6 +1578,9 @@
   STR.asNext = ['次の種目', 'Next up'];
   STR.asCancelBtn = ['中止', 'Cancel'];
   STR.asTotalLabel = ['総合スコア', 'Overall score'];
+  STR.asTop10 = ['TOP 10', 'TOP 10'];
+  STR.asNew = ['NEW', 'NEW'];
+  STR.asNewBest = ['NEW BEST!', 'NEW BEST!'];
   STR.provisionalNote = ['スコアは暫定換算です。換算式は今後調整されます', 'Scores use a provisional formula that may be adjusted later'];
   STR.storageSaveFailed = ['記録を保存できませんでした。空き容量を確認し、データを書き出してください', 'Could not save your records. Check storage space and export your data'];
   STR.storageExportPrompt = ['保存容量が少なくなっています。PROFILEからデータを書き出してください', 'Storage is running low. Export your data from PROFILE'];
@@ -1640,6 +1674,7 @@
   STR.prHistTitle = ['履歴 (直近14日)', 'History (last 14 days)'];
   STR.prExportJsonBtn = ['JSONをエクスポート', 'Export JSON'];
   STR.prExportCsvBtn = ['CSVをエクスポート', 'Export CSV'];
+  STR.prBestTotal = ['BEST TOTAL', 'BEST TOTAL'];
   STR.prRxTitle = ['今日の処方', "Today's Prescription"];
   STR.prRxFmt = ['{t} を3セット', 'Do 3 sets of {t}'];
   STR.prRxTargetLabel = ['目標', 'Target'];
@@ -1744,6 +1779,14 @@
     else {
       d.assessment.runs = d.assessment.runs.filter(isPlainObject);
       d.assessment.runs.forEach(run => { if (!isPlainObject(run.tasks)) run.tasks = {}; });
+    }
+    if (!Array.isArray(d.assessment.top)) d.assessment.top = [];
+    else {
+      d.assessment.top = d.assessment.top
+        .filter(entry => isPlainObject(entry) && Number.isFinite(Number(entry.totalAvg)))
+        .sort((a, b) => Number(b.totalAvg) - Number(a.totalAvg) || Number(a.ts) - Number(b.ts))
+        .slice(0, 10);
+      d.assessment.top.forEach(entry => { if (!isPlainObject(entry.scores)) entry.scores = {}; });
     }
     return d;
   }
@@ -3010,12 +3053,20 @@
     if (taskId === 'timing') return value <= 30 ? 'S' : value <= 60 ? 'A' : value <= 100 ? 'B' : value <= 150 ? 'C' : 'D';
     return 'D';
   }
+  // 赤ミス1回は約1グレード分、フライング1回は約半グレード分の負担として評価時だけ加算する。
+  // 表示中央値と保存済みraw/summaryには混ぜず、TRAINING/ASSESSMENT共通の評価文字にだけ使う。
+  function perceptionAdjustedMs(summary) {
+    if (!summary || !Number.isFinite(summary.median)) return null;
+    const noGoErrors = Number.isFinite(summary.noGoErrors) ? Math.max(0, summary.noGoErrors) : 0;
+    const falseStarts = Number.isFinite(summary.falseStarts) ? Math.max(0, summary.falseStarts) : 0;
+    return summary.median + noGoErrors * 40 + falseStarts * 25;
+  }
   // 課題ごとの代表指標を既存の1発評価しきい値へ通し、総合評価を表示時に導出する
   function trOverallGrade(taskId, summary) {
     if (!summary) return 'D';
     let value = null;
     switch (taskId) {
-      case 'perception': value = summary.median; break;
+      case 'perception': value = perceptionAdjustedMs(summary); break;
       case 'flick': value = summary.spsMedian; break;
       case 'precision': value = summary.avgErrRatio != null ? 1 - summary.avgErrRatio : null; break;
       case 'switching': value = summary.perTargetMedian; break;
@@ -4345,13 +4396,54 @@
       storageNotice('capacity');
       db.assessment.runs = db.assessment.runs.slice(-AS_RUN_LIMIT);
     }
+    const previousBest = db.assessment.top.length ? Number(db.assessment.top[0].totalAvg) : null;
+    const topEntry = {
+      ts: run.ts,
+      totalAvg: run.totalAvg,
+      seed: run.seed,
+      scores: Object.fromEntries(TR_ORDER.map(id => [id, run.tasks[id].score])),
+    };
+    db.assessment.top = db.assessment.top.concat(topEntry)
+      .filter(entry => Number.isFinite(Number(entry.totalAvg)))
+      .sort((a, b) => Number(b.totalAvg) - Number(a.totalAvg) || Number(a.ts) - Number(b.ts))
+      .slice(0, 10);
+    const isTop10 = db.assessment.top.includes(topEntry);
+    const isNewBest = isTop10 && (!Number.isFinite(previousBest) || totalAvg > previousBest);
     db.assessment.pending = null;
     saveDB();
     AS = null; TR_MODE = 'solo'; RNG = Math.random;
-    asShowResult(run);
+    asShowResult(run, { topEntry, isTop10, isNewBest });
   }
-  function asShowResult(run) {
+  function asShowResult(run, ranking) {
     $('asTotalScore').textContent = run.totalAvg;
+    const newBest = $('asNewBest');
+    newBest.textContent = T('asNewBest');
+    newBest.classList.toggle('hidden', !(ranking && ranking.isNewBest));
+    if (ranking && ranking.isNewBest) {
+      // TRAININGの自己ベスト更新と同じ2音チャイムを流用する。
+      beep(659, .09, .16);
+      setTimeout(() => beep(880, .13, .16), 90);
+      buzz([12, 24, 12]);
+    }
+    const topWrap = $('asTop10');
+    topWrap.innerHTML = `<div class="as-top10-title">${T('asTop10')}</div>`;
+    db.assessment.top.forEach((entry, i) => {
+      const isCurrent = ranking && ranking.isTop10 && entry === ranking.topEntry;
+      const row = document.createElement('div');
+      row.className = 'as-top10-row' + (isCurrent ? ' is-current' : '');
+      row.innerHTML = `<span class="as-top10-rank">${i + 1}</span>` +
+        `<span>${trHistoryDate(entry.ts, false)}</span>` +
+        `<span class="as-top10-score">${Number(entry.totalAvg).toFixed(1)}</span>`;
+      const badgeSlot = document.createElement('span');
+      if (isCurrent) {
+        const badge = document.createElement('span');
+        badge.className = 'tr-history-new';
+        badge.textContent = T('asNew');
+        badgeSlot.appendChild(badge);
+      }
+      row.appendChild(badgeSlot);
+      topWrap.appendChild(row);
+    });
     const wrap = $('asRows');
     wrap.innerHTML = '';
     TR_ORDER.forEach(id => {
@@ -4666,6 +4758,10 @@
     $('prPrescription').classList.toggle('hidden', !hasData);
     $('prAbilityWrap').classList.toggle('hidden', !hasData);
     $('prHistWrap').classList.toggle('hidden', !hasData);
+    const bestTotal = $('prBestTotal');
+    const bestEntry = db.assessment.top.length ? db.assessment.top[0] : null;
+    bestTotal.classList.toggle('hidden', !bestEntry);
+    bestTotal.textContent = bestEntry ? `${T('prBestTotal')}: ${Number(bestEntry.totalAvg).toFixed(1)}` : '';
     if (hasData) {
       if (PR_SELECTED >= days.length) PR_SELECTED = 0;
       const latest = days[PR_SELECTED];
@@ -4710,7 +4806,7 @@
   function prExportCsv() {
     if (!db.assessment.runs.length) return;
     const cols = ['ts_iso', 'date', 'seed', 'assessment_version', 'test_config_version', 'score_formula_version',
-      'perception', 'flick', 'precision', 'tracking', 'switching', 'timing', 'total_avg', 'w', 'h', 'dpr', 'portrait'];
+      'perception', 'flick', 'precision', 'tracking', 'switching', 'timing', 'total_avg', 'w', 'h', 'dpr', 'portrait', 'top_rank'];
     const lines = [cols.join(',')];
     db.assessment.runs.forEach(r => {
       const d = new Date(r.ts);
@@ -4719,8 +4815,11 @@
       // tracking列は旧run互換のため残す。v3以降のrunでは空欄になる。
       const taskScores = ['perception', 'flick', 'precision', 'tracking', 'switching', 'timing']
         .map(id => (r.tasks && r.tasks[id] ? r.tasks[id].score : ''));
+      const topIndex = db.assessment.top.findIndex(entry =>
+        entry.ts === r.ts && entry.seed === r.seed && Number(entry.totalAvg) === Number(r.totalAvg));
       const flat = [d.toISOString(), date, r.seed, r.assessment_version, r.test_config_version, r.score_formula_version,
-        ...taskScores, r.totalAvg, env.w != null ? env.w : '', env.h != null ? env.h : '', env.dpr != null ? env.dpr : '', env.portrait != null ? env.portrait : ''];
+        ...taskScores, r.totalAvg, env.w != null ? env.w : '', env.h != null ? env.h : '', env.dpr != null ? env.dpr : '',
+        env.portrait != null ? env.portrait : '', topIndex >= 0 ? topIndex + 1 : ''];
       lines.push(flat.map(prCsvCell).join(','));
     });
     const csv = '﻿' + lines.join('\r\n'); // UTF-8 BOM付き (Excelでの文字化け防止)
