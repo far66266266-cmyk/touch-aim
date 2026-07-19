@@ -1757,6 +1757,7 @@
   let totalScore = 0;
   let records = [];             // idx順の {time, acc, pts, sizeF, miss}
   let rafId = 0;
+  let countdownTimer = 0;       // SCORE ATTACK開始カウントダウン
   let gapTimer = 0;             // 次ターゲット出現用タイマー
   let nextIdx = 0;              // 次に出すターゲット番号
   let spawnSizes = [];          // 事前生成したサイズ倍率
@@ -1764,6 +1765,9 @@
   let replay = null;            // 直前プレイのリプレイデータ (メモリのみ)
   let combo = 0, maxCombo = 0;  // 青い芯への連続ヒット数
   let roundWhiffs = 0, zoneHits = 0; // 実績用: 今ラウンドの空振り数・芯ヒット数
+
+  // ゲーム判定へ入れるのはprimary pointerだけ。副タッチや合成イベントは採用しない。
+  function isPrimaryPointer(e) { return !!e && e.isPrimary === true; }
 
   // ===== サウンド (WebAudio・ユーザー操作内で両Contextを共通アンロック) =====
   let ac = null;
@@ -2278,19 +2282,22 @@
 
   // ===== カウントダウン → 開始 =====
   function startCountdown() {
+    captureViewportBaseline();
+    clearInterval(countdownTimer);
     state = 'countdown';
     show('countdown');
     hud.classList.remove('hidden');
     let n = 3;
     $('countdown').textContent = n;
     beep(440, .1, .15);
-    const iv = setInterval(() => {
+    countdownTimer = setInterval(() => {
       n--;
       if (n > 0) {
         $('countdown').textContent = n;
         beep(440, .1, .15);
       } else {
-        clearInterval(iv);
+        clearInterval(countdownTimer);
+        countdownTimer = 0;
         beep(880, .15, .2);
         $('countdown').classList.add('hidden');
         startRound();
@@ -2392,6 +2399,7 @@
 
   // ===== タップ判定 =====
   field.addEventListener('pointerdown', (e) => {
+    if (!isPrimaryPointer(e)) return;
     if (state !== 'play') return;
     const now = performance.now();
     const tNow = now - roundStart;
@@ -2942,6 +2950,7 @@
   function trLaunchWithCount(fn, context) {
     trCancelLaunch();
     if (typeof fn !== 'function') return;
+    captureViewportBaseline();
     const owner = { timer: 0, context: context || null };
     TR_COUNT = owner;
     state = 'countdown';
@@ -3240,6 +3249,9 @@
     let delayTimer = 0, finishTimer = 0, spawnAt = 0, padPointerId = null, tg = null;
 
     function cleanup() {
+      if (padPointerId !== null) {
+        try { if (pad.hasPointerCapture(padPointerId)) pad.releasePointerCapture(padPointerId); } catch (e) { /* capture解除不能でも続行 */ }
+      }
       pad.removeEventListener('pointerdown', onPadDown);
       pad.removeEventListener('pointerup', onPadUp);
       pad.removeEventListener('pointercancel', onPadUp);
@@ -3247,9 +3259,11 @@
       clearTimeout(finishTimer);
     }
     function onPadDown(e) {
+      if (!isPrimaryPointer(e)) return;
       if (phase !== 'wait') return;
       phase = 'holding';
       padPointerId = e.pointerId;
+      try { pad.setPointerCapture(e.pointerId); } catch (err) { /* 非対応環境でも同一pointerId判定は維持 */ }
       pad.classList.add('active');
       trHideMsg();
       const wait = 1200 + RNG() * 2300;
@@ -3284,7 +3298,7 @@
       }, wait);
     }
     function onPadUp(e) {
-      if (padPointerId !== null && e.pointerId !== padPointerId) return;
+      if (!isPrimaryPointer(e) || padPointerId === null || e.pointerId !== padPointerId) return;
       if (phase === 'holding') {
         // フライング: 出現前に離した。試行はやり直し(カウントしない)
         D.falseStarts++;
@@ -3370,6 +3384,9 @@
     let phase = 'wait', delayTimer = 0, finishTimer = 0, spawnAt = 0, releaseAt = 0, padPointerId = null, reaction = 0, tg = null;
 
     function cleanup() {
+      if (padPointerId !== null) {
+        try { if (pad.hasPointerCapture(padPointerId)) pad.releasePointerCapture(padPointerId); } catch (e) { /* capture解除不能でも続行 */ }
+      }
       pad.removeEventListener('pointerdown', onPadDown);
       pad.removeEventListener('pointerup', onPadUp);
       pad.removeEventListener('pointercancel', onPadUp);
@@ -3378,9 +3395,11 @@
       clearTimeout(finishTimer);
     }
     function onPadDown(e) {
+      if (!isPrimaryPointer(e)) return;
       if (phase !== 'wait') return;
       phase = 'holding';
       padPointerId = e.pointerId;
+      try { pad.setPointerCapture(e.pointerId); } catch (err) { /* 非対応環境でも同一pointerId判定は維持 */ }
       pad.classList.add('active');
       trHideMsg();
       const wait = 500 + RNG() * 900;
@@ -3396,7 +3415,7 @@
       }, wait);
     }
     function onPadUp(e) {
-      if (padPointerId !== null && e.pointerId !== padPointerId) return;
+      if (!isPrimaryPointer(e) || padPointerId === null || e.pointerId !== padPointerId) return;
       if (phase === 'holding') {
         clearTimeout(delayTimer);
         cleanup();
@@ -3413,6 +3432,7 @@
       }
     }
     function onFieldDown(e) {
+      if (!isPrimaryPointer(e)) return;
       if (phase !== 'moving') return;
       const now = performance.now();
       const d = Math.hypot(e.clientX - tx, e.clientY - ty);
@@ -3495,6 +3515,7 @@
       precisionSpawn();
     }
     function onDown(e) {
+      if (!isPrimaryPointer(e)) return;
       if (tapped) return;
       const d = Math.hypot(e.clientX - tx, e.clientY - ty);
       if (d > r * 1.6) return; // 明らかに無関係な場所のタップは無視
@@ -3594,6 +3615,7 @@
     let finishTimer = 0;
 
     function onDown(e) {
+      if (!isPrimaryPointer(e)) return;
       let best = null, bestRatio = Infinity;
       for (const t of D.targets) {
         if (t.done) continue;
@@ -3689,6 +3711,7 @@
 
     function curX(now) { return x0 + dir * speed * ((now - startT) / 1000); }
     function onDown(e) {
+      if (!isPrimaryPointer(e)) return;
       if (tapped) return;
       tapped = true;
       const now = performance.now();
@@ -3815,7 +3838,6 @@
     if (!TR_DEMO) return null;
     const ctx = TR_DEMO.ctx;
     TR_DEMO.timers.forEach(clearTimeout);
-    window.removeEventListener('resize', trSkipDemo);
     const fld = $('trField');
     fld.removeEventListener('pointerdown', trSkipDemo);
     fld.innerHTML = '';
@@ -3830,7 +3852,8 @@
     trLaunchWithCount(() => TR_START[ctx.taskId](), ctx);
   }
   function trDemoStartReal() { trStartIntroContext(trDemoCleanup()); }
-  function trSkipDemo() {
+  function trSkipDemo(e) {
+    if (e && !isPrimaryPointer(e)) return;
     if (!TR_DEMO || TR_DEMO.finishing) return;
     trDemoStartReal();
   }
@@ -3843,10 +3866,10 @@
     $('trTaskName').textContent = TR_META[ctx.taskId].name;
     trSetProgress(0, null); trHideMsg();
     const fld = $('trField'); fld.innerHTML = ''; fld.classList.remove('hidden');
+    captureViewportBaseline();
     TR_DEMO = { ctx, timers: [], finger: null, finishing: false };
     trDemoDecorate();
     fld.addEventListener('pointerdown', trSkipDemo);
-    window.addEventListener('resize', trSkipDemo);
     TR_DEMO_SEQUENCES[ctx.taskId]();
   }
 
@@ -4211,7 +4234,18 @@
     show('asResult');
   }
 
-  // ===== TRAINING / ASSESSMENT: バックグラウンド中断の共通復帰 =====
+  // ===== 全ゲーム共通: バックグラウンド・画面変更中断 =====
+  const VIEWPORT_INTERRUPT_RATIO = 0.15;
+  let interruptionInProgress = false;
+  let viewportBaseline = readViewportSnapshot();
+
+  function readViewportSnapshot() {
+    return { w: innerWidth, h: innerHeight, short: Math.min(innerWidth, innerHeight), portrait: innerHeight >= innerWidth };
+  }
+  function captureViewportBaseline() { viewportBaseline = readViewportSnapshot(); }
+  function hasInterruptibleActivity() {
+    return !!(TR_DEMO || TR_COUNT || TR || countdownTimer || state === 'play');
+  }
   function trRestoreIntro(ctx) {
     if (!ctx || !TR_START[ctx.taskId]) return false;
     state = 'title';
@@ -4222,33 +4256,93 @@
     trShowIntro(ctx.taskId, ctx.mode, ctx.returnScreen || (ctx.mode === 'assessment' ? 'assessment' : 'training'));
     return true;
   }
-  function handleAppInterruption() {
-    let ctx = null;
-    if (TR_DEMO) {
-      ctx = trDemoCleanup();
-    } else if (TR_COUNT) {
-      ctx = trCancelLaunch();
-    } else if (TR) {
-      const taskId = TR.task;
-      const modeAtInterrupt = TR_MODE;
-      ctx = { taskId, mode: modeAtInterrupt, returnScreen: modeAtInterrupt === 'assessment' ? 'assessment' : 'training' };
-      const interrupted = TR;
-      if (interrupted.cleanup) {
-        try { interrupted.cleanup(); } catch (e) { /* 復帰画面を優先して続行 */ }
+  function interruptActiveActivity(reason) {
+    // visibility/pagehide/resize/orientationが連続しても、所有者を先に外してcleanupを一度だけにする。
+    if (interruptionInProgress || !hasInterruptibleActivity()) return false;
+    interruptionInProgress = true;
+    let interrupted = false;
+    try {
+      let ctx = null;
+      if (TR_DEMO) {
+        ctx = trDemoCleanup();
+        interrupted = true;
+      } else if (TR_COUNT) {
+        ctx = trCancelLaunch();
+        interrupted = true;
+      } else if (TR) {
+        const owner = TR;
+        const modeAtInterrupt = TR_MODE;
+        ctx = { taskId: owner.task, mode: modeAtInterrupt, returnScreen: modeAtInterrupt === 'assessment' ? 'assessment' : 'training' };
+        TR = null; // 先に所有権を外し、再入しても二重cleanup・二重保存させない。
+        const cleanup = owner.cleanup;
+        owner.cleanup = null;
+        if (cleanup) {
+          try { cleanup(); } catch (e) { /* 復帰画面を優先して続行 */ }
+        }
+        TR_MODE = 'solo';
+        RNG = Math.random;
+        interrupted = true; // 未完了runは保存せず、pending.doneTasks/nextIndexは変更しない。
+      } else if (countdownTimer) {
+        clearInterval(countdownTimer);
+        countdownTimer = 0;
+        state = 'title';
+        hud.classList.add('hidden');
+        field.innerHTML = '';
+        renderTitle();
+        show('title');
+        interrupted = true;
+      } else if (state === 'play') {
+        // 集計経路(endRound)へ入れず、SCORE ATTACKの未完了ラウンドを破棄する。
+        state = 'title';
+        cancelAnimationFrame(rafId); rafId = 0;
+        clearTimeout(gapTimer); gapTimer = 0;
+        active.forEach(tg => { clearTimeout(tg.lifeTimer); tg.el.remove(); });
+        active = [];
+        replay = null;
+        field.innerHTML = '';
+        $('combo').classList.add('hidden');
+        hud.classList.add('hidden');
+        renderTitle();
+        show('title');
+        interrupted = true;
       }
-      TR = null; // 未完了runは保存しない。pending.nextIndexも進めない。
-      TR_MODE = 'solo';
-      RNG = Math.random;
+      if (ctx) trRestoreIntro(ctx);
+      if (interrupted) captureViewportBaseline();
+      return interrupted;
+    } finally {
+      interruptionInProgress = false;
     }
-    if (ctx) trRestoreIntro(ctx);
   }
   function onVisibilityChange() {
-    if (document.hidden) handleAppInterruption();
+    if (document.hidden) interruptActiveActivity('visibilitychange');
+  }
+  function onPageHide() {
+    interruptActiveActivity('pagehide');
+  }
+  function onViewportChange(reason) {
+    const next = readViewportSnapshot();
+    if (!hasInterruptibleActivity()) {
+      viewportBaseline = next;
+      return;
+    }
+    const orientationChanged = next.portrait !== viewportBaseline.portrait;
+    const shortChange = viewportBaseline.short > 0 ? Math.abs(next.short - viewportBaseline.short) / viewportBaseline.short : 0;
+    // orientationchange自体、または短辺15%以上の変化だけを中断対象にする。軽微なresizeはCSS追従のみ。
+    if (reason === 'orientationchange' || orientationChanged || shortChange >= VIEWPORT_INTERRUPT_RATIO) {
+      interruptActiveActivity(reason);
+    }
+  }
+  function onResize() {
+    onViewportChange('resize');
+  }
+  function onOrientationChange() {
+    onViewportChange('orientationchange');
   }
   function onPageShow(e) {
     if (!e.persisted) return;
     // pagehideを経ず凍結された環境でも、残った所有者を一度だけ片付ける。
-    handleAppInterruption();
+    interruptActiveActivity('pageshow');
+    captureViewportBaseline();
     const hasScreen = Array.from(document.querySelectorAll('.screen')).some(el => !el.classList.contains('hidden'));
     if (!hasScreen && state !== 'play') {
       if (db.assessment.pending) { asRenderStart(); show('assessment'); }
@@ -4574,8 +4668,10 @@
   document.addEventListener('dblclick', e => e.preventDefault());
   document.addEventListener('contextmenu', e => e.preventDefault());
   document.addEventListener('visibilitychange', onVisibilityChange);
-  window.addEventListener('pagehide', handleAppInterruption);
+  window.addEventListener('pagehide', onPageHide);
   window.addEventListener('pageshow', onPageShow);
+  window.addEventListener('resize', onResize);
+  window.addEventListener('orientationchange', onOrientationChange);
 
   applyLang();
   renderTitle();
