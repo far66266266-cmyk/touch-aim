@@ -63,7 +63,7 @@
   .hidden { display: none !important; }
 
   h1 {
-    margin-top: 104px; /* 上部の♪トグル・言語セレクタと重ならないように下げる */
+    margin-top: 0; /* 上部コントロールは通常フローの .menu-top が受け持つ */
     font-family: 'Orbitron', sans-serif;
     font-size: 37px; font-weight: 900;
     letter-spacing: .16em;
@@ -348,7 +348,7 @@
     padding-top: max(32px, env(safe-area-inset-top));
   }
   /* ===== メインメニュー ===== */
-  #menu { overflow-y: auto; touch-action: pan-y; }
+  #menu { overflow-y: auto; touch-action: pan-y; justify-content: flex-start; }
   .cats {
     display: flex; flex-direction: column; gap: 12px;
     width: 100%; max-width: 420px;
@@ -472,16 +472,19 @@
   .as-row-score { font-family: 'Rajdhani', sans-serif; font-size: 22px; font-weight: 700; color: #e6edf3; }
 
   #langSel {
-    position: absolute;
-    top: calc(12px + env(safe-area-inset-top)); right: 16px;
     background: #161b22; color: #8b949e;
     border: 1px solid #30363d; border-radius: 8px;
     font-size: 13px; padding: 6px 8px;
     font-family: inherit;
   }
+  /* メニュー上部のコントロール行 (通常フロー: ブラウザ差で重ならない) */
+  .menu-top {
+    width: 100%; max-width: 420px;
+    display: flex; justify-content: space-between; align-items: center;
+    padding-top: env(safe-area-inset-top);
+    margin-bottom: 40px;
+  }
   #bgmBtn {
-    position: absolute;
-    top: calc(12px + env(safe-area-inset-top)); left: 16px;
     min-width: 76px;
     background: #161b22; color: #8b949e;
     border: 1px solid #30363d; border-radius: 8px;
@@ -1016,8 +1019,10 @@
 
   <!-- メインメニュー (4分類) -->
   <div id="menu" class="screen">
-    <button id="bgmBtn" type="button"></button>
-    <select id="langSel"></select>
+    <div class="menu-top">
+      <button id="bgmBtn" type="button"></button>
+      <select id="langSel"></select>
+    </div>
     <h1>TOUCH AIM</h1>
     <div class="sub" data-i18n="sub">出現する円をすばやく・中心を狙ってタップ</div>
     <div class="cats">
