@@ -363,6 +363,11 @@
     cursor: pointer;
   }
   .cat:active { transform: scale(.98); }
+  .cat.cat-bounce { animation: catBounce .22s ease-out; }
+  @keyframes catBounce {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+  }
   .cat-name {
     font-family: 'Orbitron', sans-serif;
     font-size: 19px; font-weight: 700;
@@ -798,6 +803,14 @@
   .tr-feedback.tr-b { color: #3fb950; }
   .tr-feedback.tr-c { color: #8b949e; }
   .tr-feedback.tr-d { color: #a83b3b; }
+  .tr-penalty {
+    position: absolute; transform: translate(-50%, -100%); z-index: 19;
+    pointer-events: none; white-space: nowrap;
+    color: #f85149; font-family: 'Rajdhani', sans-serif;
+    font-size: 18px; font-weight: 700;
+    text-shadow: 0 2px 8px rgba(0,0,0,.85);
+    animation: trFloatUp .7s ease-out forwards;
+  }
   @keyframes trFloatUp {
     0% { opacity: 0; transform: translate(-50%,-82%) scale(.75); }
     16% { opacity: 1; transform: translate(-50%,-100%) scale(1.08); }
@@ -1410,12 +1423,12 @@
   STR.trIntro_perception_m = ['計測: 白い円が出てから指が離れるまでの反応速度。フェイクで離すと減点', 'Measured: reaction speed from the white circle appearing until finger lift. Lifting on a fake costs points'];
   STR.trIntro_flick_1 = ['1. パッドに指を置いたまま待つ', '1. Hold your finger on the pad and wait'];
   STR.trIntro_flick_2 = ['2. 円が出たら、指を離して一気にタップ', '2. When a circle appears, lift your finger and tap it in one quick motion'];
-  STR.trIntro_flick_3 = ['3. 8方向×1回', '3. One rep in each of 8 directions'];
+  STR.trIntro_flick_3 = ['3. 全10回・方向は毎回ランダム', '3. 10 reps total, with a random direction each time'];
   STR.trIntro_flick_m = ['計測: 離してから当てるまでの移動スピード(距離÷時間)', 'Measured: movement speed from lift to hit (distance divided by time)'];
-  STR.trIntro_precision_1 = ['1. 円が次々に出る(1秒で消える)', '1. Circles appear one after another (each disappears in 1 second)'];
+  STR.trIntro_precision_1 = ['1. 円が次々に出る(900msで消える)', '1. Circles appear one after another (each disappears in 900ms)'];
   STR.trIntro_precision_2 = ['2. 円の中心を"ていねいに"タップ', '2. Tap the center of each circle carefully'];
   STR.trIntro_precision_3 = ['3. 全12回', '3. 12 reps total'];
-  STR.trIntro_precision_m = ['計測: 中心からのズレ。1秒以内ならスピードは採点されない', 'Measured: distance from center. Speed is not scored as long as you tap within 1 second'];
+  STR.trIntro_precision_m = ['計測: 中心からのズレ。900ms以内ならスピードは採点されない', 'Measured: distance from center. Speed is not scored as long as you tap within 900ms'];
   STR.trIntro_tracking_1 = ['1. 動く円に指を乗せる', '1. Put your finger on the moving circle'];
   STR.trIntro_tracking_2 = ['2. 指を画面につけたまま、円を追いかけ続ける', '2. Keep your finger on the screen and follow it'];
   STR.trIntro_tracking_3 = ['3. {n}秒間ずっと', '3. For {n} seconds straight'];
@@ -1471,6 +1484,7 @@
   STR.trLate = ['LATE', 'LATE'];
   STR.trStay = ['滞在率 {pct}%', 'IN ZONE {pct}%'];
   STR.trSwitch = ['切替 {ms}ms', 'SWITCH {ms}ms'];
+  STR.trPenalty300 = ['+300ms', '+300ms'];
   STR.trFake = ['FAKE!', 'FAKE!'];
   STR.trOkay = ['OK', 'OK'];
   STR.trSpeed = ['{sps} scr/s / {ms}ms', '{sps} scr/s / {ms}ms'];
@@ -1615,11 +1629,12 @@
   let combo = 0, maxCombo = 0;  // 青い芯への連続ヒット数
   let roundWhiffs = 0, zoneHits = 0; // 実績用: 今ラウンドの空振り数・芯ヒット数
 
-  // ===== サウンド (WebAudio・タップで初期化) =====
+  // ===== サウンド (WebAudio・ユーザー操作内で両Contextを共通アンロック) =====
   let ac = null;
   function beep(freq, dur, gain) {
     try {
       if (!ac) ac = new (window.AudioContext || window.webkitAudioContext)();
+      if (ac.state === 'suspended') ac.resume();
       const o = ac.createOscillator(), g = ac.createGain();
       o.frequency.value = freq;
       g.gain.setValueAtTime(gain, ac.currentTime);
@@ -1633,6 +1648,7 @@
   function boo() {
     try {
       if (!ac) ac = new (window.AudioContext || window.webkitAudioContext)();
+      if (ac.state === 'suspended') ac.resume();
       const o = ac.createOscillator(), g = ac.createGain();
       o.type = 'sawtooth';
       o.frequency.setValueAtTime(140, ac.currentTime);
@@ -1691,20 +1707,25 @@
       bgmStep = (bgmStep + 1) % 64;
     }
   }
+  function ensureBgmContext() {
+    if (bgmAc) return;
+    bgmAc = new (window.AudioContext || window.webkitAudioContext)();
+    bgmMaster = bgmAc.createGain();
+    bgmMaster.gain.value = .06;
+    bgmMaster.connect(bgmAc.destination);
+  }
+  function startBgmScheduler() {
+    if (!bgmAc || !db.settings.bgm || bgmAc.state !== 'running' || bgmTimer) return;
+    bgmNextAt = bgmAc.currentTime + .05; bgmStep = 0;
+    bgmPump(); bgmTimer = setInterval(bgmPump, 100);
+  }
   async function bgmStart() {
     if (!db.settings.bgm) return;
     try {
-      if (!bgmAc) {
-        bgmAc = new (window.AudioContext || window.webkitAudioContext)();
-        bgmMaster = bgmAc.createGain();
-        bgmMaster.gain.value = .06;
-        bgmMaster.connect(bgmAc.destination);
-      }
-      await bgmAc.resume();
+      ensureBgmContext();
+      if (bgmAc.state === 'suspended') await bgmAc.resume();
       if (!db.settings.bgm) { await bgmAc.suspend(); return; }
-      bgmNextAt = bgmAc.currentTime + .05; bgmStep = 0;
-      clearInterval(bgmTimer);
-      bgmPump(); bgmTimer = setInterval(bgmPump, 100);
+      startBgmScheduler();
     } catch (e) { /* BGM非対応でもゲームは続行 */ }
   }
   async function bgmStop() {
@@ -1712,6 +1733,19 @@
     bgmNodes.forEach(o => { try { o.stop(); } catch (e) { /* 停止済みなら無視 */ } });
     bgmNodes.clear();
     try { if (bgmAc && bgmAc.state !== 'closed') await bgmAc.suspend(); } catch (e) { /* 停止不能でも続行 */ }
+  }
+  function unlockAudio() {
+    try {
+      if (!ac) ac = new (window.AudioContext || window.webkitAudioContext)();
+      ensureBgmContext();
+      const resumes = [];
+      if (ac.state === 'suspended') resumes.push(ac.resume());
+      if (bgmAc.state === 'suspended') resumes.push(bgmAc.resume());
+      Promise.all(resumes).then(() => {
+        if (db.settings.bgm) startBgmScheduler();
+      }).catch(() => { /* アンロック不能でもゲームは続行 */ });
+      if (!resumes.length && db.settings.bgm) startBgmScheduler();
+    } catch (e) { /* WebAudio非対応でもゲームは続行 */ }
   }
   function updateBgmButton() {
     const el = $('bgmBtn');
@@ -3026,12 +3060,11 @@
 
   // ===== 2. FLICK (振り向き: 反応と移動時間を分離計測) =====
   const FLICK_DIRS = [0, 45, 90, 135, 180, 225, 270, 315];
-  // totalOverride: ASSESSMENTでも全方向1回(8試行)を維持するため通常は既定値と同じ
+  // TRAININGは10試行、ASSESSMENTは8試行。方向は各試行でRNGから独立に選ぶ。
   function startFlick(totalOverride) {
-    const total = totalOverride || 8;
+    const total = totalOverride || 10;
     trEnterPlay('flick', total);
     TR.total = total; TR.trial = 0;
-    TR.order = shuffleArr(FLICK_DIRS.map((d, i) => i));
     flickNextTrial();
   }
   function flickNextTrial() {
@@ -3050,7 +3083,7 @@
     fld.appendChild(pad);
     trShowMsg(T('trHoldPad'));
 
-    const dirIdx = D.order[D.trial];
+    const dirIdx = Math.floor(RNG() * FLICK_DIRS.length);
     const angle = FLICK_DIRS[dirIdx] * Math.PI / 180;
     const dist = Math.min(rect.w, rect.h) * 0.35;
     const tr_ = Math.max(20, Math.round(baseRadius() * 0.55));
@@ -3212,7 +3245,7 @@
         trShake(tg); boo(); trFeedback(tx, ty, 'D', T('trMiss'), '');
         nextTimer = setTimeout(advance, 520);
       }
-    }, 1000);
+    }, 900);
     TR.cleanup = () => { clearTimeout(nextTimer); fld.removeEventListener('pointerdown', onDown); };
   }
   function finishPrecision() {
@@ -3340,7 +3373,7 @@
 
   // ===== 4. SWITCHING (切替: セットごとに3個から7個へ増加) =====
   function startSwitching(totalOverride) {
-    const counts = totalOverride === 3 ? [3, 4, 5] : [3, 4, 5, 6, 7];
+    const counts = totalOverride === 3 ? [3, 4, 5] : [3, 3, 4, 4, 5, 5, 6, 6, 7, 7];
     trEnterPlay('switching', counts.length);
     TR.total = counts.length; TR.counts = counts; TR.set = 0; TR.wrongTaps = 0; TR.setResults = [];
     switchingNextSet();
@@ -3386,6 +3419,7 @@
       D.targets.push({ num, x, y, r, el: tg, done: false });
     });
     D.setStartAt = null;
+    D.setWrongTaps = 0;
     let finishTimer = 0;
 
     function onDown(e) {
@@ -3406,9 +3440,10 @@
         best.el.classList.remove('tr-pop'); void best.el.offsetWidth; best.el.classList.add('tr-pop');
         if (D.expected > count) {
           fld.removeEventListener('pointerdown', onDown);
-          const setMs = now - D.setStartAt;
+          const measuredSetMs = now - D.setStartAt;
+          const setMs = measuredSetMs + D.setWrongTaps * 300;
           const perTarget = setMs / (count - 1);
-          D.setResults.push({ count, setMs, perTarget });
+          D.setResults.push({ count, measuredSetMs, penaltyMs: D.setWrongTaps * 300, wrongTaps: D.setWrongTaps, setMs, perTarget });
           const grade = trGrade('switching', perTarget);
           trFeedback(best.x, best.y, grade, trFmt('trSetResult', { n: count, sec: (setMs / 1000).toFixed(2), ms: Math.round(perTarget) }), '');
           trGradeSound(grade);
@@ -3421,7 +3456,12 @@
         }
       } else {
         D.wrongTaps++;
+        D.setWrongTaps++;
         trShake(best.el); boo(); buzz(30);
+        const penalty = document.createElement('div');
+        penalty.className = 'tr-penalty'; penalty.textContent = T('trPenalty300');
+        penalty.style.left = best.x + 'px'; penalty.style.top = (best.y - 10) + 'px';
+        fld.appendChild(penalty); setTimeout(() => penalty.remove(), 750);
       }
     }
     fld.addEventListener('pointerdown', onDown);
@@ -3759,7 +3799,7 @@
 
   // ===== 課題開始前の共通イントロ =====
   // TRAININGは通常試行数、ASSESSMENTは短縮試行数を同じ文面の{n}へ差し込む。
-  const TR_INTRO_TOTALS = { perception: 10, flick: 8, precision: 12, switching: 5, timing: 10 };
+  const TR_INTRO_TOTALS = { perception: 10, flick: 10, precision: 12, switching: 10, timing: 10 };
   function trShowIntro(taskId, mode, returnScreen) {
     const assessment = mode === 'assessment';
     const rawTotal = assessment ? AS_TOTALS[taskId] : TR_INTRO_TOTALS[taskId];
@@ -3801,11 +3841,11 @@
   // 「短縮試行数」「seed付き決定的な乱数」「db.assessmentへの保存」だけを分岐させる。
   // ===================================================================
   const ASSESSMENT_VERSION = 1;
-  const TEST_CONFIG_VERSION = 3; // TRACKING削除・5能力課題再設計v2
-  const SCORE_FORMULA_VERSION = 2;
+  const TEST_CONFIG_VERSION = 4; // PRECISION/SWITCHING/TIMING/FLICK構成調整
+  const SCORE_FORMULA_VERSION = 3;
   const AS_RESUME_MS = 30 * 60 * 1000; // 中断からの再開が有効な時間 (30分)
   const AS_DAILY_LIMIT = 2;
-  // 試行数/所要時間はTRAINING既定値の約6割 (全体5〜7分目安)。flickは全方向1回を維持するため既定8のまま
+  // 試行数/所要時間はTRAINING既定値の約6割 (全体5〜7分目安)。FLICKはseed付きランダム方向で8試行
   const AS_TOTALS = { perception: 7, flick: 8, precision: 8, switching: 3, timing: 8 };
 
   let AS = null; // 実行中のASSESSMENT状態 { seed, index, results:{taskId:{raw,summary,score}} }
@@ -3894,11 +3934,17 @@
       default: return 0;
     }
   }
+  // SWITCHINGは誤タップペナルティ込み時間だけで評価し、他課題はv2式を維持する。
+  function asScoreV3(taskId, raw, summary) {
+    if (taskId === 'switching') return asClamp100(asLinear(summary.perTargetMedian, 320, 100, 900, 0));
+    return asScoreV2(taskId, raw, summary);
+  }
   // 将来score_formula_versionが増えても過去の生データから再計算できるよう、バージョン分岐だけをここに足す
   function asComputeScore(taskId, raw, summary, version) {
     if (version === 1) return asScoreV1(taskId, raw, summary);
     if (version === 2) return asScoreV2(taskId, raw, summary);
-    return asScoreV2(taskId, raw, summary);
+    if (version === 3) return asScoreV3(taskId, raw, summary);
+    return asScoreV3(taskId, raw, summary);
   }
 
   // ===== 開始画面の表示更新 =====
@@ -4271,8 +4317,15 @@
     saveDB(); updateBgmButton();
     if (db.settings.bgm) bgmStart(); else bgmStop();
   });
-  // 自動再生制限を越えるため、最初のユーザー操作をBGM開始の合図にする
-  document.addEventListener('pointerdown', () => { if (db.settings.bgm) bgmStart(); }, { once: true });
+  // captureで各ボタン処理より先に両Contextを生成・再開し、iOS Safariの制限を越える
+  document.addEventListener('pointerdown', unlockAudio, true);
+  ['catSa', 'catTr', 'catAs', 'catPr'].forEach(id => {
+    $(id).addEventListener('pointerdown', e => {
+      const card = e.currentTarget;
+      beep(587, .05, .12);
+      card.classList.remove('cat-bounce'); void card.offsetWidth; card.classList.add('cat-bounce');
+    });
+  });
   document.querySelectorAll('[data-back]').forEach(b => b.addEventListener('click', () => show('menu')));
   // 言語セレクタ
   const sel = $('langSel');
