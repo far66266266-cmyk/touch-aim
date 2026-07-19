@@ -390,8 +390,15 @@
   /* ===== メインメニュー ===== */
   #menu { overflow-y: auto; touch-action: pan-y; justify-content: flex-start; }
   #quickPlayBtn {
-    width: 100%; max-width: 420px;
-    margin: 0 0 18px;
+    /* buttonのブラウザ差(iOS Safariのappearance・Braveのflex-shrink)を消し、
+       他のカードと同じ幅・位置で収まるようにする */
+    display: block;
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    max-width: 420px;
+    box-sizing: border-box;
+    margin: 0 auto 18px;
     padding: 18px 24px;
     font-size: 24px;
   }
