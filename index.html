@@ -7,6 +7,23 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <title>Touch Aim - タッチエイム練習</title>
+<meta name="description" content="スマホで狙って鍛える無料タッチエイム練習ゲーム。3モードのスコアアタック、5能力のトレーニング、能力測定で自分の腕を可視化。">
+<!-- OGP: SNS/LINE等でリンク共有時のカード表示 -->
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://far66266266-cmyk.github.io/touch-aim/">
+<meta property="og:title" content="TOUCH AIM — スマホで狙って鍛える">
+<meta property="og:description" content="タッチスクリーンで反応・精度・切替・迎撃を測る無料エイム練習ゲーム。3モードのスコアアタック+5能力トレーニング+能力測定。">
+<meta property="og:image" content="https://far66266266-cmyk.github.io/touch-aim/og-card.png">
+<meta property="og:image:type" content="image/png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:site_name" content="Touch Aim">
+<meta property="og:locale" content="ja_JP">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="TOUCH AIM — スマホで狙って鍛える">
+<meta name="twitter:description" content="タッチスクリーンで反応・精度・切替・迎撃を測る無料エイム練習ゲーム。">
+<meta name="twitter:image" content="https://far66266266-cmyk.github.io/touch-aim/og-card.png">
+<meta name="theme-color" content="#0a0e14">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
@@ -1523,9 +1540,9 @@
     m_normal: ['ノーマル', 'Normal', '普通', '노멀', 'Normal', 'Normal', 'Normal', 'Normal', 'Обычный', 'Normal'],
     m_acc: ['精度重視', 'Precision', '精准', '정확도', 'Precisión', 'Precisão', 'Précision', 'Präzision', 'Точность', 'Presisi'],
     m_speed: ['速度重視', 'Speed', '速度', '스피드', 'Velocidad', 'Velocidade', 'Vitesse', 'Tempo', 'Скорость', 'Kecepatan'],
-    d_normal: ['標準ルール。速さと精度をバランスよく評価', 'Standard rules — balanced scoring of speed and accuracy'],
-    d_acc: ['的が小さめ・出現ゆったり。中心精度が得点を決める', 'Smaller targets, more relaxed pacing — accuracy decides your score'],
-    d_speed: ['的は大きめだがすぐ消える。反応速度が得点を決める', 'Bigger targets that vanish fast — reaction speed decides your score'],
+    d_normal: ['標準ルール。速さと精度をバランスよく評価', 'Standard rules — balanced scoring of speed and accuracy', '标准规则：均衡评估速度与精准度', '표준 규칙 — 속도와 정확도를 균형 있게 평가', 'Reglas estándar: equilibrio entre velocidad y precisión', 'Regras padrão: equilíbrio entre velocidade e precisão', 'Règles standard : vitesse et précision équilibrées', 'Standardregeln – Tempo und Präzision ausgewogen bewertet', 'Стандартные правила: баланс скорости и точности', 'Aturan standar — penilaian seimbang antara kecepatan dan akurasi'],
+    d_acc: ['的が小さめ・出現ゆったり。中心精度が得点を決める', 'Smaller targets, more relaxed pacing — accuracy decides your score', '目标更小、出现节奏较慢——瞄准中心的精准度决定得分', '더 작은 타깃과 여유로운 템포 — 중심 정확도가 점수를 결정', 'Objetivos más pequeños y ritmo relajado: la precisión decide la puntuación', 'Alvos menores e ritmo mais tranquilo: a precisão decide a pontuação', 'Cibles plus petites et rythme plus calme : la précision décide du score', 'Kleinere Ziele, ruhigeres Tempo – Präzision entscheidet über die Punktzahl', 'Цели меньше, темп спокойнее — результат определяет точность', 'Target lebih kecil, tempo lebih santai — akurasi menentukan skor'],
+    d_speed: ['的は大きめだがすぐ消える。反応速度が得点を決める', 'Bigger targets that vanish fast — reaction speed decides your score', '目标更大但转瞬即逝——反应速度决定得分', '더 큰 타깃이 빠르게 사라짐 — 반응 속도가 점수를 결정', 'Objetivos más grandes que desaparecen rápido: la reacción decide la puntuación', 'Alvos maiores que somem rápido: a reação decide a pontuação', 'Cibles plus grandes mais très brèves : la réaction décide du score', 'Größere Ziele verschwinden schnell – Reaktionstempo entscheidet', 'Цели больше, но быстро исчезают — результат определяет реакция', 'Target lebih besar tetapi cepat hilang — kecepatan reaksi menentukan skor'],
     rulesBtn: ['ルール・遊び方', 'How to Play', '规则玩法', '규칙·플레이 방법', 'Reglas', 'Regras', 'Règles', 'Regeln', 'Правила', 'Aturan'],
     noRec: ['まだ記録がありません', 'No records yet', '暂无记录', '아직 기록이 없습니다', 'Sin registros todavía', 'Nenhum registro ainda', 'Aucun record pour l’instant', 'Noch keine Einträge', 'Пока нет записей', 'Belum ada rekor'],
     thScore: ['スコア', 'Score', '得分', '점수', 'Puntos', 'Pontos', 'Score', 'Punkte', 'Очки', 'Skor'],
@@ -1552,7 +1569,7 @@
     close: ['閉じる', 'Close', '关闭', '닫기', 'Cerrar', 'Fechar', 'Fermer', 'Schließen', 'Закрыть', 'Tutup'],
     replayNote: ['黄=タップ位置 / 赤=空振り / 薄い輪郭=消えた円', 'Yellow = tap / Red = whiff / Faint = expired circle', '黄=点击位置 / 红=落空 / 淡圈=已消失的圆', '노랑=탭 위치 / 빨강=헛스윙 / 옅은 원=사라진 원', 'Amarillo = toque / Rojo = fallo / Tenue = círculo expirado', 'Amarelo = toque / Vermelho = erro / Fraco = círculo expirado', 'Jaune = toucher / Rouge = raté / Pâle = cercle disparu', 'Gelb = Tipp / Rot = Fehlschlag / Blass = abgelaufen', 'Жёлтый = нажатие / Красный = промах / Бледный = исчезнувший круг', 'Kuning = ketukan / Merah = meleset / Pudar = lingkaran hilang'],
     rBasic: ['基本', 'Basics', '基本', '기본', 'Básico', 'Básico', 'Bases', 'Grundlagen', 'Основы', 'Dasar'],
-    rBasicP: ['25秒の間に10個の円がランダムなタイミング・位置・大きさで出現します(常に1個ずつ。寿命はモードにより0.4〜2秒で、SPEEDでは後半ほど短くなります)。すばやく中心を狙ってタップ。反応時間は1/1000秒単位で計測されます。', '10 circles appear within 25 seconds at random times, positions and sizes (one at a time; lifetime is 0.4-2s depending on mode, shrinking over the round in SPEED). Tap fast and aim for the center. Reaction time is measured to the millisecond.'],
+    rBasicP: ['25秒の間に10個の円がランダムなタイミング・位置・大きさで出現します(常に1個ずつ。寿命はモードにより0.4〜2秒で、SPEEDでは後半ほど短くなります)。すばやく中心を狙ってタップ。反応時間は1/1000秒単位で計測されます。', '10 circles appear within 25 seconds at random times, positions and sizes (one at a time; lifetime is 0.4-2s depending on mode, shrinking over the round in SPEED). Tap fast and aim for the center. Reaction time is measured to the millisecond.', '25秒内会有10个圆圈以随机时间、位置和大小依次出现（每次1个；持续0.4-2秒，视模式而定；SPEED后半程会更短）。快速点击并瞄准圆心。反应时间精确到毫秒。', '25초 동안 원 10개가 무작위 시간·위치·크기로 하나씩 나타납니다(수명은 모드에 따라 0.4-2초, SPEED는 후반으로 갈수록 짧아짐). 빠르게 중심을 노려 탭하세요. 반응 시간은 밀리초 단위로 측정됩니다.', 'Aparecen 10 círculos en 25 segundos, uno por uno, con tiempo, posición y tamaño aleatorios (duran 0,4-2 s según el modo; en SPEED duran menos al avanzar). Toca rápido y apunta al centro. La reacción se mide en milisegundos.', '10 círculos aparecem em 25 segundos, um por vez, em tempos, posições e tamanhos aleatórios (duram 0,4-2 s conforme o modo; em SPEED, menos no fim). Toque rápido e mire no centro. A reação é medida em milissegundos.', '10 cercles apparaissent en 25 secondes, un par un, à des moments, positions et tailles aléatoires (durée de 0,4 à 2 s selon le mode, réduite en fin de SPEED). Touchez vite en visant le centre. La réaction est mesurée à la milliseconde.', 'In 25 Sekunden erscheinen 10 Kreise einzeln zu zufälligen Zeiten, an zufälligen Stellen und in zufälligen Größen (je nach Modus 0,4–2 s sichtbar; in SPEED später kürzer). Tippe schnell auf die Mitte. Die Reaktion wird millisekundengenau gemessen.', 'За 25 секунд по одному появляются 10 кругов в случайное время, в случайных местах и разных размеров (на 0,4–2 с в зависимости от режима; в SPEED время сокращается). Быстро нажимайте в центр. Реакция измеряется в миллисекундах.', '10 lingkaran muncul satu per satu dalam 25 detik dengan waktu, posisi, dan ukuran acak (bertahan 0,4-2 dtk sesuai mode; makin singkat menjelang akhir SPEED). Ketuk cepat dan bidik tengah. Reaksi diukur dalam milidetik.'],
     rScore: ['スコア', 'Scoring', '得分', '점수', 'Puntuación', 'Pontuação', 'Score', 'Punkte', 'Очки', 'Skor'],
     rScoreP: ['1発の得点 = 速さ × 中心精度 × 円の小ささ(基準1000点)。小さい円ほど倍率が高く、10個の平均は常に×1.00。速さと精度の配分はモードで変わります。', 'Points per hit = speed × accuracy × circle size (base 1000). Smaller circles score higher, and the 10-circle average is always ×1.00. Each mode weighs speed vs accuracy differently.', '单次得分 = 速度 × 精度 × 圆圈大小（基准1000分）。圆越小倍率越高，10个圆的平均始终为×1.00。各模式对速度与精度的权重不同。', '1회 득점 = 속도 × 정확도 × 원의 크기(기준 1000점). 작은 원일수록 배율이 높고, 10개 평균은 항상 ×1.00입니다. 속도와 정확도의 비중은 모드마다 다릅니다.', 'Puntos por acierto = velocidad × precisión × tamaño (base 1000). Los círculos pequeños puntúan más y la media de los 10 siempre es ×1,00. Cada modo pondera distinto velocidad y precisión.', 'Pontos por acerto = velocidade × precisão × tamanho (base 1000). Círculos menores valem mais e a média dos 10 é sempre ×1,00. Cada modo pesa velocidade e precisão de forma diferente.', 'Points par tir = vitesse × précision × taille (base 1000). Les petits cercles rapportent plus et la moyenne des 10 est toujours ×1,00. Chaque mode pondère différemment vitesse et précision.', 'Punkte pro Treffer = Tempo × Präzision × Kreisgröße (Basis 1000). Kleinere Kreise bringen mehr, der Schnitt der 10 ist immer ×1,00. Jeder Modus gewichtet Tempo und Präzision anders.', 'Очки за попадание = скорость × точность × размер круга (база 1000). Маленькие круги дают больше, среднее по 10 всегда ×1,00. Режимы по-разному взвешивают скорость и точность.', 'Poin per ketukan = kecepatan × akurasi × ukuran lingkaran (dasar 1000). Lingkaran kecil bernilai lebih; rata-rata 10 lingkaran selalu ×1,00. Tiap mode menimbang kecepatan vs akurasi secara berbeda.'],
     rGrade: ['評価', 'Grades', '评价', '등급', 'Calificación', 'Avaliação', 'Notes', 'Wertung', 'Оценка', 'Penilaian'],
@@ -1562,127 +1579,127 @@
     rPenalty: ['ペナルティ', 'Penalties', '惩罚', '페널티', 'Penalizaciones', 'Penalidades', 'Pénalités', 'Strafen', 'Штрафы', 'Penalti'],
     rPenaltyP: ['空振り(円の外をタップ)は-100点。円を2秒以内にタップできないとTIME OUTで0点です。', 'Whiffs (tapping outside the circle) cost -100 points. Missing a circle for 2 seconds is a TIME OUT worth 0 points.', '落空（点击圆圈外）扣100分。2秒内未点击圆圈则TIME OUT，得0分。', '헛스윙(원 밖 탭)은 -100점. 2초 안에 원을 탭하지 못하면 TIME OUT으로 0점입니다.', 'Fallar el toque (fuera del círculo) resta 100 puntos. No tocar un círculo en 2 s es TIME OUT y vale 0.', 'Errar o toque (fora do círculo) custa -100 pontos. Não tocar em 2 s é TIME OUT e vale 0.', 'Un raté (hors du cercle) coûte -100 points. Ne pas toucher un cercle en 2 s est un TIME OUT à 0 point.', 'Fehlschläge (außerhalb des Kreises) kosten -100 Punkte. Wird ein Kreis 2 s nicht getroffen: TIME OUT, 0 Punkte.', 'Промах (нажатие вне круга) — минус 100 очков. Если не нажать круг за 2 с — TIME OUT, 0 очков.', 'Meleset (ketuk di luar lingkaran) -100 poin. Tidak mengetuk dalam 2 detik = TIME OUT, 0 poin.'],
     rMode: ['モードと記録', 'Modes & records', '模式与记录', '모드와 기록', 'Modos y registros', 'Modos e registros', 'Modes et records', 'Modi & Rekorde', 'Режимы и рекорды', 'Mode & rekor'],
-    rModeP: ['3つのモードは的の大きさ・寿命・出現テンポと配点が異なります。記録(ベスト・TOP10・グラフ)はモード別に、この端末のブラウザへ保存されます。', 'The three modes differ in target size, lifetime, spawn pace, and scoring. Records (best, top 10, chart) are stored per mode in this device\'s browser.'],
+    rModeP: ['3つのモードは的の大きさ・寿命・出現テンポと配点が異なります。記録(ベスト・TOP10・グラフ)はモード別に、この端末のブラウザへ保存されます。', 'The three modes differ in target size, lifetime, spawn pace, and scoring. Records (best, top 10, chart) are stored per mode in this device\'s browser.', '3种模式的目标大小、持续时间、出现节奏和计分各不相同。各模式的记录（BEST、TOP 10、图表）会保存在本设备的浏览器中。', '3개 모드는 타깃 크기·수명·출현 템포·배점이 다릅니다. 모드별 기록(BEST·TOP 10·차트)은 이 기기의 브라우저에 저장됩니다.', 'Los 3 modos varían en tamaño, duración, ritmo y puntuación. Los registros (BEST, TOP 10 y gráfica) se guardan por modo en el navegador de este dispositivo.', 'Os 3 modos variam em tamanho, duração, ritmo e pontuação. Os registros (BEST, TOP 10 e gráfico) são salvos por modo no navegador deste dispositivo.', 'Les 3 modes diffèrent par la taille, la durée, le rythme et le score. Les records (BEST, TOP 10 et graphique) sont enregistrés par mode dans le navigateur de cet appareil.', 'Die 3 Modi unterscheiden sich bei Zielgröße, Dauer, Tempo und Wertung. Rekorde (BEST, TOP 10, Diagramm) werden je Modus im Browser dieses Geräts gespeichert.', 'В 3 режимах различаются размер целей, время их жизни, темп и подсчёт очков. Рекорды (BEST, TOP 10, график) сохраняются отдельно в браузере этого устройства.', 'Ketiga mode berbeda dalam ukuran target, durasi, tempo, dan skor. Rekor (BEST, TOP 10, grafik) disimpan per mode di browser perangkat ini.'],
   };
   STR.saDesc = ['10ターゲット×25秒のスコアアタック', 'Score attack — 10 targets in 25 seconds', '25秒10个目标的比分挑战', '25초 10타깃 스코어 어택', 'Ataque de puntuación: 10 objetivos en 25 s', 'Ataque de pontuação: 10 alvos em 25 s', 'Score attack : 10 cibles en 25 s', 'Score Attack – 10 Ziele in 25 s', 'Скоростной зачёт: 10 целей за 25 с', 'Score attack — 10 target dalam 25 detik'];
-  STR.trDesc = ['5つのエイム能力を個別に練習', 'Practice five aim skills individually'];
-  STR.asDesc = ['5種目を通して能力を測定 (1日2回)', 'Measure your skills across five tests (twice a day)'];
-  STR.prDesc = ['五角形チャートで能力を可視化', 'Visualize your skills on a pentagon chart'];
+  STR.trDesc = ['5つのエイム能力を個別に練習', 'Practice five aim skills individually', '分别练习5项瞄准能力', '5가지 에임 능력을 개별 연습', 'Practica por separado 5 habilidades de puntería', 'Pratique separadamente 5 habilidades de mira', 'Entraînez séparément 5 aptitudes de visée', 'Trainiere 5 Zielfähigkeiten einzeln', 'Тренируйте 5 навыков прицеливания отдельно', 'Latih 5 kemampuan bidik secara terpisah'];
+  STR.asDesc = ['5種目を通して能力を測定 (1日2回)', 'Measure your skills across five tests (twice a day)', '通过5项测试评估能力（每天2次）', '5개 테스트로 능력 측정 (하루 2회)', 'Mide tus habilidades en 5 pruebas (2 veces al día)', 'Meça suas habilidades em 5 testes (2 vezes ao dia)', 'Mesurez vos aptitudes avec 5 tests (2 fois par jour)', 'Miss deine Fähigkeiten in 5 Tests (2-mal täglich)', 'Оцените навыки по 5 тестам (2 раза в день)', 'Ukur kemampuan lewat 5 tes (2 kali sehari)'];
+  STR.prDesc = ['五角形チャートで能力を可視化', 'Visualize your skills on a pentagon chart', '用五边形图表呈现能力', '오각형 차트로 능력 시각화', 'Visualiza tus habilidades en un gráfico pentagonal', 'Visualize suas habilidades em um gráfico pentagonal', 'Visualisez vos aptitudes sur un graphique pentagonal', 'Zeige deine Fähigkeiten in einem Fünfeckdiagramm', 'Покажите навыки на пятиугольной диаграмме', 'Lihat kemampuan pada grafik segi lima'];
   STR.soon = ['準備中', 'Coming soon', '敬请期待', '준비 중', 'Próximamente', 'Em breve', 'Bientôt', 'Demnächst', 'Скоро', 'Segera hadir'];
   STR.backMenu = ['メニューへ', 'Back to menu', '返回菜单', '메뉴로', 'Al menú', 'Ao menu', 'Retour au menu', 'Zum Menü', 'В меню', 'Ke menu'];
 
   // ===== ASSESSMENT: 新規UI文字列 (ja[0]/en[1] の2要素のみ。他言語はen→jaへ自動フォールバック) =====
-  STR.asRemainFmt = ['本日の残り回数 {n}/2', 'Remaining today: {n}/2'];
-  STR.asDoneToday = ['本日は終了。また明日', 'Done for today — come back tomorrow'];
-  STR.asResumeQ = ['中断したセッションがあります。続きから再開しますか?', 'You have a paused session. Resume where you left off?'];
-  STR.asResumeBtn = ['再開', 'Resume'];
-  STR.asDiscardBtn = ['破棄', 'Discard'];
-  STR.asNext = ['次の種目', 'Next up'];
-  STR.asCancelBtn = ['中止', 'Cancel'];
-  STR.asTotalLabel = ['総合スコア', 'Overall score'];
-  STR.asTop10 = ['TOP 10', 'TOP 10'];
-  STR.asNew = ['NEW', 'NEW'];
-  STR.asNewBest = ['NEW BEST!', 'NEW BEST!'];
-  STR.provisionalNote = ['スコアは暫定換算です。換算式は今後調整されます', 'Scores use a provisional formula that may be adjusted later'];
-  STR.storageSaveFailed = ['記録を保存できませんでした。空き容量を確認し、データを書き出してください', 'Could not save your records. Check storage space and export your data'];
-  STR.storageExportPrompt = ['保存容量が少なくなっています。PROFILEからデータを書き出してください', 'Storage is running low. Export your data from PROFILE'];
-  STR.quickPlay = ['PLAY', 'PLAY'];
-  STR.resultTraining = ['TRAINING', 'TRAINING'];
-  STR.resultAssessment = ['ASSESSMENT', 'ASSESSMENT'];
-  STR.playHint = ['円をタップして中心を狙え', 'Tap the circles and aim for the center'];
+  STR.asRemainFmt = ['本日の残り回数 {n}/2', 'Remaining today: {n}/2', '今日剩余次数：{n}/2', '오늘 남은 횟수: {n}/2', 'Intentos restantes hoy: {n}/2', 'Tentativas restantes hoje: {n}/2', 'Essais restants aujourd’hui : {n}/2', 'Heute verbleibend: {n}/2', 'Осталось сегодня: {n}/2', 'Sisa hari ini: {n}/2'];
+  STR.asDoneToday = ['本日は終了。また明日', 'Done for today — come back tomorrow', '今天已完成，明天再来', '오늘은 끝났습니다 — 내일 다시 오세요', 'Listo por hoy. Vuelve mañana', 'Concluído por hoje. Volte amanhã', 'Terminé pour aujourd’hui. Revenez demain', 'Für heute fertig – komm morgen wieder', 'На сегодня всё — возвращайтесь завтра', 'Selesai untuk hari ini — kembali besok'];
+  STR.asResumeQ = ['中断したセッションがあります。続きから再開しますか?', 'You have a paused session. Resume where you left off?', '有一个暂停的测试。要从中断处继续吗？', '중단된 세션이 있습니다. 이어서 재개할까요?', 'Hay una sesión pausada. ¿Quieres reanudarla?', 'Há uma sessão pausada. Deseja continuar de onde parou?', 'Une session est en pause. Reprendre là où vous vous êtes arrêté ?', 'Eine Sitzung wurde pausiert. An derselben Stelle fortsetzen?', 'Есть приостановленная сессия. Продолжить с места остановки?', 'Ada sesi yang dijeda. Lanjutkan dari posisi terakhir?'];
+  STR.asResumeBtn = ['再開', 'Resume', '继续', '재개', 'Reanudar', 'Retomar', 'Reprendre', 'Fortsetzen', 'Продолжить', 'Lanjutkan'];
+  STR.asDiscardBtn = ['破棄', 'Discard', '放弃', '폐기', 'Descartar', 'Descartar', 'Abandonner', 'Verwerfen', 'Сбросить', 'Buang'];
+  STR.asNext = ['次の種目', 'Next up', '下一项', '다음 종목', 'Siguiente', 'Próximo', 'À suivre', 'Als Nächstes', 'Далее', 'Berikutnya'];
+  STR.asCancelBtn = ['中止', 'Cancel', '取消', '취소', 'Cancelar', 'Cancelar', 'Annuler', 'Abbrechen', 'Отмена', 'Batal'];
+  STR.asTotalLabel = ['総合スコア', 'Overall score', '综合得分', '종합 점수', 'Puntuación total', 'Pontuação geral', 'Score global', 'Gesamtpunktzahl', 'Общий результат', 'Skor keseluruhan'];
+  STR.asTop10 = ['TOP 10', 'TOP 10', 'TOP 10', 'TOP 10', 'TOP 10', 'TOP 10', 'TOP 10', 'TOP 10', 'TOP 10', 'TOP 10'];
+  STR.asNew = ['NEW', 'NEW', 'NEW', 'NEW', 'NEW', 'NEW', 'NEW', 'NEW', 'NEW', 'NEW'];
+  STR.asNewBest = ['NEW BEST!', 'NEW BEST!', 'NEW BEST!', 'NEW BEST!', 'NEW BEST!', 'NEW BEST!', 'NEW BEST!', 'NEW BEST!', 'NEW BEST!', 'NEW BEST!'];
+  STR.provisionalNote = ['スコアは暫定換算です。換算式は今後調整されます', 'Scores use a provisional formula that may be adjusted later', '分数采用暂定换算公式，今后可能调整', '점수는 임시 환산식이며 추후 조정될 수 있습니다', 'La puntuación usa una fórmula provisional que podrá ajustarse', 'A pontuação usa uma fórmula provisória que poderá ser ajustada', 'Le score utilise une formule provisoire susceptible d’être ajustée', 'Die Punktzahl nutzt eine vorläufige Formel, die später angepasst werden kann', 'Результат рассчитан по предварительной формуле, которая может измениться', 'Skor memakai rumus sementara yang dapat disesuaikan nanti'];
+  STR.storageSaveFailed = ['記録を保存できませんでした。空き容量を確認し、データを書き出してください', 'Could not save your records. Check storage space and export your data', '无法保存记录。请检查存储空间并导出数据', '기록을 저장하지 못했습니다. 저장 공간을 확인하고 데이터를 내보내세요', 'No se pudieron guardar los registros. Revisa el espacio y exporta tus datos', 'Não foi possível salvar os registros. Verifique o espaço e exporte os dados', 'Impossible d’enregistrer vos données. Vérifiez l’espace disponible et exportez-les', 'Datensätze konnten nicht gespeichert werden. Speicher prüfen und Daten exportieren', 'Не удалось сохранить записи. Проверьте свободное место и экспортируйте данные', 'Rekor tidak dapat disimpan. Periksa ruang penyimpanan dan ekspor data'];
+  STR.storageExportPrompt = ['保存容量が少なくなっています。PROFILEからデータを書き出してください', 'Storage is running low. Export your data from PROFILE', '存储空间不足。请从PROFILE导出数据', '저장 공간이 부족합니다. PROFILE에서 데이터를 내보내세요', 'Queda poco espacio. Exporta tus datos desde PROFILE', 'O espaço está acabando. Exporte seus dados pelo PROFILE', 'L’espace disponible est faible. Exportez vos données depuis PROFILE', 'Der Speicher wird knapp. Exportiere deine Daten über PROFILE', 'Заканчивается место. Экспортируйте данные из PROFILE', 'Ruang penyimpanan hampir habis. Ekspor data dari PROFILE'];
+  STR.quickPlay = ['PLAY', 'PLAY', 'PLAY', 'PLAY', 'PLAY', 'PLAY', 'PLAY', 'PLAY', 'PLAY', 'PLAY'];
+  STR.resultTraining = ['TRAINING', 'TRAINING', 'TRAINING', 'TRAINING', 'TRAINING', 'TRAINING', 'TRAINING', 'TRAINING', 'TRAINING', 'TRAINING'];
+  STR.resultAssessment = ['ASSESSMENT', 'ASSESSMENT', 'ASSESSMENT', 'ASSESSMENT', 'ASSESSMENT', 'ASSESSMENT', 'ASSESSMENT', 'ASSESSMENT', 'ASSESSMENT', 'ASSESSMENT'];
+  STR.playHint = ['円をタップして中心を狙え', 'Tap the circles and aim for the center', '点击圆圈，瞄准圆心', '원을 탭하고 중심을 노리세요', 'Toca los círculos y apunta al centro', 'Toque nos círculos e mire no centro', 'Touchez les cercles en visant le centre', 'Tippe auf die Kreise und ziele auf die Mitte', 'Нажимайте на круги, целясь в центр', 'Ketuk lingkaran dan bidik tengahnya'];
 
   // ===== TRAINING: 新規UI文字列 (ja[0]/en[1] の2要素のみ。他言語はen→jaへ自動フォールバック) =====
-  STR.trBackHub = ['課題一覧へ', 'Back to tasks'];
-  STR.trIntroHow = ['遊び方', 'HOW TO PLAY'];
-  STR.trIntroDemo = ['実演を見る', 'Watch demo'];
-  STR.trIntroStart = ['すぐ始める', 'Start now'];
-  STR.trIntroBack = ['戻る', 'Back'];
-  STR.trDemoBadge = ['DEMO', 'DEMO'];
-  STR.trDemoSkip = ['実演中… タップでスキップ', 'Demo playing... Tap to skip'];
-  STR.trDemoTry = ['やってみよう!', 'Your turn!'];
-  STR.trRecent5 = ['RECENT 5', 'RECENT 5'];
-  STR.trTop3 = ['TOP 3', 'TOP 3'];
-  STR.trNew = ['NEW', 'NEW'];
-  STR.trIntro_perception_1 = ['1. 画面下のパッドに指を置いたまま待つ', '1. Hold your finger on the pad at the bottom and wait'];
-  STR.trIntro_perception_2 = ['2. 白い円が出たら、指をパッと離す(それで1回完了)', '2. When a white circle appears, quickly lift your finger (that completes one rep)'];
-  STR.trIntro_perception_3 = ['3. 赤い円はフェイク。離さずそのまま我慢。全10回', '3. A red circle is a fake. Keep holding without lifting. 10 reps total'];
-  STR.trIntro_perception_m = ['計測: 白い円が出てから指が離れるまでの反応速度。フェイクで離すと減点', 'Measured: reaction speed from the white circle appearing until finger lift. Lifting on a fake costs points'];
-  STR.trIntro_flick_1 = ['1. パッドに指を置いたまま待つ', '1. Hold your finger on the pad and wait'];
-  STR.trIntro_flick_2 = ['2. 円が出たら、指を離して一気にタップ', '2. When a circle appears, lift your finger and tap it in one quick motion'];
-  STR.trIntro_flick_3 = ['3. 全10回・方向は毎回ランダム', '3. 10 reps total, with a random direction each time'];
-  STR.trIntro_flick_m = ['計測: 離してから当てるまでの移動スピード(距離÷時間)', 'Measured: movement speed from lift to hit (distance divided by time)'];
-  STR.trIntro_precision_1 = ['1. 円が次々に出る(900msで消える)', '1. Circles appear one after another (each disappears in 900ms)'];
-  STR.trIntro_precision_2 = ['2. 円の中心を"ていねいに"タップ', '2. Tap the center of each circle carefully'];
-  STR.trIntro_precision_3 = ['3. 全12回', '3. 12 reps total'];
-  STR.trIntro_precision_m = ['計測: 中心からのズレ。900ms以内ならスピードは採点されない', 'Measured: distance from center. Speed is not scored as long as you tap within 900ms'];
-  STR.trIntro_switching_1 = ['1. 番号つきの円が同時に出る', '1. Numbered circles appear at the same time'];
-  STR.trIntro_switching_2 = ['2. 1→2→3…の順に全部タップ', '2. Tap every circle in order: 1→2→3…'];
-  STR.trIntro_switching_3 = ['3. セットごとに数が増える(3個→7個)', '3. The number increases each set (3→7 circles)'];
-  STR.trIntro_switching_m = ['計測: 1個あたりの切り替えスピードと順番ミス', 'Measured: switching speed per target and wrong-order taps'];
-  STR.trIntro_timing_1 = ['1. 円が画面を横切っていく', '1. A circle moves across the screen'];
-  STR.trIntro_timing_2 = ['2. 追いかけずに、通り道を予測して1回タップ', "2. Don't chase it - predict its path and tap once"];
-  STR.trIntro_timing_3 = ['3. タップ位置と円の距離で判定。全10回', '3. Judged by distance between tap and ball. 10 reps total'];
-  STR.trIntro_timing_m = ['計測: タップ時の円中心とタップ位置の距離(px)。入力遅延の影響を受けない設計', 'Measured: distance between the ball center and your tap at the exact tap moment. No input-latency bias by design'];
-  STR.trD_perception = ['白で離し、赤では止まる反応判断', 'React to white and hold on red'];
-  STR.trD_flick = ['離してから着弾までの移動スピード', 'Movement speed from lift to landing'];
-  STR.trD_precision = ['小さな的の中心に正確に止める', 'Stop precisely on small targets'];
-  STR.trD_switching = ['増えていく的を順番どおり素早く切替', 'Switch quickly through growing numbered sets'];
-  STR.trD_timing = ['動く円の通り道を予測して迎撃する', 'Predict the moving circle path and intercept it'];
-  STR.trHoldPad = ['パッドを押さえたまま待つ', 'Hold the pad and wait'];
-  STR.trFalseStart = ['早すぎ! もう一度', 'Too early! Try again'];
-  STR.trTapTarget = ['的をタップ', 'Tap the target'];
-  STR.tr_k_median = ['反応 中央値', 'Reaction median'];
-  STR.tr_k_fastest = ['最速', 'Fastest'];
-  STR.tr_k_sd = ['ばらつき(SD)', 'Std. dev.'];
-  STR.tr_k_falseStarts = ['フライング', 'False starts'];
-  STR.tr_k_noGoErrors = ['フェイク誤反応', 'No-go errors'];
-  STR.tr_k_reaction = ['反応 中央値', 'Reaction median'];
-  STR.tr_k_move = ['移動時間 中央値', 'Move time median'];
-  STR.tr_k_sps = ['移動スピード 中央値', 'Movement speed median'];
-  STR.tr_k_err = ['平均誤差', 'Avg. error'];
-  STR.tr_k_miss = ['ミス数', 'Misses'];
-  STR.tr_k_errRatio = ['平均中心誤差', 'Avg. center error'];
-  STR.tr_k_sdRatio = ['誤差ばらつき', 'Error variance'];
-  STR.tr_k_dxdy = ['縦横バイアス(x,y)', 'Bias (x, y)'];
-  STR.tr_k_missRate = ['ミス率', 'Miss rate'];
-  STR.tr_k_gap = ['切替時間 中央値', 'Switch time median'];
-  STR.tr_k_wrong = ['誤タップ', 'Wrong taps'];
-  STR.tr_k_streak = ['最長ストリーク', 'Longest streak'];
-  STR.tr_k_maxClear = ['最大クリア個数', 'Largest set cleared'];
-  STR.tr_k_signed = ['早押し/遅押し傾向', 'Early/late tendency'];
-  STR.tr_k_hits = ['命中', 'Hits'];
-  STR.tr_k_best = ['ベスト', 'Best'];
-  STR.trVsLast = ['前回比', 'vs last'];
-  STR.bgmOn = ['♪ ON', '♪ ON'];
-  STR.bgmOff = ['♪ OFF', '♪ OFF'];
-  STR.trMiss = ['MISS', 'MISS'];
-  STR.trDeviation = ['ズレ {px}px ({pct}%)', 'OFFSET {px}px ({pct}%)'];
-  STR.trMoveOffset = ['移動 {ms}ms / ズレ {px}px', 'MOVE {ms}ms / OFFSET {px}px'];
-  STR.trEarly = ['EARLY', 'EARLY'];
-  STR.trLate = ['LATE', 'LATE'];
-  STR.trSwitch = ['切替 {ms}ms', 'SWITCH {ms}ms'];
-  STR.trPenalty300 = ['+300ms', '+300ms'];
-  STR.trFake = ['FAKE!', 'FAKE!'];
-  STR.trOkay = ['OK', 'OK'];
-  STR.trSpeed = ['{sps} scr/s / {ms}ms', '{sps} scr/s / {ms}ms'];
-  STR.trSetResult = ['{n}個 {sec}s ({ms}ms/個)', '{n} targets {sec}s ({ms}ms each)'];
+  STR.trBackHub = ['課題一覧へ', 'Back to tasks', '返回任务列表', '과제 목록으로', 'Volver a las tareas', 'Voltar às tarefas', 'Retour aux exercices', 'Zurück zu den Aufgaben', 'К списку заданий', 'Kembali ke daftar tugas'];
+  STR.trIntroHow = ['遊び方', 'HOW TO PLAY', '玩法', '플레이 방법', 'CÓMO JUGAR', 'COMO JOGAR', 'COMMENT JOUER', 'SPIELANLEITUNG', 'КАК ИГРАТЬ', 'CARA BERMAIN'];
+  STR.trIntroDemo = ['実演を見る', 'Watch demo', '观看演示', '시연 보기', 'Ver demo', 'Ver demonstração', 'Voir la démo', 'Demo ansehen', 'Смотреть демо', 'Lihat demo'];
+  STR.trIntroStart = ['すぐ始める', 'Start now', '立即开始', '바로 시작', 'Empezar ahora', 'Começar agora', 'Commencer', 'Jetzt starten', 'Начать сейчас', 'Mulai sekarang'];
+  STR.trIntroBack = ['戻る', 'Back', '返回', '뒤로', 'Volver', 'Voltar', 'Retour', 'Zurück', 'Назад', 'Kembali'];
+  STR.trDemoBadge = ['DEMO', 'DEMO', 'DEMO', 'DEMO', 'DEMO', 'DEMO', 'DEMO', 'DEMO', 'DEMO', 'DEMO'];
+  STR.trDemoSkip = ['実演中… タップでスキップ', 'Demo playing... Tap to skip', '演示中… 点击跳过', '시연 중… 탭하여 건너뛰기', 'Demo en curso... Toca para omitir', 'Demonstração em andamento... Toque para pular', 'Démo en cours… Touchez pour passer', 'Demo läuft … Tippen zum Überspringen', 'Идёт демо… Нажмите, чтобы пропустить', 'Demo berlangsung... Ketuk untuk melewati'];
+  STR.trDemoTry = ['やってみよう!', 'Your turn!', '轮到你了！', '이제 해보세요!', '¡Tu turno!', 'Sua vez!', 'À vous !', 'Du bist dran!', 'Теперь вы!', 'Giliranmu!'];
+  STR.trRecent5 = ['RECENT 5', 'RECENT 5', 'RECENT 5', 'RECENT 5', 'RECENT 5', 'RECENT 5', 'RECENT 5', 'RECENT 5', 'RECENT 5', 'RECENT 5'];
+  STR.trTop3 = ['TOP 3', 'TOP 3', 'TOP 3', 'TOP 3', 'TOP 3', 'TOP 3', 'TOP 3', 'TOP 3', 'TOP 3', 'TOP 3'];
+  STR.trNew = ['NEW', 'NEW', 'NEW', 'NEW', 'NEW', 'NEW', 'NEW', 'NEW', 'NEW', 'NEW'];
+  STR.trIntro_perception_1 = ['1. 画面下のパッドに指を置いたまま待つ', '1. Hold your finger on the pad at the bottom and wait', '1. 手指按住底部感应区并等待', '1. 화면 아래 패드에 손가락을 대고 기다리세요', '1. Mantén el dedo sobre el panel inferior y espera', '1. Mantenha o dedo no painel inferior e espere', '1. Gardez le doigt sur la zone en bas et attendez', '1. Finger auf das Feld unten legen und warten', '1. Удерживайте палец на нижней площадке и ждите', '1. Tahan jari pada pad di bawah dan tunggu'];
+  STR.trIntro_perception_2 = ['2. 白い円が出たら、指をパッと離す(それで1回完了)', '2. When a white circle appears, quickly lift your finger (that completes one rep)', '2. 白色圆圈出现时迅速抬起手指（完成1次）', '2. 흰 원이 나타나면 손가락을 빠르게 떼세요(1회 완료)', '2. Cuando aparezca un círculo blanco, levanta el dedo rápido (1 repetición)', '2. Quando aparecer um círculo branco, levante o dedo rápido (1 repetição)', '2. Dès qu’un cercle blanc apparaît, levez vite le doigt (1 répétition)', '2. Beim weißen Kreis den Finger schnell anheben (1 Durchgang)', '2. При появлении белого круга быстро уберите палец (1 попытка)', '2. Saat lingkaran putih muncul, cepat angkat jari (1 repetisi)'];
+  STR.trIntro_perception_3 = ['3. 赤い円はフェイク。離さずそのまま我慢。全10回', '3. A red circle is a fake. Keep holding without lifting. 10 reps total', '3. 红色圆圈是假目标，不要抬手。共10次', '3. 빨간 원은 페이크입니다. 떼지 말고 유지하세요. 총 10회', '3. El círculo rojo es falso. No levantes el dedo. 10 repeticiones', '3. O círculo vermelho é falso. Não levante o dedo. 10 repetições', '3. Le cercle rouge est un leurre. Ne levez pas le doigt. 10 répétitions', '3. Der rote Kreis ist eine Finte. Finger liegen lassen. 10 Durchgänge', '3. Красный круг — обманка. Не убирайте палец. Всего 10 попыток', '3. Lingkaran merah adalah tipuan. Jangan angkat jari. Total 10 repetisi'];
+  STR.trIntro_perception_m = ['計測: 白い円が出てから指が離れるまでの反応速度。フェイクで離すと減点', 'Measured: reaction speed from the white circle appearing until finger lift. Lifting on a fake costs points', '测量：白色圆圈出现至手指抬起的反应速度。误判假目标会扣分', '측정: 흰 원 출현부터 손가락을 뗄 때까지의 반응 속도. 페이크에 반응하면 감점', 'Medición: reacción desde que aparece el círculo blanco hasta que levantas el dedo. Reaccionar al falso resta puntos', 'Medição: reação entre o círculo branco aparecer e levantar o dedo. Reagir ao falso desconta pontos', 'Mesure : réaction entre l’apparition du cercle blanc et le lever du doigt. Réagir au leurre coûte des points', 'Messung: Reaktion vom weißen Kreis bis zum Anheben. Reaktion auf eine Finte kostet Punkte', 'Измерение: реакция от появления белого круга до снятия пальца. Реакция на обманку снижает результат', 'Diukur: reaksi dari munculnya lingkaran putih hingga jari diangkat. Bereaksi pada tipuan mengurangi poin'];
+  STR.trIntro_flick_1 = ['1. パッドに指を置いたまま待つ', '1. Hold your finger on the pad and wait', '1. 手指按住感应区并等待', '1. 패드에 손가락을 대고 기다리세요', '1. Mantén el dedo sobre el panel y espera', '1. Mantenha o dedo no painel e espere', '1. Gardez le doigt sur la zone et attendez', '1. Finger auf das Feld legen und warten', '1. Удерживайте палец на площадке и ждите', '1. Tahan jari pada pad dan tunggu'];
+  STR.trIntro_flick_2 = ['2. 円が出たら、指を離して一気にタップ', '2. When a circle appears, lift your finger and tap it in one quick motion', '2. 圆圈出现时抬起手指，一气呵成地点击', '2. 원이 나타나면 손가락을 떼고 한 번에 탭하세요', '2. Al aparecer un círculo, levanta el dedo y tócalo de un solo movimiento', '2. Quando o círculo aparecer, levante o dedo e toque de uma vez', '2. Dès qu’un cercle apparaît, levez le doigt et touchez-le d’un seul geste', '2. Beim Kreis den Finger anheben und in einer Bewegung tippen', '2. При появлении круга уберите палец и одним движением нажмите на него', '2. Saat lingkaran muncul, angkat jari lalu ketuk dalam satu gerakan'];
+  STR.trIntro_flick_3 = ['3. 全10回・方向は毎回ランダム', '3. 10 reps total, with a random direction each time', '3. 共10次，每次方向随机', '3. 총 10회, 매번 방향은 무작위', '3. 10 repeticiones, con dirección aleatoria cada vez', '3. 10 repetições, com direção aleatória a cada vez', '3. 10 répétitions, avec une direction aléatoire à chaque fois', '3. 10 Durchgänge, Richtung jedes Mal zufällig', '3. Всего 10 попыток, направление каждый раз случайное', '3. Total 10 repetisi, arah acak setiap kali'];
+  STR.trIntro_flick_m = ['計測: 離してから当てるまでの移動スピード(距離÷時間)', 'Measured: movement speed from lift to hit (distance divided by time)', '测量：从抬手到命中的移动速度（距离÷时间）', '측정: 손가락을 뗀 뒤 명중까지의 이동 속도(거리÷시간)', 'Medición: velocidad desde que levantas el dedo hasta el acierto (distancia÷tiempo)', 'Medição: velocidade entre levantar o dedo e acertar (distância÷tempo)', 'Mesure : vitesse entre le lever du doigt et la touche (distance÷temps)', 'Messung: Bewegungstempo vom Anheben bis zum Treffer (Strecke÷Zeit)', 'Измерение: скорость движения от снятия пальца до попадания (расстояние÷время)', 'Diukur: kecepatan gerak dari jari diangkat hingga kena (jarak÷waktu)'];
+  STR.trIntro_precision_1 = ['1. 円が次々に出る(900msで消える)', '1. Circles appear one after another (each disappears in 900ms)', '1. 圆圈会接连出现（900ms后消失）', '1. 원이 차례로 나타납니다(900ms 후 사라짐)', '1. Los círculos aparecen uno tras otro (desaparecen en 900ms)', '1. Os círculos aparecem um após outro (somem em 900ms)', '1. Les cercles apparaissent l’un après l’autre (disparaissent en 900ms)', '1. Kreise erscheinen nacheinander (verschwinden nach 900ms)', '1. Круги появляются один за другим (исчезают через 900ms)', '1. Lingkaran muncul satu per satu (hilang dalam 900ms)'];
+  STR.trIntro_precision_2 = ['2. 円の中心を"ていねいに"タップ', '2. Tap the center of each circle carefully', '2. 仔细点击每个圆圈的中心', '2. 각 원의 중심을 신중하게 탭하세요', '2. Toca con cuidado el centro de cada círculo', '2. Toque com cuidado no centro de cada círculo', '2. Touchez soigneusement le centre de chaque cercle', '2. Sorgfältig auf die Mitte jedes Kreises tippen', '2. Аккуратно нажимайте в центр каждого круга', '2. Ketuk tengah setiap lingkaran dengan teliti'];
+  STR.trIntro_precision_3 = ['3. 全12回', '3. 12 reps total', '3. 共12次', '3. 총 12회', '3. 12 repeticiones', '3. 12 repetições', '3. 12 répétitions', '3. Insgesamt 12 Durchgänge', '3. Всего 12 попыток', '3. Total 12 repetisi'];
+  STR.trIntro_precision_m = ['計測: 中心からのズレ。900ms以内ならスピードは採点されない', 'Measured: distance from center. Speed is not scored as long as you tap within 900ms', '测量：距圆心的偏差。只要在900ms内点击，速度不计分', '측정: 중심에서 벗어난 거리. 900ms 이내라면 속도는 채점하지 않음', 'Medición: distancia al centro. La velocidad no puntúa si tocas en 900ms', 'Medição: distância do centro. A velocidade não conta se tocar em 900ms', 'Mesure : écart au centre. La vitesse ne compte pas si vous touchez en 900ms', 'Messung: Abstand zur Mitte. Tempo zählt nicht, wenn du binnen 900ms tippst', 'Измерение: отклонение от центра. Скорость не оценивается при нажатии в пределах 900ms', 'Diukur: jarak dari tengah. Kecepatan tidak dinilai jika mengetuk dalam 900ms'];
+  STR.trIntro_switching_1 = ['1. 番号つきの円が同時に出る', '1. Numbered circles appear at the same time', '1. 带编号的圆圈会同时出现', '1. 번호가 있는 원이 동시에 나타납니다', '1. Aparecen círculos numerados a la vez', '1. Círculos numerados aparecem ao mesmo tempo', '1. Des cercles numérotés apparaissent en même temps', '1. Nummerierte Kreise erscheinen gleichzeitig', '1. Одновременно появляются пронумерованные круги', '1. Lingkaran bernomor muncul bersamaan'];
+  STR.trIntro_switching_2 = ['2. 1→2→3…の順に全部タップ', '2. Tap every circle in order: 1→2→3…', '2. 按1→2→3…的顺序点击所有圆圈', '2. 1→2→3… 순서로 모든 원을 탭하세요', '2. Toca todos los círculos en orden: 1→2→3…', '2. Toque em todos os círculos na ordem: 1→2→3…', '2. Touchez tous les cercles dans l’ordre : 1→2→3…', '2. Alle Kreise der Reihe nach tippen: 1→2→3…', '2. Нажмите все круги по порядку: 1→2→3…', '2. Ketuk semua lingkaran berurutan: 1→2→3…'];
+  STR.trIntro_switching_3 = ['3. セットごとに数が増える(3個→7個)', '3. The number increases each set (3→7 circles)', '3. 每组数量增加（3个→7个）', '3. 세트마다 개수가 늘어납니다(3개→7개)', '3. La cantidad aumenta en cada serie (3→7 círculos)', '3. A quantidade aumenta a cada série (3→7 círculos)', '3. Le nombre augmente à chaque série (3→7 cercles)', '3. Die Anzahl steigt pro Satz (3→7 Kreise)', '3. В каждом наборе кругов становится больше (3→7)', '3. Jumlah bertambah tiap set (3→7 lingkaran)'];
+  STR.trIntro_switching_m = ['計測: 1個あたりの切り替えスピードと順番ミス', 'Measured: switching speed per target and wrong-order taps', '测量：每个目标的切换速度和顺序错误', '측정: 타깃당 전환 속도와 순서 오류', 'Medición: velocidad de cambio por objetivo y toques fuera de orden', 'Medição: velocidade de troca por alvo e toques fora de ordem', 'Mesure : vitesse de changement par cible et erreurs d’ordre', 'Messung: Wechselzeit pro Ziel und falsche Reihenfolge', 'Измерение: скорость переключения на цель и ошибки порядка', 'Diukur: kecepatan beralih per target dan kesalahan urutan'];
+  STR.trIntro_timing_1 = ['1. 円が画面を横切っていく', '1. A circle moves across the screen', '1. 圆圈会横穿屏幕', '1. 원이 화면을 가로질러 움직입니다', '1. Un círculo cruza la pantalla', '1. Um círculo atravessa a tela', '1. Un cercle traverse l’écran', '1. Ein Kreis bewegt sich über den Bildschirm', '1. Круг движется поперёк экрана', '1. Lingkaran bergerak melintasi layar'];
+  STR.trIntro_timing_2 = ['2. 追いかけずに、通り道を予測して1回タップ', "2. Don't chase it - predict its path and tap once", '2. 不要追着圆圈，预判路线并点击1次', '2. 쫓지 말고 경로를 예측해 한 번 탭하세요', '2. No lo persigas: predice su trayectoria y toca una vez', '2. Não persiga: preveja o trajeto e toque uma vez', '2. Ne le suivez pas : anticipez sa trajectoire et touchez une fois', '2. Nicht verfolgen – Bahn vorhersagen und einmal tippen', '2. Не следуйте за ним — предскажите путь и нажмите один раз', '2. Jangan dikejar — prediksi jalurnya dan ketuk sekali'];
+  STR.trIntro_timing_3 = ['3. タップ位置と円の距離で判定。全10回', '3. Judged by distance between tap and ball. 10 reps total', '3. 根据点击位置与圆圈的距离判定。共10次', '3. 탭 위치와 원의 거리로 판정합니다. 총 10회', '3. Se evalúa la distancia entre el toque y el círculo. 10 repeticiones', '3. Avaliado pela distância entre o toque e o círculo. 10 repetições', '3. Évalué selon la distance entre le toucher et le cercle. 10 répétitions', '3. Gewertet wird der Abstand zwischen Tipp und Kreis. 10 Durchgänge', '3. Оценка по расстоянию между нажатием и кругом. Всего 10 попыток', '3. Dinilai dari jarak antara ketukan dan lingkaran. Total 10 repetisi'];
+  STR.trIntro_timing_m = ['計測: タップ時の円中心とタップ位置の距離(px)。入力遅延の影響を受けない設計', 'Measured: distance between the ball center and your tap at the exact tap moment. No input-latency bias by design', '测量：点击瞬间圆心与点击位置的距离(px)。设计上不受输入延迟影响', '측정: 탭 순간 원 중심과 탭 위치의 거리(px). 입력 지연 영향을 받지 않는 설계', 'Medición: distancia entre el centro y el toque en ese instante (px). Diseño sin sesgo por latencia', 'Medição: distância entre o centro e o toque naquele instante (px). Sem viés de latência', 'Mesure : distance entre le centre et le toucher à cet instant (px). Conçu sans biais de latence', 'Messung: Abstand zwischen Kreismitte und Tipp im Tippmoment (px). Ohne Einfluss der Eingabeverzögerung', 'Измерение: расстояние от центра круга до точки нажатия в этот момент (px). Задержка ввода не влияет', 'Diukur: jarak antara tengah lingkaran dan ketukan saat itu (px). Dirancang tanpa bias latensi input'];
+  STR.trD_perception = ['白で離し、赤では止まる反応判断', 'React to white and hold on red', '见白抬手，见红保持', '흰색에는 떼고 빨간색에는 유지하는 반응 판단', 'Reacciona al blanco y mantén en rojo', 'Reaja ao branco e segure no vermelho', 'Réagissez au blanc et maintenez sur le rouge', 'Auf Weiß reagieren, bei Rot halten', 'Реагируйте на белый, удерживайте на красный', 'Bereaksi pada putih dan tahan pada merah'];
+  STR.trD_flick = ['離してから着弾までの移動スピード', 'Movement speed from lift to landing', '从抬手到命中的移动速度', '손가락을 뗀 뒤 명중까지의 이동 속도', 'Velocidad desde que levantas el dedo hasta el acierto', 'Velocidade entre levantar o dedo e acertar', 'Vitesse entre le lever du doigt et la touche', 'Bewegungstempo vom Anheben bis zum Treffer', 'Скорость движения от снятия пальца до попадания', 'Kecepatan gerak dari jari diangkat hingga kena'];
+  STR.trD_precision = ['小さな的の中心に正確に止める', 'Stop precisely on small targets', '精准停在小目标中心', '작은 타깃 중심에 정확히 멈추기', 'Detente con precisión en el centro de objetivos pequeños', 'Pare com precisão no centro de alvos pequenos', 'Arrêtez-vous précisément au centre de petites cibles', 'Präzise in der Mitte kleiner Ziele stoppen', 'Точно останавливайтесь в центре малых целей', 'Berhenti tepat di tengah target kecil'];
+  STR.trD_switching = ['増えていく的を順番どおり素早く切替', 'Switch quickly through growing numbered sets', '按顺序快速切换不断增多的目标', '늘어나는 타깃을 순서대로 빠르게 전환', 'Cambia rápido entre series numeradas cada vez mayores', 'Alterne rápido entre séries numeradas crescentes', 'Passez vite entre des séries numérotées croissantes', 'Schnell durch wachsende nummerierte Zielgruppen wechseln', 'Быстро переключайтесь между растущими наборами по порядку', 'Beralih cepat melalui set bernomor yang makin besar'];
+  STR.trD_timing = ['動く円の通り道を予測して迎撃する', 'Predict the moving circle path and intercept it', '预判移动圆圈的路线并拦截', '움직이는 원의 경로를 예측해 요격', 'Predice la trayectoria del círculo e intercepta', 'Preveja o trajeto do círculo e intercepte', 'Anticipez la trajectoire du cercle et interceptez-le', 'Bahn des Kreises vorhersagen und abfangen', 'Предскажите путь круга и перехватите его', 'Prediksi jalur lingkaran bergerak dan cegat'];
+  STR.trHoldPad = ['パッドを押さえたまま待つ', 'Hold the pad and wait', '按住感应区并等待', '패드를 누른 채 기다리세요', 'Mantén pulsado el panel y espera', 'Mantenha o painel pressionado e espere', 'Maintenez la zone et attendez', 'Feld gedrückt halten und warten', 'Удерживайте площадку и ждите', 'Tahan pad dan tunggu'];
+  STR.trFalseStart = ['早すぎ! もう一度', 'Too early! Try again', '太早了！再试一次', '너무 빨라요! 다시 시도하세요', '¡Demasiado pronto! Inténtalo de nuevo', 'Cedo demais! Tente de novo', 'Trop tôt ! Réessayez', 'Zu früh! Noch einmal', 'Слишком рано! Попробуйте ещё раз', 'Terlalu cepat! Coba lagi'];
+  STR.trTapTarget = ['的をタップ', 'Tap the target', '点击目标', '타깃을 탭하세요', 'Toca el objetivo', 'Toque no alvo', 'Touchez la cible', 'Ziel antippen', 'Нажмите на цель', 'Ketuk target'];
+  STR.tr_k_median = ['反応 中央値', 'Reaction median', '反应中位数', '반응 중앙값', 'Mediana de reacción', 'Mediana de reação', 'Réaction médiane', 'Median der Reaktion', 'Медиана реакции', 'Median reaksi'];
+  STR.tr_k_fastest = ['最速', 'Fastest', '最快', '최고 속도', 'Más rápido', 'Mais rápido', 'Plus rapide', 'Schnellste', 'Лучшее время', 'Tercepat'];
+  STR.tr_k_sd = ['ばらつき(SD)', 'Std. dev.', '波动(SD)', '편차(SD)', 'Desv. est. (SD)', 'Desv. padrão (SD)', 'Écart-type (SD)', 'Std.-Abw. (SD)', 'Станд. откл. (SD)', 'Simpangan baku (SD)'];
+  STR.tr_k_falseStarts = ['フライング', 'False starts', '提前反应', '부정 출발', 'Salidas falsas', 'Falsas largadas', 'Faux départs', 'Fehlstarts', 'Фальстарты', 'Start terlalu awal'];
+  STR.tr_k_noGoErrors = ['フェイク誤反応', 'No-go errors', '假目标误反应', '페이크 오반응', 'Errores no-go', 'Erros no-go', 'Erreurs no-go', 'No-go-Fehler', 'Ошибки no-go', 'Kesalahan no-go'];
+  STR.tr_k_reaction = ['反応 中央値', 'Reaction median', '反应中位数', '반응 중앙값', 'Mediana de reacción', 'Mediana de reação', 'Réaction médiane', 'Median der Reaktion', 'Медиана реакции', 'Median reaksi'];
+  STR.tr_k_move = ['移動時間 中央値', 'Move time median', '移动时间中位数', '이동 시간 중앙값', 'Mediana de movimiento', 'Mediana de movimento', 'Temps de déplacement médian', 'Median der Bewegungszeit', 'Медиана времени движения', 'Median waktu gerak'];
+  STR.tr_k_sps = ['移動スピード 中央値', 'Movement speed median', '移动速度中位数', '이동 속도 중앙값', 'Mediana de velocidad', 'Mediana de velocidade', 'Vitesse médiane', 'Median der Bewegungsgeschwindigkeit', 'Медиана скорости движения', 'Median kecepatan gerak'];
+  STR.tr_k_err = ['平均誤差', 'Avg. error', '平均误差', '평균 오차', 'Error medio', 'Erro médio', 'Erreur moyenne', 'Ø Fehler', 'Средняя ошибка', 'Rata-rata kesalahan'];
+  STR.tr_k_miss = ['ミス数', 'Misses', '失误数', '실수', 'Fallos', 'Erros', 'Ratés', 'Fehler', 'Ошибки', 'Meleset'];
+  STR.tr_k_errRatio = ['平均中心誤差', 'Avg. center error', '平均中心偏差', '평균 중심 오차', 'Error medio al centro', 'Erro médio do centro', 'Écart moyen au centre', 'Ø Abweichung zur Mitte', 'Среднее отклонение от центра', 'Rata-rata kesalahan pusat'];
+  STR.tr_k_sdRatio = ['誤差ばらつき', 'Error variance', '误差波动', '오차 분산', 'Variación del error', 'Variação do erro', 'Variation de l’erreur', 'Fehlerstreuung', 'Разброс ошибки', 'Variasi kesalahan'];
+  STR.tr_k_dxdy = ['縦横バイアス(x,y)', 'Bias (x, y)', '横纵偏差(x,y)', '가로·세로 편향(x,y)', 'Sesgo (x, y)', 'Viés (x, y)', 'Biais (x, y)', 'Abweichung (x, y)', 'Смещение (x, y)', 'Bias (x, y)'];
+  STR.tr_k_missRate = ['ミス率', 'Miss rate', '失误率', '실수율', 'Tasa de fallos', 'Taxa de erros', 'Taux de ratés', 'Fehlerrate', 'Доля ошибок', 'Tingkat meleset'];
+  STR.tr_k_gap = ['切替時間 中央値', 'Switch time median', '切换时间中位数', '전환 시간 중앙값', 'Mediana de cambio', 'Mediana de troca', 'Temps de changement médian', 'Median der Wechselzeit', 'Медиана времени переключения', 'Median waktu beralih'];
+  STR.tr_k_wrong = ['誤タップ', 'Wrong taps', '错误点击', '오탭', 'Toques incorrectos', 'Toques errados', 'Touches incorrectes', 'Falsche Tipps', 'Неверные нажатия', 'Ketukan salah'];
+  STR.tr_k_streak = ['最長ストリーク', 'Longest streak', '最长连续命中', '최장 연속 기록', 'Racha más larga', 'Maior sequência', 'Plus longue série', 'Längste Serie', 'Лучшая серия', 'Rentetan terpanjang'];
+  STR.tr_k_maxClear = ['最大クリア個数', 'Largest set cleared', '最大通关数量', '최대 클리어 개수', 'Mayor serie completada', 'Maior série concluída', 'Plus grande série réussie', 'Größter geschaffter Satz', 'Максимальный пройденный набор', 'Set terbesar diselesaikan'];
+  STR.tr_k_signed = ['早押し/遅押し傾向', 'Early/late tendency', '过早/过晚倾向', '빠른/늦은 탭 경향', 'Tendencia temprana/tardía', 'Tendência cedo/tarde', 'Tendance avance/retard', 'Tendenz früh/spät', 'Склонность нажимать раньше/позже', 'Kecenderungan awal/terlambat'];
+  STR.tr_k_hits = ['命中', 'Hits', '命中', '명중', 'Aciertos', 'Acertos', 'Touches', 'Treffer', 'Попадания', 'Kena'];
+  STR.tr_k_best = ['ベスト', 'Best', '最佳', '베스트', 'Mejor', 'Melhor', 'Meilleur', 'Bestwert', 'Лучший', 'Terbaik'];
+  STR.trVsLast = ['前回比', 'vs last', '较上次', '지난번 대비', 'vs. anterior', 'vs. anterior', 'vs précédent', 'vs. letztes Mal', 'к прошлому', 'vs sebelumnya'];
+  STR.bgmOn = ['♪ ON', '♪ ON', '♪ ON', '♪ ON', '♪ ON', '♪ ON', '♪ ON', '♪ ON', '♪ ON', '♪ ON'];
+  STR.bgmOff = ['♪ OFF', '♪ OFF', '♪ OFF', '♪ OFF', '♪ OFF', '♪ OFF', '♪ OFF', '♪ OFF', '♪ OFF', '♪ OFF'];
+  STR.trMiss = ['MISS', 'MISS', 'MISS', 'MISS', 'MISS', 'MISS', 'MISS', 'MISS', 'MISS', 'MISS'];
+  STR.trDeviation = ['ズレ {px}px ({pct}%)', 'OFFSET {px}px ({pct}%)', '偏差 {px}px ({pct}%)', '오차 {px}px ({pct}%)', 'DESVÍO {px}px ({pct}%)', 'DESVIO {px}px ({pct}%)', 'ÉCART {px}px ({pct}%)', 'ABWEICHUNG {px}px ({pct}%)', 'СМЕЩЕНИЕ {px}px ({pct}%)', 'SELISIH {px}px ({pct}%)'];
+  STR.trMoveOffset = ['移動 {ms}ms / ズレ {px}px', 'MOVE {ms}ms / OFFSET {px}px', '移动 {ms}ms / 偏差 {px}px', '이동 {ms}ms / 오차 {px}px', 'MOV. {ms}ms / DESVÍO {px}px', 'MOV. {ms}ms / DESVIO {px}px', 'MOUV. {ms}ms / ÉCART {px}px', 'BEWEGUNG {ms}ms / ABW. {px}px', 'ДВИЖЕНИЕ {ms}ms / СМЕЩЕНИЕ {px}px', 'GERAK {ms}ms / SELISIH {px}px'];
+  STR.trEarly = ['EARLY', 'EARLY', 'EARLY', 'EARLY', 'EARLY', 'EARLY', 'EARLY', 'EARLY', 'EARLY', 'EARLY'];
+  STR.trLate = ['LATE', 'LATE', 'LATE', 'LATE', 'LATE', 'LATE', 'LATE', 'LATE', 'LATE', 'LATE'];
+  STR.trSwitch = ['切替 {ms}ms', 'SWITCH {ms}ms', '切换 {ms}ms', '전환 {ms}ms', 'CAMBIO {ms}ms', 'TROCA {ms}ms', 'CHANGEMENT {ms}ms', 'WECHSEL {ms}ms', 'ПЕРЕКЛЮЧЕНИЕ {ms}ms', 'BERALIH {ms}ms'];
+  STR.trPenalty300 = ['+300ms', '+300ms', '+300ms', '+300ms', '+300ms', '+300ms', '+300ms', '+300ms', '+300ms', '+300ms'];
+  STR.trFake = ['FAKE!', 'FAKE!', 'FAKE!', 'FAKE!', 'FAKE!', 'FAKE!', 'FAKE!', 'FAKE!', 'FAKE!', 'FAKE!'];
+  STR.trOkay = ['OK', 'OK', 'OK', 'OK', 'OK', 'OK', 'OK', 'OK', 'OK', 'OK'];
+  STR.trSpeed = ['{sps} scr/s / {ms}ms', '{sps} scr/s / {ms}ms', '{sps} scr/s / {ms}ms', '{sps} scr/s / {ms}ms', '{sps} scr/s / {ms}ms', '{sps} scr/s / {ms}ms', '{sps} scr/s / {ms}ms', '{sps} scr/s / {ms}ms', '{sps} scr/s / {ms}ms', '{sps} scr/s / {ms}ms'];
+  STR.trSetResult = ['{n}個 {sec}s ({ms}ms/個)', '{n} targets {sec}s ({ms}ms each)', '{n}个目标 {sec}s（每个{ms}ms）', '{n}개 {sec}s (개당 {ms}ms)', '{n} objetivos {sec}s ({ms}ms cada uno)', '{n} alvos {sec}s ({ms}ms cada)', '{n} cibles {sec}s ({ms}ms chacune)', '{n} Ziele {sec}s (je {ms}ms)', '{n} целей {sec}s (по {ms}ms)', '{n} target {sec}s ({ms}ms per target)'];
 
   // ===== PROFILE: 新規UI文字列 (ja[0]/en[1] の2要素のみ。能力名・DATA EXPORT等のゲーム語彙は英語固定) =====
-  STR.prNoData = ['まだASSESSMENTのデータがありません', 'No ASSESSMENT data yet'];
-  STR.prGoAssessment = ['ASSESSMENTへ', 'Go to ASSESSMENT'];
-  STR.prLatestFmt = ['最新 ({d})', 'Latest ({d})'];
-  STR.prPrevFmt = ['前回 ({d})', 'Previous ({d})'];
-  STR.prWeakHint = ['TRAININGの該当課題で重点練習しよう', 'Practice this task in TRAINING to improve'];
-  STR.prHistTitle = ['履歴 (直近14日)', 'History (last 14 days)'];
-  STR.prExportJsonBtn = ['JSONをエクスポート', 'Export JSON'];
-  STR.prExportCsvBtn = ['CSVをエクスポート', 'Export CSV'];
-  STR.prBestTotal = ['BEST TOTAL', 'BEST TOTAL'];
-  STR.prRxTitle = ['今日の処方', "Today's Prescription"];
-  STR.prRxFmt = ['{t} を3セット', 'Do 3 sets of {t}'];
-  STR.prRxTargetLabel = ['目標', 'Target'];
-  STR.prRxDoneMsg = ['再測定で成果を確認しよう', 'Retake the assessment to check your progress'];
-  STR.prRxGoAssessBtn = ['ASSESSMENTへ', 'Go to ASSESSMENT'];
-  STR.prRxGoTrainBtn = ['この課題を練習', 'Practice this task'];
+  STR.prNoData = ['まだASSESSMENTのデータがありません', 'No ASSESSMENT data yet', '暂无ASSESSMENT数据', '아직 ASSESSMENT 데이터가 없습니다', 'Aún no hay datos de ASSESSMENT', 'Ainda não há dados de ASSESSMENT', 'Aucune donnée ASSESSMENT pour le moment', 'Noch keine ASSESSMENT-Daten', 'Данных ASSESSMENT пока нет', 'Belum ada data ASSESSMENT'];
+  STR.prGoAssessment = ['ASSESSMENTへ', 'Go to ASSESSMENT', '前往ASSESSMENT', 'ASSESSMENT로', 'Ir a ASSESSMENT', 'Ir para ASSESSMENT', 'Aller à ASSESSMENT', 'Zu ASSESSMENT', 'Перейти в ASSESSMENT', 'Ke ASSESSMENT'];
+  STR.prLatestFmt = ['最新 ({d})', 'Latest ({d})', '最新 ({d})', '최신 ({d})', 'Último ({d})', 'Mais recente ({d})', 'Dernier ({d})', 'Neueste ({d})', 'Последний ({d})', 'Terbaru ({d})'];
+  STR.prPrevFmt = ['前回 ({d})', 'Previous ({d})', '上次 ({d})', '이전 ({d})', 'Anterior ({d})', 'Anterior ({d})', 'Précédent ({d})', 'Vorherige ({d})', 'Предыдущий ({d})', 'Sebelumnya ({d})'];
+  STR.prWeakHint = ['TRAININGの該当課題で重点練習しよう', 'Practice this task in TRAINING to improve', '在TRAINING中重点练习这项任务', 'TRAINING에서 이 과제를 집중 연습하세요', 'Practica esta tarea en TRAINING para mejorar', 'Pratique esta tarefa no TRAINING para melhorar', 'Entraînez cet exercice dans TRAINING pour progresser', 'Übe diese Aufgabe in TRAINING, um besser zu werden', 'Тренируйте это задание в TRAINING, чтобы улучшить результат', 'Latih tugas ini di TRAINING untuk meningkat'];
+  STR.prHistTitle = ['履歴 (直近14日)', 'History (last 14 days)', '历史记录（最近14天）', '기록 (최근 14일)', 'Historial (últimos 14 días)', 'Histórico (últimos 14 dias)', 'Historique (14 derniers jours)', 'Verlauf (letzte 14 Tage)', 'История (последние 14 дней)', 'Riwayat (14 hari terakhir)'];
+  STR.prExportJsonBtn = ['JSONをエクスポート', 'Export JSON', '导出JSON', 'JSON 내보내기', 'Exportar JSON', 'Exportar JSON', 'Exporter JSON', 'JSON exportieren', 'Экспорт JSON', 'Ekspor JSON'];
+  STR.prExportCsvBtn = ['CSVをエクスポート', 'Export CSV', '导出CSV', 'CSV 내보내기', 'Exportar CSV', 'Exportar CSV', 'Exporter CSV', 'CSV exportieren', 'Экспорт CSV', 'Ekspor CSV'];
+  STR.prBestTotal = ['BEST TOTAL', 'BEST TOTAL', 'BEST TOTAL', 'BEST TOTAL', 'BEST TOTAL', 'BEST TOTAL', 'BEST TOTAL', 'BEST TOTAL', 'BEST TOTAL', 'BEST TOTAL'];
+  STR.prRxTitle = ['今日の処方', "Today's Prescription", '今日处方', '오늘의 처방', 'Plan de hoy', 'Plano de hoje', 'Programme du jour', 'Heutiger Plan', 'План на сегодня', 'Program hari ini'];
+  STR.prRxFmt = ['{t} を3セット', 'Do 3 sets of {t}', '完成3组{t}', '{t} 3세트', 'Haz 3 series de {t}', 'Faça 3 séries de {t}', 'Faites 3 séries de {t}', '3 Sätze {t}', 'Выполните 3 подхода: {t}', 'Lakukan 3 set {t}'];
+  STR.prRxTargetLabel = ['目標', 'Target', '目标', '목표', 'Objetivo', 'Objetivo', 'Objectif', 'Ziel', 'Цель', 'Target'];
+  STR.prRxDoneMsg = ['再測定で成果を確認しよう', 'Retake the assessment to check your progress', '再次测评以确认进步', '다시 측정해 성과를 확인하세요', 'Repite la evaluación para comprobar tu progreso', 'Refaça a avaliação para conferir seu progresso', 'Refaites l’évaluation pour vérifier vos progrès', 'Wiederhole die Bewertung, um deinen Fortschritt zu prüfen', 'Пройдите оценку снова, чтобы проверить прогресс', 'Ulangi penilaian untuk melihat kemajuan'];
+  STR.prRxGoAssessBtn = ['ASSESSMENTへ', 'Go to ASSESSMENT', '前往ASSESSMENT', 'ASSESSMENT로', 'Ir a ASSESSMENT', 'Ir para ASSESSMENT', 'Aller à ASSESSMENT', 'Zu ASSESSMENT', 'Перейти в ASSESSMENT', 'Ke ASSESSMENT'];
+  STR.prRxGoTrainBtn = ['この課題を練習', 'Practice this task', '练习这项任务', '이 과제 연습', 'Practicar esta tarea', 'Praticar esta tarefa', 'Entraîner cet exercice', 'Diese Aufgabe üben', 'Тренировать это задание', 'Latih tugas ini'];
 
   // ===== 実績の説明文 (25個・実績名は英語固定、説明のみi18n) =====
   STR.ad_first_play = ['初めて1プレイを完了', 'Complete your first round', '完成首次游玩', '첫 플레이 완료', 'Completa tu primera partida', 'Complete sua primeira partida', 'Terminez votre première partie', 'Schließe deine erste Runde ab', 'Завершите первую игру', 'Selesaikan permainan pertama'];
@@ -1709,7 +1726,7 @@
   STR.ad_hits300 = ['累計300ヒット', 'Hit 300 targets (cumulative)', '累计命中300次', '누적 명중 300회', 'Acierta 300 objetivos (acumulado)', 'Acerte 300 alvos (acumulado)', 'Touchez 300 cibles (cumulé)', 'Triff 300 Ziele (kumulativ)', 'Поразите 300 целей (всего)', 'Kenai 300 target (akumulasi)'];
   STR.ad_hits500 = ['累計500ヒット', 'Hit 500 targets (cumulative)', '累计命中500次', '누적 명중 500회', 'Acierta 500 objetivos (acumulado)', 'Acerte 500 alvos (acumulado)', 'Touchez 500 cibles (cumulé)', 'Triff 500 Ziele (kumulativ)', 'Поразите 500 целей (всего)', 'Kenai 500 target (akumulasi)'];
   STR.ad_hits1000 = ['累計1,000ヒット', 'Hit 1,000 targets (cumulative)', '累计命中1,000次', '누적 명중 1,000회', 'Acierta 1.000 objetivos (acumulado)', 'Acerte 1.000 alvos (acumulado)', 'Touchez 1 000 cibles (cumulé)', 'Triff 1.000 Ziele (kumulativ)', 'Поразите 1000 целей (всего)', 'Kenai 1.000 target (akumulasi)'];
-  STR.achNextFmt = ['次の実績: {n} {cur}/{max}', 'NEXT: {n} {cur}/{max}'];
+  STR.achNextFmt = ['次の実績: {n} {cur}/{max}', 'NEXT: {n} {cur}/{max}', 'NEXT: {n} {cur}/{max}', 'NEXT: {n} {cur}/{max}', 'NEXT: {n} {cur}/{max}', 'NEXT: {n} {cur}/{max}', 'NEXT: {n} {cur}/{max}', 'NEXT: {n} {cur}/{max}', 'NEXT: {n} {cur}/{max}', 'NEXT: {n} {cur}/{max}'];
   STR.ad_plays50 = ['SCORE ATTACKを累計50プレイ完了', 'Complete 50 SCORE ATTACK rounds (cumulative)', '累计完成50次SCORE ATTACK游玩', 'SCORE ATTACK 누적 50회 완료', 'Completa 50 partidas de SCORE ATTACK (acumulado)', 'Complete 50 partidas de SCORE ATTACK (acumulado)', 'Terminez 50 parties de SCORE ATTACK (cumulé)', 'Schließe 50 SCORE-ATTACK-Runden ab (kumulativ)', 'Завершите 50 игр SCORE ATTACK (всего)', 'Selesaikan 50 permainan SCORE ATTACK (akumulasi)'];
 
   // ===== ストレージ v2 (バージョン付き・一元化) =====
