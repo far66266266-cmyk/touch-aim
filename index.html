@@ -111,6 +111,13 @@
     text-shadow: 0 0 40px rgba(46,168,255,.6);
     justify-content: center;
   }
+  #trCount {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 96px; font-weight: 900;
+    color: #2ea8ff;
+    text-shadow: 0 0 40px rgba(46,168,255,.6);
+    justify-content: center;
+  }
 
   /* ===== ゲーム ===== */
   #field { position: absolute; inset: 0; z-index: 1; }
@@ -1298,6 +1305,9 @@
   <!-- カウントダウン -->
   <div id="countdown" class="screen hidden">3</div>
 
+  <!-- TRAINING / ASSESSMENT 課題開始カウントダウン -->
+  <div id="trCount" class="screen hidden" aria-live="assertive">3</div>
+
   <!-- リザルト -->
   <div id="result" class="screen hidden">
     <div id="resultMode"></div>
@@ -1889,7 +1899,9 @@
   const MODE_LABEL = { normal: 'BALANCED', acc: 'PRECISION', speed: 'SPEED' };
 
   function show(id) {
-    ['menu', 'title', 'training', 'assessment', 'profile', 'countdown', 'result', 'rules', 'achievements', 'trResult', 'trIntro', 'asResult']
+    // カウントダウン外への画面遷移は、予約中の課題開始も必ず取り消す。
+    if (id !== 'trCount') trCancelLaunch();
+    ['menu', 'title', 'training', 'assessment', 'profile', 'countdown', 'trCount', 'result', 'rules', 'achievements', 'trResult', 'trIntro', 'asResult']
       .forEach(s => $(s).classList.toggle('hidden', s !== id));
   }
 
@@ -2837,6 +2849,43 @@
   }
 
   // ===== 課題開始/中断の共通処理 =====
+  let TR_COUNT = null;
+  function trCancelLaunch() {
+    if (!TR_COUNT) return;
+    clearTimeout(TR_COUNT.timer);
+    TR_COUNT = null;
+    window.removeEventListener('pagehide', trCountPageHide);
+    $('trCount').classList.add('hidden');
+  }
+  function trCountPageHide() { trCancelLaunch(); }
+  function trLaunchWithCount(fn) {
+    trCancelLaunch();
+    if (typeof fn !== 'function') return;
+    const owner = { timer: 0 };
+    TR_COUNT = owner;
+    state = 'countdown';
+    show('trCount');
+    window.addEventListener('pagehide', trCountPageHide);
+    let n = 3;
+    $('trCount').textContent = n;
+    beep(440, .1, .15);
+    const step = () => {
+      if (TR_COUNT !== owner) return;
+      n--;
+      if (n > 0) {
+        $('trCount').textContent = n;
+        beep(440, .1, .15);
+        owner.timer = setTimeout(step, 800);
+        return;
+      }
+      TR_COUNT = null;
+      window.removeEventListener('pagehide', trCountPageHide);
+      $('trCount').classList.add('hidden');
+      beep(880, .15, .2);
+      fn();
+    };
+    owner.timer = setTimeout(step, 800);
+  }
   function trEnterPlay(taskId, total) {
     TR_LAST_TASK = taskId;
     state = 'training';
@@ -2853,6 +2902,7 @@
     trHideMsg();
   }
   function trAbort() {
+    trCancelLaunch();
     if (TR && TR.cleanup) { try { TR.cleanup(); } catch (e) { /* 片付け失敗でも続行 */ } }
     TR = null;
     state = 'title';
@@ -3803,7 +3853,7 @@
     if (!ctx) return;
     if (ctx.mode === 'assessment') { asStartTask(ctx.taskId); return; }
     TR_MODE = 'solo'; RNG = Math.random;
-    TR_START[ctx.taskId]();
+    trLaunchWithCount(() => TR_START[ctx.taskId]());
   }
   function trDemoStartReal() { trStartIntroContext(trDemoCleanup()); }
   function trDemoPageHide() { trDemoCleanup(); }
@@ -4137,9 +4187,12 @@
   }
   function asStartTask(taskId) {
     if (!AS) return;
-    RNG = taskRng(AS.seed, taskId);        // 種目ごとに決定的なPRNGへ差し替え
-    TR_MODE = 'assessment';
-    TR_START[taskId](AS_TOTALS[taskId]);
+    trLaunchWithCount(() => {
+      if (!AS) return;
+      RNG = taskRng(AS.seed, taskId);        // 種目ごとに決定的なPRNGへ差し替え
+      TR_MODE = 'assessment';
+      TR_START[taskId](AS_TOTALS[taskId]);
+    });
   }
   // 1種目完了時: trFinishTaskから呼ばれる (TR_MODE==='assessment'のときのみ)
   function asOnTaskDone(taskId, raw, summary) {
@@ -4444,7 +4497,7 @@
   $('catSa').addEventListener('click', () => { renderTitle(); show('title'); });
   $('catTr').addEventListener('click', () => { renderTrHub(); show('training'); });
   $('trAbortBtn').addEventListener('click', () => { if (TR_DEMO) trSkipDemo(); else trAbort(); });
-  $('trRetryBtn').addEventListener('click', () => { if (TR_LAST_TASK) TR_START[TR_LAST_TASK](); });
+  $('trRetryBtn').addEventListener('click', () => { if (TR_LAST_TASK) trLaunchWithCount(() => TR_START[TR_LAST_TASK]()); });
   $('trBackHubBtn').addEventListener('click', () => { renderTrHub(); show('training'); });
   $('trIntroStartBtn').addEventListener('click', trStartFromIntro);
   $('trIntroDemoBtn').addEventListener('click', trStartDemoFromIntro);
