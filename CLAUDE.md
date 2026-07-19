@@ -220,3 +220,52 @@
 - 採点式を更新しても生データから再計算可能。
 - Basic Launch状態では広告や★がなくても全機能を遊べる。
 - ユーザーデータを破壊する変更をしない。
+
+## Codexレビューからの修正依頼（2026-07-19 / Sol向け）→ 全項目対応済み (2026-07-19)
+
+ユーザー吟味の上、P0-1/P0-2/P1-1/P1-2/P2 をすべてCodex実装・Fableレビュー/検証・公開済み。P1-1(1日2回)は**開始時消費**でユーザー決定。ファイル分割は今回見送り(挙動修正優先)。以下は原文の依頼記録。
+
+現在の正しい能力構成は **5能力（PERCEPTION / FLICK / PRECISION / SWITCHING / TIMING）**。TRACKINGは廃止済み。以下は新機能追加より先に対応する。作業開始時点で `index.html` に未コミットの「TRAINING / ASSESSMENT開始前3カウント」変更があるため、上書き・巻き戻しせず、その変更を含めて直すこと。
+
+### P0: 中断・バックグラウンド復帰で測定値や画面を壊さない
+
+- `visibilitychange` / `pagehide` / 必要に応じて `pageshow` を共通管理し、カウントダウン中・TRAINING中・ASSESSMENT中のタイマー、RAF、イベントリスナーを確実に片付ける。
+- 現在の `trCountPageHide()` はカウント画面だけを隠すため、bfcache復帰時に全画面非表示になり得る。必ず安全な復帰画面を表示する。
+- TRAINING中に隠れた場合は未完了runを保存せず、その課題のイントロへ戻す。
+- ASSESSMENT中に隠れた場合は完了済み種目を保持し、進行中の1種目だけを最初からやり直せる状態にする。中断中の経過時間を反応時間やTIMINGの値へ混ぜない。
+- 再開時は同じassessment seedとtask saltからRNGを作り直し、途中状態を継ぎ足さない。
+
+### P0: schema 2の保存データを階層ごとに正規化する
+
+- `loadDB()`が返した直後に `normalizeDB()` 相当を通し、少なくとも `settings`、`sa`各モード、`stats`、`ach`、`training`、`assessment.daily`、`assessment.pending`、`assessment.runs`を型・配列まで検証して既定値補完する。
+- `schema === 2 && d.sa`だけで採用した後に `db.stats.plays`へ直接触れて落ちる経路をなくす。
+- 壊れた部分だけを補完し、正常なbest、history、TOP10、実績、TRAINING/ASSESSMENT履歴を消さない。
+- JSON parse不能時の退避は維持する。localStorage保存失敗を完全に無言にせず、少なくとも画面上で一度通知できるようにする。
+
+### P1: ASSESSMENTの「1日2回」を開始回数として成立させる
+
+- 新規測定の開始を確定した時点で1回消費し、途中破棄から何度でも再抽選・再挑戦できる状態をなくす。
+- pendingの再開では追加消費しない。バックグラウンド中断も同じpendingを使う。
+- 完走時の二重加算を削除し、日付変更、30分pending、残り回数表示との整合を確認する。
+- 既存のschema 2データを破壊しない。必要ならカウント規則だけ明示的にバージョン化する。
+
+### P1: β分析用の生データを30runで捨てない
+
+- PROFILEの表示対象（直近14日など）と保存上限を分離する。
+- `db.assessment.runs.slice(-30)`は廃止し、当面は最低300runを保持する。JSON/CSVエクスポートには保持中の全runを含める。
+- localStorage容量を概算し、容量超過直前に古いデータを黙って消すのではなく、エクスポートを促す。
+
+### P2: 保守性と操作性
+
+- TRAININGの課題カードをクリック専用`div`ではなく`button`、または同等のrole/tabindex/Enter/Space操作対応にする。
+- 廃止済みTRACKINGの実行関数・デモなど到達不能コードを削除する。ただし過去データ再計算に必要な旧score versionの互換分岐は残す。
+- 今回は大規模なファイル分割を同時に行わない。挙動修正を先に完了し、別コミットで開発用ソース分割→単一HTML生成を検討する。
+
+### 完了確認
+
+1. 空データ、現行データ、`stats`欠損、`assessment:{}`、壊れた配列を含む保存データで起動でき、残せる正常データは残る。
+2. カウントダウン中と5課題それぞれのプレイ中にhidden/pagehideを発生させ、復帰後に白画面・二重タイマー・異常スコアが出ない。
+3. ASSESSMENTは開始で1回消費、再開で消費なし、破棄後も消費済み、完走時に二重加算なし。
+4. 31件以上のASSESSMENT runが保存・JSON/CSV出力でき、PROFILE表示は従来どおり重くならない。
+5. SCORE ATTACK、TRAINING、ASSESSMENT、PROFILE、25実績の既存動作を回帰確認する。
+6. JavaScript構文エラー、重複ID、ブラウザconsole errorがない。
