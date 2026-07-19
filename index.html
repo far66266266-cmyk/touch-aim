@@ -4227,7 +4227,7 @@
   // ===================================================================
   const ASSESSMENT_VERSION = 1;
   const TEST_CONFIG_VERSION = 5; // TIMINGを迎撃射撃方式へ変更
-  const SCORE_FORMULA_VERSION = 3;
+  const SCORE_FORMULA_VERSION = 4;
   const AS_RESUME_MS = 30 * 60 * 1000; // 中断からの再開が有効な時間 (30分)
   const AS_DAILY_LIMIT = 2;
   const AS_RUN_LIMIT = 300;             // β分析用の生run保持上限 (PROFILE表示上限とは分離)
@@ -4325,12 +4325,45 @@
     if (taskId === 'switching') return asClamp100(asLinear(summary.perTargetMedian, 320, 100, 900, 0));
     return asScoreV2(taskId, raw, summary);
   }
+  // v4: 「100点=中〜上級者でも簡単には届かない」水準に閾値を全体的に辛くした校正。
+  // 生データ構造・種目の意味は不変、asLinearのx1/y1を締め上げただけ。過去runはversionで区別。
+  function asScoreV4(taskId, raw, summary) {
+    switch (taskId) {
+      case 'perception': {
+        // 中央値 150ms→100点 (人間反応の下限付近)、450→0。ノーゴー誤反応/フライング減点は維持
+        const base = asLinear(summary.median, 150, 100, 450, 0);
+        return asClamp100(base - (summary.noGoErrors || 0) * 12 - (summary.falseStarts || 0) * 8);
+      }
+      case 'flick': {
+        // 正規化速度 3.5画面/秒 → 80点 (高速フリック水準)、命中率20点
+        const hitRate = raw.length ? raw.filter(r => r.hit).length / raw.length : 0;
+        return asClamp100(asLinear(summary.spsMedian, .6, 0, 3.5, 80) + hitRate * 20);
+      }
+      case 'precision': {
+        // 平均中心誤差比 3% → 80点 (ほぼど真ん中)、命中率20点
+        const hitRate = raw.length ? raw.filter(r => r.hit).length / raw.length : 0;
+        const errPart = summary.avgErrRatio == null ? 0 : asLinear(summary.avgErrRatio, 0.03, 80, 0.50, 0);
+        return asClamp100(errPart + hitRate * 20);
+      }
+      case 'switching': {
+        // 1個あたり切替時間(誤タップペナルティ込み) 220ms → 100点 (機械的テンポ)
+        return asClamp100(asLinear(summary.perTargetMedian, 220, 100, 900, 0));
+      }
+      case 'timing': {
+        // 迎撃射撃: 平均|ms相当誤差| 10ms → 70点、命中率30点
+        const hitRate = raw.length ? raw.filter(r => r.hit).length / raw.length : 0;
+        const errPart = summary.avgAbsErr == null ? 0 : asLinear(summary.avgAbsErr, 10, 70, 150, 0);
+        return asClamp100(errPart + hitRate * 30);
+      }
+      default: return 0;
+    }
+  }
   // 将来score_formula_versionが増えても過去の生データから再計算できるよう、バージョン分岐だけをここに足す
   function asComputeScore(taskId, raw, summary, version) {
     if (version === 1) return asScoreV1(taskId, raw, summary);
     if (version === 2) return asScoreV2(taskId, raw, summary);
     if (version === 3) return asScoreV3(taskId, raw, summary);
-    return asScoreV3(taskId, raw, summary);
+    return asScoreV4(taskId, raw, summary);
   }
 
   // ===== 開始画面の表示更新 =====
