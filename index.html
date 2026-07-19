@@ -952,19 +952,21 @@
     text-shadow: 0 0 10px currentColor;
   }
   .tr-timing-mark.miss { color: #f85149; }
+  .tr-timing-center {
+    position: absolute; width: 7px; height: 7px; transform: translate(-50%,-50%);
+    z-index: 18; border-radius: 50%; background: #39d5ff;
+    box-shadow: 0 0 9px rgba(57,213,255,.85); pointer-events: none;
+  }
+  .tr-timing-line {
+    position: absolute; height: 1px; z-index: 16; transform-origin: 0 50%;
+    background: rgba(57,213,255,.68); pointer-events: none;
+  }
   .tr-ok-mark {
     position: absolute; transform: translate(-50%,-50%); z-index: 18;
     color: #7ee787; font-family: 'Orbitron', sans-serif; font-size: 15px; font-weight: 800;
     pointer-events: none; text-shadow: 0 0 10px rgba(126,231,135,.55);
     animation: trFloatUp .65s ease-out forwards;
   }
-  .tr-judge-ring {
-    position: absolute; transform: translate(-50%,-50%); border-radius: 50%;
-    border: 3px solid rgba(255,223,93,.9); background: transparent;
-    box-shadow: 0 0 22px rgba(255,223,93,.32), inset 0 0 14px rgba(255,223,93,.12);
-    pointer-events: none;
-  }
-
   #trMsg {
     position: absolute; left: 0; right: 0; top: 40%;
     transform: translateY(-50%);
@@ -1617,15 +1619,15 @@
   STR.trIntro_switching_2 = ['2. 1→2→3…の順に全部タップ', '2. Tap every circle in order: 1→2→3…'];
   STR.trIntro_switching_3 = ['3. セットごとに数が増える(3個→7個)', '3. The number increases each set (3→7 circles)'];
   STR.trIntro_switching_m = ['計測: 1個あたりの切り替えスピードと順番ミス', 'Measured: switching speed per target and wrong-order taps'];
-  STR.trIntro_timing_1 = ['1. 枠だけのリングが判定ゾーン', '1. The outline ring is the timing zone'];
-  STR.trIntro_timing_2 = ['2. 円が流れてくる', '2. A circle flows toward it'];
-  STR.trIntro_timing_3 = ['3. リングにピッタリ重なった瞬間、画面をタップ。全10回', '3. Tap anywhere the instant the circle perfectly overlaps the ring. 10 reps total'];
-  STR.trIntro_timing_m = ['計測: 重なった瞬間とのズレ(EARLY/LATE、ms)', 'Measured: offset from the exact overlap (EARLY/LATE, ms)'];
+  STR.trIntro_timing_1 = ['1. 円が画面を横切っていく', '1. A circle moves across the screen'];
+  STR.trIntro_timing_2 = ['2. 追いかけずに、通り道を予測して1回タップ', "2. Don't chase it - predict its path and tap once"];
+  STR.trIntro_timing_3 = ['3. タップ位置と円の距離で判定。全10回', '3. Judged by distance between tap and ball. 10 reps total'];
+  STR.trIntro_timing_m = ['計測: タップ時の円中心とタップ位置の距離(px)。入力遅延の影響を受けない設計', 'Measured: distance between the ball center and your tap at the exact tap moment. No input-latency bias by design'];
   STR.trD_perception = ['白で離し、赤では止まる反応判断', 'React to white and hold on red'];
   STR.trD_flick = ['離してから着弾までの移動スピード', 'Movement speed from lift to landing'];
   STR.trD_precision = ['小さな的の中心に正確に止める', 'Stop precisely on small targets'];
   STR.trD_switching = ['増えていく的を順番どおり素早く切替', 'Switch quickly through growing numbered sets'];
-  STR.trD_timing = ['流れる円と判定リングの重なりを狙う', 'Time a flowing circle with the judge ring'];
+  STR.trD_timing = ['動く円の通り道を予測して迎撃する', 'Predict the moving circle path and intercept it'];
   STR.trHoldPad = ['パッドを押さえたまま待つ', 'Hold the pad and wait'];
   STR.trFalseStart = ['早すぎ! もう一度', 'Too early! Try again'];
   STR.trTapTarget = ['的をタップ', 'Tap the target'];
@@ -3852,7 +3854,7 @@
     ]);
   }
 
-  // ===== 5. TIMING (音ゲー方式: 判定リングへの重なりをどこでもタップ) =====
+  // ===== 5. TIMING (迎撃射撃方式: 動体の未来位置を読んで通り道をタップ) =====
   const TIMING_SPEEDS = [220, 320, 440]; // px/s (3段階)
   function startTiming(totalOverride) {
     const total = totalOverride || 10;
@@ -3872,13 +3874,8 @@
     const speed = TIMING_SPEEDS[speedLevel];
     const dir = TR.dirToggle; TR.dirToggle *= -1;
     const y = rect.top + rect.h * (.42 + RNG() * .16);
-    const ringX = dir > 0 ? rect.left + rect.w * .78 : rect.left + rect.w * .22;
     const x0 = dir > 0 ? rect.left - r : rect.right + r;
-    const ring = document.createElement('div');
-    ring.className = 'tr-judge-ring';
-    ring.style.width = ring.style.height = (r * 2) + 'px';
-    ring.style.left = ringX + 'px'; ring.style.top = y + 'px';
-    fld.appendChild(ring);
+    const xEnd = dir > 0 ? rect.right + r : rect.left - r;
     const tg = document.createElement('div');
     tg.className = 'target plain';
     tg.style.width = tg.style.height = (r * 2) + 'px';
@@ -3887,7 +3884,7 @@
     fld.appendChild(tg);
 
     const startT = performance.now();
-    const arrivalAt = startT + Math.abs(ringX - x0) / speed * 1000;
+    const endAt = startT + Math.abs(xEnd - x0) / speed * 1000;
     let tapped = false, rafId = 0, finishTimer = 0;
 
     function curX(now) { return x0 + dir * speed * ((now - startT) / 1000); }
@@ -3895,23 +3892,33 @@
       if (!isPrimaryPointer(e)) return;
       if (tapped) return;
       tapped = true;
-      // タッチ入力遅延の補正: e.timeStamp(OSがイベントを受けた時刻に近い)を優先し、
-      // さらにハードウェア→OS→JS配送分の残差として控えめに40ms差し引く。
-      // これがないと「見た目ぴったり」で押しても常に+50〜100msのLATE判定になる
-      const raw = (typeof e.timeStamp === 'number' && e.timeStamp > 0) ? e.timeStamp : performance.now();
-      const INPUT_LAG_MS = 40;
-      const errMs = Math.round(raw - arrivalAt - INPUT_LAG_MS);
-      const hit = Math.abs(errMs) <= 150;
-      D.raw.push({ errMs, speedLevel, hit });
+      // イベント時刻の円位置と同じイベントのタップ座標を比べるため、入力遅延は相殺される。
+      const tapTime = e.timeStamp || performance.now();
+      const ballX = curX(tapTime), ballY = y;
+      const dx = e.clientX - ballX, dy = e.clientY - ballY;
+      const errPx = Math.hypot(dx, dy);
+      const errMsEquiv = errPx / speed * 1000;
+      const hit = errPx <= r * 1.5;
+      D.raw.push({ errPx, speedLevel, hit, dx, dy });
       fld.removeEventListener('pointerdown', onDown);
       cancelAnimationFrame(rafId);
-      const grade = trGrade('timing', Math.abs(errMs));
+      const grade = trGrade('timing', errMsEquiv);
+      if (hit) {
+        const line = document.createElement('div');
+        line.className = 'tr-timing-line';
+        line.style.left = ballX + 'px'; line.style.top = ballY + 'px';
+        line.style.width = errPx + 'px';
+        line.style.transform = `rotate(${Math.atan2(dy, dx)}rad)`;
+        fld.appendChild(line);
+        const center = document.createElement('div');
+        center.className = 'tr-timing-center';
+        center.style.left = ballX + 'px'; center.style.top = ballY + 'px'; fld.appendChild(center);
+      }
       const mark = document.createElement('div');
       mark.className = 'tr-timing-mark' + (hit ? '' : ' miss'); mark.textContent = hit ? '•' : '×';
-      mark.style.left = ringX + 'px'; mark.style.top = y + 'px'; fld.appendChild(mark);
-      const direction = errMs < 0 ? T('trEarly') : T('trLate');
-      trFeedback(ringX, y - 18, grade, hit ? `${errMs > 0 ? '+' : ''}${errMs}ms ${direction}` : T('trMiss'), '');
-      if (hit) trGradeSound(grade); else boo();
+      mark.style.left = e.clientX + 'px'; mark.style.top = e.clientY + 'px'; fld.appendChild(mark);
+      if (hit) { trFeedback(e.clientX, e.clientY - 18, grade, `${Math.round(errPx)}px`, ''); trGradeSound(grade); }
+      else boo();
       finishTimer = setTimeout(advance, 650);
     }
     fld.addEventListener('pointerdown', onDown);
@@ -3919,14 +3926,14 @@
     function frame(now) {
       const cx = curX(now);
       tg.style.left = cx + 'px';
-      if (now > arrivalAt + 150) {
+      if (now > endAt) {
         if (!tapped) {
           tapped = true;
-          D.raw.push({ errMs: null, speedLevel, hit: false });
+          D.raw.push({ errPx: null, speedLevel, hit: false, dx: null, dy: null });
           fld.removeEventListener('pointerdown', onDown);
           const mark = document.createElement('div'); mark.className = 'tr-timing-mark miss'; mark.textContent = '×';
-          mark.style.left = ringX + 'px'; mark.style.top = y + 'px'; fld.appendChild(mark);
-          trFeedback(ringX, y - 18, 'D', T('trMiss'), ''); boo();
+          mark.style.left = (dir > 0 ? rect.right - r : rect.left + r) + 'px'; mark.style.top = y + 'px'; fld.appendChild(mark);
+          boo();
           finishTimer = setTimeout(advance, 650);
         }
         return;
@@ -3945,11 +3952,11 @@
   function finishTiming() {
     const D = TR;
     const hits = D.raw.filter(r => r.hit);
-    const measured = D.raw.filter(r => r.errMs != null);
-    const summary = { avgAbsErr: trMean(measured.map(r => Math.abs(r.errMs))), avgSigned: trMean(measured.map(r => r.errMs)), hits: hits.length, total: D.total, metricUnit: 'ms' };
+    const measured = D.raw.filter(r => r.errPx != null);
+    // avgAbsErrはキー名とms表示を維持し、内容だけを速度換算したms相当値にする。
+    const summary = { avgAbsErr: trMean(measured.map(r => r.errPx / TIMING_SPEEDS[r.speedLevel] * 1000)), hits: hits.length, total: D.total, metricUnit: 'ms' };
     trFinishTask('timing', D.raw, summary, [
       ['tr_k_err', summary.avgAbsErr != null ? Math.round(summary.avgAbsErr) + 'ms' : '-'],
-      ['tr_k_signed', summary.avgSigned != null ? (summary.avgSigned > 0 ? '+' : '') + Math.round(summary.avgSigned) + 'ms' : '-'],
       ['tr_k_hits', `${summary.hits}/${D.total}`],
     ]);
   }
@@ -4131,18 +4138,27 @@
   }
   function trDemoTiming() {
     const rect = trPlayAreaRect(), r = Math.max(22, Math.round(baseRadius() * .6));
-    const y = rect.top + rect.h * .48, hitX = rect.left + rect.w * .68;
-    const ring = document.createElement('div'); ring.className = 'tr-judge-ring';
-    ring.style.width = ring.style.height = (r * 2) + 'px'; ring.style.left = hitX + 'px'; ring.style.top = y + 'px'; $('trField').appendChild(ring);
-    const tg = trDemoTarget(rect.left - r, y, r, 'plain tr-demo-linear');
+    const y = rect.top + rect.h * .48, tapX = rect.left + rect.w * .68;
+    const x0 = rect.left - r, xEnd = rect.right + r;
+    const tg = trDemoTarget(x0, y, r, 'plain tr-demo-linear');
     const finger = trDemoFinger(innerWidth / 2, rect.bottom + 70); TR_DEMO.finger = finger;
-    trDemoAt(250, () => trDemoMove(finger, innerWidth / 2, rect.top + rect.h * .78, 'slow'));
-    trDemoAt(550, () => { tg.style.left = hitX + 'px'; });
-    trDemoAt(2500, () => {
-      tg.classList.remove('tr-demo-linear'); tg.style.transition = 'none'; tg.style.left = hitX + 'px';
-      trDemoFeedback(hitX, y, 'S', `-12ms ${T('trEarly')}`, '', tg);
+    const moveStart = 550, travelMs = 3200;
+    const interceptAt = moveStart + (tapX - x0) / (xEnd - x0) * travelMs;
+    trDemoAt(250, () => trDemoMove(finger, tapX, y, 'slow'));
+    trDemoAt(moveStart, () => { tg.style.left = xEnd + 'px'; });
+    trDemoAt(interceptAt, () => {
+      const ballX = tapX + 5, errPx = Math.abs(tapX - ballX);
+      tg.classList.remove('tr-demo-linear'); tg.style.transition = 'none'; tg.style.left = ballX + 'px';
+      const line = document.createElement('div'); line.className = 'tr-timing-line';
+      line.style.left = ballX + 'px'; line.style.top = y + 'px'; line.style.width = errPx + 'px';
+      line.style.transform = 'rotate(180deg)'; $('trField').appendChild(line);
+      const center = document.createElement('div'); center.className = 'tr-timing-center';
+      center.style.left = ballX + 'px'; center.style.top = y + 'px'; $('trField').appendChild(center);
+      const mark = document.createElement('div'); mark.className = 'tr-timing-mark'; mark.textContent = '•';
+      mark.style.left = tapX + 'px'; mark.style.top = y + 'px'; $('trField').appendChild(mark);
+      trDemoFeedback(tapX, y, 'S', `${Math.round(errPx)}px`, '', tg);
     });
-    trDemoAt(4000, trDemoFinish);
+    trDemoAt(interceptAt + 1300, trDemoFinish);
   }
   const TR_DEMO_SEQUENCES = {
     perception: trDemoPerception, flick: trDemoFlick, precision: trDemoPrecision,
@@ -4193,7 +4209,7 @@
   // 「短縮試行数」「seed付き決定的な乱数」「db.assessmentへの保存」だけを分岐させる。
   // ===================================================================
   const ASSESSMENT_VERSION = 1;
-  const TEST_CONFIG_VERSION = 4; // PRECISION/SWITCHING/TIMING/FLICK構成調整
+  const TEST_CONFIG_VERSION = 5; // TIMINGを迎撃射撃方式へ変更
   const SCORE_FORMULA_VERSION = 3;
   const AS_RESUME_MS = 30 * 60 * 1000; // 中断からの再開が有効な時間 (30分)
   const AS_DAILY_LIMIT = 2;
