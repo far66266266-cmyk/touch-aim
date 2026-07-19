@@ -295,6 +295,7 @@
   #detail tbody tr:active { background: rgba(46,168,255,.08); }
   #detail tbody td:first-child::before { content: '▶'; color: #2ea8ff; font-size: 7px; margin-right: 3px; vertical-align: 1px; }
   #detail td.exc-cell { color: #ffdf5d; font-weight: 700; }
+  #detail .row-cb { font-size: 12px; color: #ffdf5d; line-height: 1.1; font-weight: 600; }
   .rep-hint {
     width: 100%; max-width: 420px;
     text-align: left;
@@ -2471,11 +2472,15 @@
       if (r.miss) {
         tr.innerHTML = `<td>${i + 1}</td><td class="miss" colspan="3">MISS</td><td class="miss">0</td>`;
       } else {
-        const exc = (r.base !== undefined ? r.base : r.pts) >= EXCELLENT_PTS;
+        const base = r.base !== undefined ? r.base : r.pts;
+        const bonus = r.pts - base;
+        const exc = base >= EXCELLENT_PTS;
+        // スコア列は素点+コンボ分の2段表示 (コンボ0のときは素点のみ)
         tr.innerHTML = `<td>${i + 1}</td><td>${r.time.toFixed(1)}ms</td>` +
           `<td>${Math.round(r.acc * 100)}%</td>` +
           `<td>×${r.sizeF.toFixed(2)}</td>` +
-          `<td${exc ? ' class="exc-cell"' : ''}>${exc ? '★' : ''}${r.pts}</td>`;
+          `<td${exc ? ' class="exc-cell"' : ''}>${exc ? '★' : ''}${base}` +
+          (bonus > 0 ? `<div class="row-cb">+${bonus}</div>` : '') + `</td>`;
       }
       tbody.appendChild(tr);
     });
