@@ -1508,9 +1508,9 @@
   const MODES = {
     normal: {
       name: 'ノーマル', desc: '速さと精度をバランスよく評価',
-      // 速度: tFull 250ms / tZero 1300ms (426ms → 時間係数 0.83)。旧350/1700は速度ペナルティが緩すぎた
+      // 速度: tFull 250ms / tZero 1350ms (426ms → 時間係数 0.84)。旧350/1700は速度ペナルティが緩すぎた
       // 精度: pow(acc, 1.5) で精度100%の価値をハッキリ出す(旧 0.1+0.9×acc だと85%と100%の差が小さすぎた)
-      tFull: 250, tZero: 1300,
+      tFull: 250, tZero: 1350,
       combine: (tf, acc) => tf * (0.05 + 0.95 * Math.pow(acc, 1.5)),
       ranks: [.9, .72, .5, .28],
       sizeMul: 1.0, lifeMs: 2000, gapTotal: 4500,
