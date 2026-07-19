@@ -715,6 +715,7 @@
     font-size: 12px; color: #5f7a94; margin-top: 6px;
     font-variant-numeric: tabular-nums;
   }
+  .tr-card-grade { font-family: 'Orbitron', sans-serif; font-size: 14px; font-weight: 900; margin-left: 7px; }
 
   /* ===== TRAINING: プレイ中オーバーレイ (SCORE ATTACKのhud/fieldとは別要素) ===== */
   #trHud {
@@ -906,6 +907,16 @@
     margin: 16px 0 22px;
   }
   .tr-metrics .stat { flex: 1 1 40%; }
+  /* 総合評価文字はSCORE ATTACKのランク表示に合わせ、TRAINING内で色を共用する */
+  .tr-overall-grade {
+    font-family: 'Orbitron', sans-serif; font-size: 68px; font-weight: 900; line-height: 1.05;
+    margin-bottom: 2px;
+  }
+  .tr-grade-S { color: #ffdf5d; text-shadow: 0 0 30px rgba(255,223,93,.6); }
+  .tr-grade-A { color: #2ea8ff; }
+  .tr-grade-B { color: #3fb950; }
+  .tr-grade-C { color: #8b949e; }
+  .tr-grade-D { color: #7f2d2d; }
   /* 自己ベスト更新・前回比 (実績解除トーストと同系統だが控えめなインライン表示) */
   .tr-best-badge {
     color: #ffdf5d; font-family: 'Orbitron', sans-serif;
@@ -916,6 +927,25 @@
   .tr-delta-line {
     font-size: 13px; margin: 0 0 8px;
     font-variant-numeric: tabular-nums;
+  }
+  /* TRAINING履歴はリザルトの主指標を邪魔しない控えめな密度にする */
+  .tr-history { width: 100%; max-width: 420px; margin: 0 0 20px; }
+  .tr-history-block + .tr-history-block { margin-top: 14px; }
+  .tr-history-title {
+    font-family: 'Orbitron', sans-serif; font-size: 11px; font-weight: 700;
+    letter-spacing: .14em; color: #8b949e; margin-bottom: 5px;
+  }
+  .tr-history-row {
+    display: grid; grid-template-columns: 76px 1fr auto auto; align-items: center; gap: 8px;
+    min-height: 27px; padding: 3px 8px; border-left: 2px solid transparent;
+    color: #8b949e; font-size: 12px; font-variant-numeric: tabular-nums;
+  }
+  .tr-history-row.is-current { border-left-color: #39d5ff; background: rgba(57,213,255,.06); }
+  .tr-history-value { color: #c9d1d9; text-align: right; }
+  .tr-history-grade { font-family: 'Orbitron', sans-serif; font-size: 13px; font-weight: 900; min-width: 13px; text-align: center; }
+  .tr-history-new {
+    color: #ffdf5d; border: 1px solid rgba(255,223,93,.55); border-radius: 999px;
+    padding: 1px 6px; font-family: 'Orbitron', sans-serif; font-size: 9px; font-weight: 700;
   }
 
   /* ===== PROFILE: 五角形レーダーチャート・能力別リスト・日別履歴・エクスポート ===== */
@@ -1097,9 +1127,11 @@
   <!-- TRAINING: 課題別リザルト (共通1画面・課題ごとに指標を出し分け) -->
   <div id="trResult" class="screen hidden">
     <div class="scr-head" id="trResultName" style="margin-bottom:6px;">PERCEPTION</div>
+    <div class="tr-overall-grade tr-grade-D" id="trOverallGrade">D</div>
     <div class="tr-best-badge hidden" id="trBestBadge">★ NEW BEST!</div>
     <div class="tr-delta-line hidden" id="trDeltaLine"></div>
     <div class="tr-metrics" id="trMetrics"></div>
+    <div class="tr-history" id="trHistory"></div>
     <button class="btn" id="trRetryBtn">RETRY</button>
     <button class="btn ghost" id="trBackHubBtn" data-i18n="trBackHub">課題一覧へ</button>
   </div>
@@ -1417,6 +1449,9 @@
   STR.trDemoBadge = ['DEMO', 'DEMO'];
   STR.trDemoSkip = ['実演中… タップでスキップ', 'Demo playing... Tap to skip'];
   STR.trDemoTry = ['やってみよう!', 'Your turn!'];
+  STR.trRecent5 = ['RECENT 5', 'RECENT 5'];
+  STR.trTop3 = ['TOP 3', 'TOP 3'];
+  STR.trNew = ['NEW', 'NEW'];
   STR.trIntro_perception_1 = ['1. 画面下のパッドに指を置いたまま待つ', '1. Hold your finger on the pad at the bottom and wait'];
   STR.trIntro_perception_2 = ['2. 白い円が出たら、指をパッと離す(それで1回完了)', '2. When a white circle appears, quickly lift your finger (that completes one rep)'];
   STR.trIntro_perception_3 = ['3. 赤い円はフェイク。離さずそのまま我慢。全10回', '3. A red circle is a fake. Keep holding without lifting. 10 reps total'];
@@ -2722,6 +2757,19 @@
     if (taskId === 'timing') return value <= 30 ? 'S' : value <= 60 ? 'A' : value <= 100 ? 'B' : value <= 150 ? 'C' : 'D';
     return 'D';
   }
+  // 課題ごとの代表指標を既存の1発評価しきい値へ通し、総合評価を表示時に導出する
+  function trOverallGrade(taskId, summary) {
+    if (!summary) return 'D';
+    let value = null;
+    switch (taskId) {
+      case 'perception': value = summary.median; break;
+      case 'flick': value = summary.spsMedian; break;
+      case 'precision': value = summary.avgErrRatio != null ? 1 - summary.avgErrRatio : null; break;
+      case 'switching': value = summary.perTargetMedian; break;
+      case 'timing': value = summary.metricUnit === 'ms' ? summary.avgAbsErr : null; break;
+    }
+    return Number.isFinite(value) ? trGrade(taskId, value) : 'D';
+  }
   function trFeedback(x, y, grade, mainText, subText) {
     const fld = $('trField');
     const el = document.createElement('div');
@@ -2756,9 +2804,11 @@
   // ===== 課題の記録保存 (直近20runのみ保持) =====
   function saveTrainingRun(taskId, raw, summary) {
     db.training[taskId] = db.training[taskId] || { runs: [] };
-    db.training[taskId].runs.push({ ts: Date.now(), test_config_version: TEST_CONFIG_VERSION, score_formula_version: SCORE_FORMULA_VERSION, raw, summary });
+    const run = { ts: Date.now(), test_config_version: TEST_CONFIG_VERSION, score_formula_version: SCORE_FORMULA_VERSION, raw, summary };
+    db.training[taskId].runs.push(run);
     db.training[taskId].runs = db.training[taskId].runs.slice(-20);
     saveDB();
+    return run;
   }
 
   // ===== 課題開始/中断の共通処理 =====
@@ -2819,6 +2869,67 @@
       default: return String(Math.round(v));
     }
   }
+  // runの日時は端末のローカル時刻で履歴用の短い表記にする
+  function trHistoryDate(ts, withTime) {
+    const d = new Date(ts);
+    if (!Number.isFinite(d.getTime())) return '-';
+    const date = `${d.getMonth() + 1}/${d.getDate()}`;
+    if (!withTime) return date;
+    return `${date} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+  }
+  // 保存済みrunsからRECENT 5 / TOP 3を都度組み立てる (保存データには順位・評価を持たせない)
+  function renderTrHistory(taskId, currentRun) {
+    const wrap = $('trHistory');
+    wrap.innerHTML = '';
+    const rec = db.training[taskId];
+    const runs = rec && Array.isArray(rec.runs) ? rec.runs : [];
+    if (!runs.length) return;
+
+    function addBlock(titleKey, items, isTop) {
+      if (!items.length) return;
+      const block = document.createElement('div');
+      block.className = 'tr-history-block';
+      const title = document.createElement('div');
+      title.className = 'tr-history-title';
+      title.textContent = T(titleKey);
+      block.appendChild(title);
+      items.forEach((item, i) => {
+        const run = isTop ? item.run : item;
+        const value = trRepMetric(taskId, run.summary);
+        const grade = trOverallGrade(taskId, run.summary);
+        const row = document.createElement('div');
+        row.className = 'tr-history-row' + (!isTop && run === currentRun ? ' is-current' : '');
+
+        const when = document.createElement('span');
+        when.textContent = isTop
+          ? `${['1st', '2nd', '3rd'][i]} · ${trHistoryDate(run.ts, false)}`
+          : trHistoryDate(run.ts, true);
+        const val = document.createElement('span');
+        val.className = 'tr-history-value';
+        val.textContent = trRepMetricFmt(taskId, value);
+        const gradeEl = document.createElement('span');
+        gradeEl.className = `tr-history-grade tr-grade-${grade}`;
+        gradeEl.textContent = grade;
+        row.appendChild(when); row.appendChild(val); row.appendChild(gradeEl);
+        if (isTop && run === currentRun) {
+          const badge = document.createElement('span');
+          badge.className = 'tr-history-new';
+          badge.textContent = T('trNew');
+          row.appendChild(badge);
+        }
+        block.appendChild(row);
+      });
+      wrap.appendChild(block);
+    }
+
+    addBlock('trRecent5', runs.slice(-5).reverse(), false);
+    const lowerBetter = TR_LOWER_BETTER[taskId];
+    const top = runs.map(run => ({ run, value: trRepMetric(taskId, run.summary) }))
+      .filter(item => Number.isFinite(item.value))
+      .sort((a, b) => lowerBetter ? a.value - b.value : b.value - a.value)
+      .slice(0, 3);
+    addBlock('trTop3', top, true);
+  }
   function showTrResult(taskId, name, rows, extra) {
     if (TR && TR.cleanup) { try { TR.cleanup(); } catch (e) { /* 片付け失敗でも続行 */ } }
     TR = null;
@@ -2828,6 +2939,10 @@
     $('trField').innerHTML = '';
     trHideMsg();
     $('trResultName').textContent = name;
+    const overall = trOverallGrade(taskId, extra && extra.currentRun ? extra.currentRun.summary : null);
+    const overallEl = $('trOverallGrade');
+    overallEl.textContent = overall;
+    overallEl.className = `tr-overall-grade tr-grade-${overall}`;
     const bestEl = $('trBestBadge');
     if (extra && extra.isBest) {
       bestEl.classList.remove('hidden');
@@ -2858,6 +2973,7 @@
       d.innerHTML = `<div class="v">${value}</div><div class="k">${T(labelKey)}</div>`;
       wrap.appendChild(d);
     });
+    renderTrHistory(taskId, extra && extra.currentRun);
     show('trResult');
   }
   // 課題完了時の共通処理。TRAINING単体練習では従来どおりrunを保存してリザルト画面へ、
@@ -2892,8 +3008,8 @@
         isBest = true; // 初回runは無条件でベスト扱い (SCORE ATTACKのNEW BESTと同じ考え方)
       }
     }
-    saveTrainingRun(taskId, raw, summary);
-    showTrResult(taskId, TR_META[taskId].name, rows, { isBest, delta });
+    const currentRun = saveTrainingRun(taskId, raw, summary);
+    showTrResult(taskId, TR_META[taskId].name, rows, { isBest, delta, currentRun });
   }
 
   // ===== 課題ハブ =====
@@ -2912,12 +3028,17 @@
   // 課題ハブカード用: 全runの中から自己ベストの代表指標を1行にして返す
   function trBestLine(taskId) {
     const rec = db.training[taskId];
-    if (!rec || !rec.runs.length) return '';
+    if (!rec || !rec.runs.length) return null;
     const lowerBetter = TR_LOWER_BETTER[taskId];
-    const vals = rec.runs.map(r => trRepMetric(taskId, r.summary)).filter(v => v != null);
-    if (!vals.length) return '';
-    const best = lowerBetter ? Math.min(...vals) : Math.max(...vals);
-    return `${T('tr_k_best')}: ${trRepMetricFmt(taskId, best)}`;
+    const candidates = rec.runs.map(run => ({ run, value: trRepMetric(taskId, run.summary) }))
+      .filter(item => Number.isFinite(item.value))
+      .sort((a, b) => lowerBetter ? a.value - b.value : b.value - a.value);
+    if (!candidates.length) return null;
+    const best = candidates[0];
+    return {
+      text: `${T('tr_k_best')}: ${trRepMetricFmt(taskId, best.value)}`,
+      grade: trOverallGrade(taskId, best.run.summary)
+    };
   }
   function renderTrHub() {
     const wrap = $('trList');
@@ -2928,7 +3049,7 @@
       card.className = 'tr-card';
       const best = trBestLine(id);
       card.innerHTML = `<div class="tr-card-name">${meta.name}</div><div class="tr-card-desc">${T(meta.descKey)}</div>` +
-        (best ? `<div class="tr-card-last">${best}</div>` : '');
+        (best ? `<div class="tr-card-last">${best.text}<span class="tr-card-grade tr-grade-${best.grade}">${best.grade}</span></div>` : '');
       card.addEventListener('click', () => trShowIntro(id, 'solo', 'training'));
       wrap.appendChild(card);
     });
