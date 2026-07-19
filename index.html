@@ -95,6 +95,10 @@
   .sub { color: #8b949e; font-size: 15px; line-height: 1.8; margin-bottom: 26px; }
 
   .btn {
+    /* flex column の .screen 直子として置かれても縦圧縮されない
+       (button の default flex-shrink:1 + 全体min-height 44px で下切れするのを防ぐ) */
+    flex-shrink: 0;
+    line-height: 1.4;
     background: linear-gradient(135deg, #2ea8ff, #1f6feb);
     color: #fff; border: 1px solid rgba(160,215,255,.5);
     border-radius: 12px;
